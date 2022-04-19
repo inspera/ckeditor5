@@ -1,6 +1,6 @@
 {
   "name": "ckeditor5-custom-build",
-  "version": "34.0.0",
+  "version": "34.0.1",
   "description": "The classic editor build of CKEditor 5 – the best browser-based rich text editor.",
   "keywords": [
     "ckeditor5-build",
@@ -36,6 +36,7 @@
     "@ckeditor/ckeditor5-editor-classic": "^34.0.0",
     "@ckeditor/ckeditor5-essentials": "^34.0.0",
     "@ckeditor/ckeditor5-heading": "^34.0.0",
+    "@ckeditor/ckeditor5-html-support": "^34.0.0",
     "@ckeditor/ckeditor5-image": "^34.0.0",
     "@ckeditor/ckeditor5-indent": "^34.0.0",
     "@ckeditor/ckeditor5-link": "^34.0.0",
