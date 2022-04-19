@@ -32,6 +32,7 @@ import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation';
 import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
+import Style from '@ckeditor/ckeditor5-style/src/style';
 
 class ClassicEditor extends ClassicEditorBase {}
 class InlineEditor extends InlineEditorBase {}
@@ -60,6 +61,7 @@ const plugins = [
 	MediaEmbed,
 	Paragraph,
 	PasteFromOffice,
+	Style,
 	Table,
 	TableToolbar,
 	TextTransformation
