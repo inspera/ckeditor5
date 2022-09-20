@@ -85,7 +85,9 @@ export default class StyleGridButtonView extends ButtonView {
 					'ck-reset_all-excluded',
 					'ck-style-grid__button__preview',
 					'ck-content'
-				]
+				],
+				// The preview "AaBbCcDdEeFfGgHhIiJj" should not be read by screen readers because it is purely presentational.
+				'aria-hidden': 'true'
 			},
 
 			children: [
@@ -109,7 +111,7 @@ export default class StyleGridButtonView extends ButtonView {
 	 * be used instead. This avoids previewing a standalone `<td>`, `<li>`, etc. without a parent.
 	 *
 	 * @private
-	 * @param {module:style/style~StyleDefinition} styleDefinition
+	 * @param {String} elementName
 	 * @returns {Boolean} `true` when the element can be rendered. `false` otherwise.
 	 */
 	_isPreviewable( elementName ) {
