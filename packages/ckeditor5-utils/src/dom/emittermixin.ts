@@ -44,7 +44,7 @@ import type EventInfo from '../eventinfo';
  * @mixes module:utils/emittermixin~EmitterMixin
  * @implements module:utils/dom/emittermixin~Emitter
  */
-export default function DomEmitterMixin<Base extends abstract new( ...args: any[] ) => BaseEmitter>(
+export default function DomEmitterMixin<Base extends abstract new( ...args: Array<any> ) => BaseEmitter>(
 	base: Base
 ): {
 	new( ...args: ConstructorParameters<Base> ): InstanceType<Base> & Emitter;
@@ -66,7 +66,7 @@ export default function DomEmitterMixin<Base extends abstract new( ...args: any[
 		public override listenTo(
 			emitter: BaseEmitter | Node | Window,
 			event: string,
-			callback: ( ev: EventInfo, ...args: any[] ) => void,
+			callback: ( ev: EventInfo, ...args: Array<any> ) => void,
 			options: CallbackOptions & { readonly useCapture?: boolean; readonly usePassive?: boolean } = {}
 		): void {
 			// Check if emitter is an instance of DOM Node. If so, use corresponding ProxyEmitter (or create one if not existing).
@@ -129,7 +129,7 @@ export default function DomEmitterMixin<Base extends abstract new( ...args: any[
 		 * @param {Node|Window} node DOM Node of the ProxyEmitter.
 		 * @returns {Array.<module:utils/dom/emittermixin~ProxyEmitter>}
 		 */
-		private _getAllProxyEmitters( node: Node | Window ): ProxyEmitter[] {
+		private _getAllProxyEmitters( node: Node | Window ): Array<ProxyEmitter> {
 			return [
 				{ capture: false, passive: false },
 				{ capture: false, passive: true },
@@ -289,7 +289,7 @@ class ProxyEmitter extends BaseEmitter {
 	 * @param {String} event The name of the event.
 	 * @param {Function} callback The function to be called on event.
 	 * @param {Object} [options={}] Additional options.
-	 * @param {module:utils/priorities~PriorityString|Number} [options.priority='normal'] The priority of this event callback. The higher
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of this event callback. The higher
 	 * the priority value the sooner the callback will be fired. Events having the same priority are called in the
 	 * order they were added.
 	 */
@@ -386,7 +386,7 @@ export interface Emitter extends BaseEmitter {
 	 * @param {String} event The name of the event.
 	 * @param {Function} callback The function to be called on event.
 	 * @param {Object} [options={}] Additional options.
-	 * @param {module:utils/priorities~PriorityString|Number} [options.priority='normal'] The priority of this event callback. The higher
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of this event callback. The higher
 	 * the priority value the sooner the callback will be fired. Events having the same priority are called in the
 	 * order they were added.
 	 * @param {Boolean} [options.useCapture=false] Indicates that events of this type will be dispatched to the registered

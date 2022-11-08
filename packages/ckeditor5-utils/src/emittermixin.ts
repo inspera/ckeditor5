@@ -28,7 +28,7 @@ const _delegations = Symbol( 'delegations' );
  * Read more about the concept of emitters in the:
  * * {@glink framework/guides/architecture/core-editor-architecture#event-system-and-observables Event system and observables}
  * section of the {@glink framework/guides/architecture/core-editor-architecture Core editor architecture} guide.
- * * {@glink framework/guides/deep-dive/event-system Event system} deep dive guide.
+ * * {@glink framework/guides/deep-dive/event-system Event system} deep-dive guide.
  *
  * @mixin EmitterMixin
  * @implements module:utils/emittermixin~Emitter
@@ -245,7 +245,7 @@ export default function EmitterMixin<Base extends abstract new( ...args: any ) =
 			}
 		}
 
-		public delegate( ...events: string[] ): EmitterMixinDelegateChain {
+		public delegate( ...events: Array<string> ): EmitterMixinDelegateChain {
 			return {
 				to: ( emitter, nameOrFunction ) => {
 					if ( !this[ _delegations ] ) {
@@ -328,7 +328,7 @@ export default function EmitterMixin<Base extends abstract new( ...args: any ) =
 		public [ _listeningTo ]?: {
 			[ emitterId: string ]: {
 				emitter: Emitter;
-				callbacks: { [ event: string]: Function[] };
+				callbacks: { [ event: string]: Array<Function> };
 			};
 		};
 
@@ -357,7 +357,7 @@ export const Emitter = EmitterMixin( Object );
  * Read more about the usage of this interface in the:
  * * {@glink framework/guides/architecture/core-editor-architecture#event-system-and-observables Event system and observables}
  * section of the {@glink framework/guides/architecture/core-editor-architecture Core editor architecture} guide.
- * * {@glink framework/guides/deep-dive/event-system Event system} deep dive guide.
+ * * {@glink framework/guides/deep-dive/event-system Event system} deep-dive guide.
  *
  * @interface
  */
@@ -373,14 +373,14 @@ export interface Emitter {
 	 * @param {String} event The name of the event.
 	 * @param {Function} callback The function to be called on event.
 	 * @param {module:utils/emittermixin~CallbackOptions} [options={}] Additional options.
-	 * @param {module:utils/priorities~PriorityString|Number} [options.priority='normal'] The priority of this event callback. The higher
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of this event callback. The higher
 	 * the priority value the sooner the callback will be fired. Events having the same priority are called in the
 	 * order they were added.
 	 */
 	on<TEvent extends BaseEvent>(
 		event: TEvent[ 'name' ],
 		callback: GetCallback<TEvent>,
-		options?: CallbackOptions
+		options?: GetCallbackOptions<TEvent>
 	): void;
 
 	/**
@@ -391,14 +391,14 @@ export interface Emitter {
 	 * @param {String} event The name of the event.
 	 * @param {Function} callback The function to be called on event.
 	 * @param {module:utils/emittermixin~CallbackOptions} [options={}] Additional options.
-	 * @param {module:utils/priorities~PriorityString|Number} [options.priority='normal'] The priority of this event callback. The higher
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of this event callback. The higher
 	 * the priority value the sooner the callback will be fired. Events having the same priority are called in the
 	 * order they were added.
 	 */
 	once<TEvent extends BaseEvent>(
 		event: TEvent[ 'name' ],
 		callback: GetCallback<TEvent>,
-		options?: CallbackOptions
+		options?: GetCallbackOptions<TEvent>
 	): void;
 
 	/**
@@ -436,7 +436,7 @@ export interface Emitter {
 	 * @param {String} event The name of the event.
 	 * @param {Function} callback The function to be called on event.
 	 * @param {module:utils/emittermixin~CallbackOptions} [options={}] Additional options.
-	 * @param {module:utils/priorities~PriorityString|Number} [options.priority='normal'] The priority of this event callback. The higher
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of this event callback. The higher
 	 * the priority value the sooner the callback will be fired. Events having the same priority are called in the
 	 * order they were added.
 	 */
@@ -444,7 +444,7 @@ export interface Emitter {
 		emitter: Emitter,
 		event: TEvent[ 'name' ],
 		callback: GetCallback<TEvent>,
-		options?: CallbackOptions
+		options?: GetCallbackOptions<TEvent>
 	): void;
 
 	/**
@@ -500,7 +500,7 @@ export interface Emitter {
 	 * @param {...String} events Event names that will be delegated to another emitter.
 	 * @returns {module:utils/emittermixin~EmitterMixinDelegateChain}
 	 */
-	delegate( ...events: string[] ): EmitterMixinDelegateChain;
+	delegate( ...events: Array<string> ): EmitterMixinDelegateChain;
 
 	/**
 	 * Stops delegating events. It can be used at different levels:
@@ -527,7 +527,7 @@ interface EmitterInternal extends Emitter {
 	 * @param {String} event The name of the event.
 	 * @param {Function} callback The function to be called on event.
 	 * @param {module:utils/emittermixin~CallbackOptions} options={} Additional options.
-	 * @param {module:utils/priorities~PriorityString|Number} [options.priority='normal'] The priority of this event callback. The higher
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of this event callback. The higher
 	 * the priority value the sooner the callback will be fired. Events having the same priority are called in the
 	 * order they were added.
 	 */
@@ -554,7 +554,7 @@ interface EmitterInternal extends Emitter {
 	[ _listeningTo ]?: {
 		[ emitterId: string ]: {
 			emitter: Emitter;
-			callbacks: { [ event: string]: Function[] };
+			callbacks: { [ event: string]: Array<Function> };
 		};
 	};
 
@@ -563,7 +563,7 @@ interface EmitterInternal extends Emitter {
 
 export type BaseEvent = {
 	name: string;
-	args: any[];
+	args: Array<any>;
 };
 
 export type GetEventInfo<TEvent extends BaseEvent> = TEvent extends { eventInfo: EventInfo } ?
@@ -576,16 +576,20 @@ export type GetNameOrEventInfo<TEvent extends BaseEvent> = TEvent extends { even
 
 export type GetCallback<TEvent extends BaseEvent> = ( this: Emitter, ev: GetEventInfo<TEvent>, ...args: TEvent[ 'args' ] ) => void;
 
+export type GetCallbackOptions<TEvent extends BaseEvent> = TEvent extends { callbackOptions: infer TOptions } ?
+	TOptions & CallbackOptions :
+	CallbackOptions;
+
 /**
  * Additional options for registering a callback.
  *
  * @typedef {Object} module:utils/emittermixin~CallbackOptions
- * @property {module:utils/priorities~PriorityString|Number} [priority] The priority of this event callback. The higher
+ * @property {module:utils/priorities~PriorityString} [priority] The priority of this event callback. The higher
  * the priority value the sooner the callback will be fired. Events having the same priority are called in the
  * order they were added.
  */
 export interface CallbackOptions {
-	readonly priority?: PriorityString | number;
+	readonly priority?: PriorityString;
 }
 
 /**
@@ -636,8 +640,8 @@ export function _getEmitterId( emitter: Emitter ): string | undefined {
 }
 
 interface EventNode {
-	callbacks: { callback: Function; priority: number }[];
-	childEvents: string[];
+	callbacks: Array<{ callback: Function; priority: number }>;
+	childEvents: Array<string>;
 }
 
 // Gets the internal `_events` property of the given object.
@@ -731,7 +735,7 @@ function createEventNamespace( source: EmitterInternal, eventName: string ): voi
 // Gets an array containing callbacks list for a given event and it's more specific events.
 // I.e. if given event is foo:bar and there is also foo:bar:abc event registered, this will
 // return callback list of foo:bar and foo:bar:abc (but not foo).
-function getCallbacksListsForNamespace( source: EmitterInternal, eventName: string ): EventNode[ 'callbacks' ][] {
+function getCallbacksListsForNamespace( source: EmitterInternal, eventName: string ): Array<EventNode[ 'callbacks' ]> {
 	const eventNode = getEvents( source )[ eventName ];
 
 	if ( !eventNode ) {
@@ -780,7 +784,7 @@ function getCallbacksForEvent( source: EmitterInternal, eventName: string ): Eve
 function fireDelegatedEvents(
 	destinations: Map<Emitter, string | ( ( name: string ) => string ) | undefined>,
 	eventInfo: EventInfo,
-	fireArgs: any[]
+	fireArgs: Array<any>
 ) {
 	for ( let [ emitter, name ] of destinations ) {
 		if ( !name ) {

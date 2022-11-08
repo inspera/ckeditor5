@@ -31,7 +31,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 	 * @private
 	 * @member {Object[]}
 	 */
-	private readonly _items: T[];
+	private readonly _items: Array<T>;
 
 	/**
 	 * The internal map of items in the collection.
@@ -88,7 +88,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 	 * @private
 	 * @member {Array}
 	 */
-	private _skippedIndexesFromExternal: number[];
+	private _skippedIndexesFromExternal: Array<number>;
 
 	constructor( options?: { readonly idProperty?: I } );
 	constructor( initialItems: Iterable<T>, options?: { readonly idProperty?: I } );
@@ -230,12 +230,12 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 			this._items.splice( currentItemIndex, 0, item );
 			this._itemMap.set( itemId, item );
 
-			this.fire<AddEvent<T>>( 'add', item, currentItemIndex );
+			this.fire<CollectionAddEvent<T>>( 'add', item, currentItemIndex );
 
 			offset++;
 		}
 
-		this.fire<ChangeEvent<T>>( 'change', {
+		this.fire<CollectionChangeEvent<T>>( 'change', {
 			added: items,
 			removed: [],
 			index
@@ -316,7 +316,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 	public remove( subject: T | number | string ): T {
 		const [ item, index ] = this._remove( subject );
 
-		this.fire<ChangeEvent<T>>( 'change', {
+		this.fire<CollectionChangeEvent<T>>( 'change', {
 			added: [],
 			removed: [ item ],
 			index
@@ -337,7 +337,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 	public map<U>(
 		callback: ( item: T, index: number ) => U,
 		ctx?: any
-	): U[] {
+	): Array<U> {
 		return this._items.map( callback, ctx );
 	}
 
@@ -369,7 +369,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 	public filter(
 		callback: ( item: T, index: number ) => boolean,
 		ctx?: any
-	): T[] {
+	): Array<T> {
 		return this._items.filter( callback, ctx );
 	}
 
@@ -392,7 +392,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 			this._remove( 0 );
 		}
 
-		this.fire<ChangeEvent<T>>( 'change', {
+		this.fire<CollectionChangeEvent<T>>( 'change', {
 			added: [],
 			removed: removedItems,
 			index: 0
@@ -623,10 +623,10 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 		}
 
 		// Synchronize the with collection as new items are added.
-		this.listenTo<AddEvent<S>>( externalCollection, 'add', addItem );
+		this.listenTo<CollectionAddEvent<S>>( externalCollection, 'add', addItem );
 
 		// Synchronize the with collection as new items are removed.
-		this.listenTo<RemoveEvent<S>>( externalCollection, 'remove', ( evt, externalItem, index ) => {
+		this.listenTo<CollectionRemoveEvent<S>>( externalCollection, 'remove', ( evt, externalItem, index ) => {
 			const item = this._bindToExternalToInternalMap.get( externalItem );
 
 			if ( item ) {
@@ -645,7 +645,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 				}
 
 				return result;
-			}, [] as number[] );
+			}, [] as Array<number> );
 		} );
 	}
 
@@ -743,7 +743,7 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 		this._bindToInternalToExternalMap.delete( item );
 		this._bindToExternalToInternalMap.delete( externalItem );
 
-		this.fire<RemoveEvent<T>>( 'remove', item, index! );
+		this.fire<CollectionRemoveEvent<T>>( 'remove', item, index! );
 
 		return [ item, index! ];
 	}
@@ -782,12 +782,12 @@ export default class Collection<T extends { [ id in I ]?: string }, I extends st
 	 */
 }
 
-export type AddEvent<T = any> = {
+export type CollectionAddEvent<T = any> = {
 	name: 'add';
 	args: [ item: T, index: number ];
 };
 
-export type ChangeEvent<T = any> = {
+export type CollectionChangeEvent<T = any> = {
 	name: 'change';
 	args: [ {
 		added: Iterable<T>;
@@ -796,7 +796,7 @@ export type ChangeEvent<T = any> = {
 	} ];
 };
 
-export type RemoveEvent<T = any> = {
+export type CollectionRemoveEvent<T = any> = {
 	name: 'remove';
 	args: [ item: T, index: number ];
 };

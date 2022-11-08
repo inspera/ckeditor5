@@ -34,12 +34,12 @@ import { Observable } from '@ckeditor/ckeditor5-utils/src/observablemixin';
  *
  * * The {@glink framework/guides/architecture/editing-engine#schema schema section} of the
  * {@glink framework/guides/architecture/editing-engine Introduction to the Editing engine architecture} guide.
- * * The {@glink framework/guides/deep-dive/schema Schema deep dive} guide.
+ * * The {@glink framework/guides/deep-dive/schema Schema deep-dive guide}.
  *
  * @mixes module:utils/observablemixin~ObservableMixin
  */
 export default class Schema extends Observable {
-	private readonly _sourceDefinitions: Record<string, SchemaItemDefinition[]>;
+	private readonly _sourceDefinitions: Record<string, Array<SchemaItemDefinition>>;
 	private readonly _attributeProperties: Record<string, AttributeProperties>;
 	private _compiledDefinitions?: Record<string, SchemaCompiledItemDefinition> | null;
 
@@ -234,7 +234,7 @@ export default class Schema extends Observable {
 	 *		schema.isBlock( paragraphElement ); // -> true
 	 *
 	 * See the {@glink framework/guides/deep-dive/schema#block-elements Block elements} section of
-	 * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide for more details.
+	 * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide} for more details.
 	 *
 	 * @param {module:engine/model/item~Item|module:engine/model/schema~SchemaContextItem|String} item
 	 * @returns {Boolean}
@@ -260,7 +260,7 @@ export default class Schema extends Observable {
 	 *		schema.isLimit( 'imageBlock' ); // -> true
 	 *
 	 * See the {@glink framework/guides/deep-dive/schema#limit-elements Limit elements} section of
-	 * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide for more details.
+	 * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide} for more details.
 	 *
 	 * @param {module:engine/model/item~Item|module:engine/model/schema~SchemaContextItem|String} item
 	 * @returns {Boolean}
@@ -290,7 +290,7 @@ export default class Schema extends Observable {
 	 *		schema.isObject( imageElement ); // -> true
 	 *
 	 * See the {@glink framework/guides/deep-dive/schema#object-elements Object elements} section of
-	 * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide for more details.
+	 * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide} for more details.
 	 *
 	 * @param {module:engine/model/item~Item|module:engine/model/schema~SchemaContextItem|String} item
 	 * @returns {Boolean}
@@ -318,7 +318,7 @@ export default class Schema extends Observable {
 	 *		schema.isInline( text ); // -> true
 	 *
 	 * See the {@glink framework/guides/deep-dive/schema#inline-elements Inline elements} section of
-	 * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide for more details.
+	 * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide} for more details.
 	 *
 	 * @param {module:engine/model/item~Item|module:engine/model/schema~SchemaContextItem|String} item
 	 * @returns {Boolean}
@@ -342,7 +342,7 @@ export default class Schema extends Observable {
 	 *		schema.isSelectable( text ); // -> false
 	 *
 	 * See the {@glink framework/guides/deep-dive/schema#selectable-elements Selectable elements section} of
-	 * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide for more details.
+	 * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide} for more details.
 	 *
 	 * @param {module:engine/model/item~Item|module:engine/model/schema~SchemaContextItem|String} item
 	 * @returns {Boolean}
@@ -370,7 +370,7 @@ export default class Schema extends Observable {
 	 *		schema.isContent( text ); // -> true
 	 *
 	 * See the {@glink framework/guides/deep-dive/schema#content-elements Content elements section} of
-	 * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide for more details.
+	 * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide} for more details.
 	 *
 	 * @param {module:engine/model/item~Item|module:engine/model/schema~SchemaContextItem|String} item
 	 * @returns {Boolean}
@@ -537,7 +537,7 @@ export default class Schema extends Observable {
 	 * a boolean value, the default algorithm (or other callbacks) will define `checkChild()`'s return value.
 	 */
 	public addChildCheck( callback: ( ctx: SchemaContextDefinition, def: SchemaCompiledItemDefinition ) => unknown ): void {
-		this.on<CheckChildEvent>( 'checkChild', ( evt, [ ctx, childDef ] ) => {
+		this.on<SchemaCheckChildEvent>( 'checkChild', ( evt, [ ctx, childDef ] ) => {
 			// checkChild() was called with a non-registered child.
 			// In 99% cases such check should return false, so not to overcomplicate all callbacks
 			// don't even execute them.
@@ -594,7 +594,7 @@ export default class Schema extends Observable {
 	 * a boolean value, the default algorithm (or other callbacks) will define `checkAttribute()`'s return value.
 	 */
 	public addAttributeCheck( callback: ( context: SchemaContextDefinition, attributeName: string ) => unknown ): void {
-		this.on<CheckAttributeEvent>( 'checkAttribute', ( evt, [ ctx, attributeName ] ) => {
+		this.on<SchemaCheckAttributeEvent>( 'checkAttribute', ( evt, [ ctx, attributeName ] ) => {
 			const retValue = callback( ctx, attributeName );
 
 			if ( typeof retValue == 'boolean' ) {
@@ -716,7 +716,7 @@ export default class Schema extends Observable {
 		if ( selection.isCollapsed ) {
 			const firstPosition = selection.getFirstPosition()!;
 			const context = [
-				...firstPosition.getAncestors() as Element[],
+				...firstPosition.getAncestors() as Array<Element>,
 				new Text( '', selection.getAttributes() )
 			];
 
@@ -784,7 +784,7 @@ export default class Schema extends Observable {
 		let backwardWalker, forwardWalker;
 
 		// Never leave a limit element.
-		const limitElement = ( position.getAncestors() as Element[] ).reverse().find( item => this.isLimit( item ) ) ||
+		const limitElement = ( position.getAncestors() as Array<Element> ).reverse().find( item => this.isLimit( item ) ) ||
 			position.root as Element;
 
 		if ( direction == 'both' || direction == 'backward' ) {
@@ -1103,7 +1103,7 @@ export default class Schema extends Observable {
  * @event checkChild
  * @param {Array} args The `checkChild()`'s arguments.
  */
-export type CheckChildEvent = {
+export type SchemaCheckChildEvent = {
 	name: 'checkChild';
 	args: [ [ context: SchemaContext, def: SchemaCompiledItemDefinition ] ];
 };
@@ -1165,7 +1165,7 @@ export type CheckChildEvent = {
  * @event checkAttribute
  * @param {Array} args The `checkAttribute()`'s arguments.
  */
-export type CheckAttributeEvent = {
+export type SchemaCheckAttributeEvent = {
 	name: 'checkAttribute';
 	args: [ [ context: SchemaContext, attributeName: string ] ];
 };
@@ -1203,7 +1203,7 @@ export type CheckAttributeEvent = {
  * {@link module:engine/model/schema~Schema#isLimit `isLimit()`} returns `true` for object elements automatically.
  *
  * Read more about the meaning of these types in the
- * {@glink framework/guides/deep-dive/schema#defining-additional-semantics dedicated section of the Schema deep dive} guide.
+ * {@glink framework/guides/deep-dive/schema#defining-additional-semantics dedicated section of the Schema deep-dive guide}.
  *
  * # Generic items
  *
@@ -1246,7 +1246,7 @@ export type CheckAttributeEvent = {
  * (paragraphs, lists items, headings, images) which, in turn, may contain text inside.
  *
  * By inheriting from the generic items you can define new items which will get extended by other editor features.
- * Read more about generic types in the {@glink framework/guides/deep-dive/schema Schema deep dive} guide.
+ * Read more about generic types in the {@glink framework/guides/deep-dive/schema Schema deep-dive guide}.
  *
  * # Example definitions
  *
@@ -1340,14 +1340,14 @@ export type CheckAttributeEvent = {
  *
  * Read more about the block elements in the
  * {@glink framework/guides/deep-dive/schema#block-elements Block elements section} of
- * the {@glink framework/guides/deep-dive/schema Schema deep dive}.
+ * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide}.
  *
  * @property {Boolean} isInline
  * Whether an item is "text-like" and should be treated as an inline node. Examples of inline elements:
  * `$text`, `softBreak` (`<br>`), etc.
  *
  * Read more about the inline elements in the
- * {@glink framework/guides/deep-dive/schema#inline-elements Inline elements section} of the Schema deep dive guide.
+ * {@glink framework/guides/deep-dive/schema#inline-elements Inline elements section} of the Schema deep-dive guide.
  *
  * @property {Boolean} isLimit
  * It can be understood as whether this element should not be split by <kbd>Enter</kbd>.
@@ -1356,7 +1356,7 @@ export type CheckAttributeEvent = {
  *
  * Read more about the limit elements in the
  * {@glink framework/guides/deep-dive/schema#limit-elements Limit elements section} of
- * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide.
+ * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide}.
  *
  * @property {Boolean} isObject
  * Whether an item is "self-contained" and should be treated as a whole. Examples of object elements:
@@ -1366,7 +1366,7 @@ export type CheckAttributeEvent = {
  * {@link module:engine/model/schema~Schema#isLimit `isLimit()`} returns `true` for object elements automatically.
  *
  * Read more about the object elements in the
- * {@glink framework/guides/deep-dive/schema#object-elements Object elements section} of the Schema deep dive guide.
+ * {@glink framework/guides/deep-dive/schema#object-elements Object elements section} of the Schema deep-dive guide.
  *
  * @property {Boolean} isSelectable
  * `true` when an element should be selectable as a whole by the user. Examples of selectable elements: `imageBlock`, `table`, `tableCell`,
@@ -1377,7 +1377,7 @@ export type CheckAttributeEvent = {
  *
  * Read more about selectable elements in the
  * {@glink framework/guides/deep-dive/schema#selectable-elements Selectable elements section} of
- * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide.
+ * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide}.
  *
  * @property {Boolean} isContent
  * An item is a content when it always finds its way to the editor data output regardless of the number and type of its descendants.
@@ -1388,17 +1388,17 @@ export type CheckAttributeEvent = {
  *
  * Read more about content elements in the
  * {@glink framework/guides/deep-dive/schema#content-elements Content elements section} of
- * the {@glink framework/guides/deep-dive/schema Schema deep dive} guide.
+ * the {@glink framework/guides/deep-dive/schema Schema deep-dive guide}.
  */
 
 export interface SchemaItemDefinition {
-	allowIn?: string | string[];
-	allowChildren?: string | string[];
-	allowAttributes?: string | string[];
-	allowContentOf?: string | string[];
-	allowWhere?: string | string[];
-	allowAttributesOf?: string | string[];
-	inheritTypesFrom?: string | string[];
+	allowIn?: string | Array<string>;
+	allowChildren?: string | Array<string>;
+	allowAttributes?: string | Array<string>;
+	allowContentOf?: string | Array<string>;
+	allowWhere?: string | Array<string>;
+	allowAttributesOf?: string | Array<string>;
+	inheritTypesFrom?: string | Array<string>;
 	inheritAllFrom?: string;
 	isBlock?: boolean;
 	isInline?: boolean;
@@ -1436,9 +1436,9 @@ export interface SchemaCompiledItemDefinition {
 	isLimit: boolean;
 	isObject: boolean;
 	isSelectable: boolean;
-	allowIn: string[];
-	allowChildren: string[];
-	allowAttributes: string[];
+	allowIn: Array<string>;
+	allowChildren: Array<string>;
+	allowAttributes: Array<string>;
 }
 
 interface SchemaCompiledItemDefinitionInternal {
@@ -1451,17 +1451,17 @@ interface SchemaCompiledItemDefinitionInternal {
 	isObject?: boolean;
 	isSelectable?: boolean;
 
-	allowIn: string[];
-	allowChildren: string[];
-	allowAttributes: string[];
+	allowIn: Array<string>;
+	allowChildren: Array<string>;
+	allowAttributes: Array<string>;
 
-	allowAttributesOf?: string[];
-	allowContentOf?: string[];
-	allowWhere?: string[];
-	inheritTypesFrom?: string[];
+	allowAttributesOf?: Array<string>;
+	allowContentOf?: Array<string>;
+	allowWhere?: Array<string>;
+	inheritTypesFrom?: Array<string>;
 }
 
-type TypeNames = ( 'isBlock' | 'isContent' | 'isInline' | 'isLimit' | 'isObject' | 'isSelectable' )[];
+type TypeNames = Array<'isBlock' | 'isContent' | 'isInline' | 'isLimit' | 'isObject' | 'isSelectable'>;
 
 /**
  * A schema context &mdash; a list of ancestors of a given position in the document.
@@ -1488,7 +1488,7 @@ type TypeNames = ( 'isBlock' | 'isContent' | 'isInline' | 'isLimit' | 'isObject'
  * using these methods you need to use {@link module:engine/model/schema~SchemaContextDefinition}s.
  */
 export class SchemaContext implements Iterable<SchemaContextItem> {
-	private _items!: SchemaContextItem[];
+	private _items!: Array<SchemaContextItem>;
 
 	/**
 	 * Creates an instance of the context.
@@ -1500,7 +1500,7 @@ export class SchemaContext implements Iterable<SchemaContextItem> {
 			return context;
 		}
 
-		let items: ( string | Item | DocumentFragment )[];
+		let items: Array<string | Item | DocumentFragment>;
 
 		if ( typeof context == 'string' ) {
 			items = [ context ];
@@ -1699,7 +1699,7 @@ export class SchemaContext implements Iterable<SchemaContextItem> {
  * String|Array.<String|module:engine/model/node~Node>} module:engine/model/schema~SchemaContextDefinition
  */
 
-export type SchemaContextDefinition = Item | Position | SchemaContext | string | ( string | Item )[];
+export type SchemaContextDefinition = Item | Position | SchemaContext | string | Array<string | Item>;
 
 /**
  * An item of the {@link module:engine/model/schema~SchemaContext schema context}.
@@ -1750,7 +1750,7 @@ export interface AttributeProperties {
 	[ name: string ]: unknown;
 }
 
-function compileBaseItemRule( sourceItemRules: SchemaItemDefinition[], itemName: string ): SchemaCompiledItemDefinitionInternal {
+function compileBaseItemRule( sourceItemRules: Array<SchemaItemDefinition>, itemName: string ): SchemaCompiledItemDefinitionInternal {
 	const itemRule = {
 		name: itemName,
 
@@ -1917,7 +1917,7 @@ function cleanUpAllowAttributes(
 	itemRule.allowAttributes = Array.from( new Set( itemRule.allowAttributes ) );
 }
 
-function copyTypes( sourceItemRules: SchemaItemDefinition[], itemRule: SchemaCompiledItemDefinitionInternal ) {
+function copyTypes( sourceItemRules: Array<SchemaItemDefinition>, itemRule: SchemaCompiledItemDefinitionInternal ) {
 	for ( const sourceItemRule of sourceItemRules ) {
 		const typeNames = Object.keys( sourceItemRule ).filter( name => name.startsWith( 'is' ) ) as TypeNames;
 
@@ -1928,7 +1928,7 @@ function copyTypes( sourceItemRules: SchemaItemDefinition[], itemRule: SchemaCom
 }
 
 function copyProperty(
-	sourceItemRules: SchemaItemDefinition[],
+	sourceItemRules: Array<SchemaItemDefinition>,
 	itemRule: SchemaCompiledItemDefinitionInternal,
 	propertyName: 'allowIn' |
 		'allowContentOf' |
@@ -1949,7 +1949,7 @@ function copyProperty(
 	}
 }
 
-function makeInheritAllWork( sourceItemRules: SchemaItemDefinition[], itemRule: SchemaCompiledItemDefinitionInternal ) {
+function makeInheritAllWork( sourceItemRules: Array<SchemaItemDefinition>, itemRule: SchemaCompiledItemDefinitionInternal ) {
 	for ( const sourceItemRule of sourceItemRules ) {
 		const inheritFrom = sourceItemRule.inheritAllFrom;
 
