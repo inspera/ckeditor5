@@ -53,7 +53,12 @@ export default class SpecialCharactersArrows extends Plugin {
 			{ title: t( 'rightwards arrow to bar' ), character: '⇥' },
 			{ title: t( 'upwards arrow to bar' ), character: '⤒' },
 			{ title: t( 'downwards arrow to bar' ), character: '⤓' },
-			{ title: t( 'up down arrow with base' ), character: '↨' }
+			{ title: t( 'up down arrow with base' ), character: '↨' },
+			{ title: t( 'back with leftwards arrow above' ), character: '🔙' },
+			{ title: t( 'end with leftwards arrow above' ), character: '🔚' },
+			{ title: t( 'on with exclamation mark with left right arrow above' ), character: '🔛' },
+			{ title: t( 'soon with rightwards arrow above' ), character: '🔜' },
+			{ title: t( 'top with upwards arrow above' ), character: '🔝' }
 		] );
 	}
 }
