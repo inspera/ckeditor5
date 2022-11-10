@@ -37,17 +37,10 @@ import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformatio
 import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 import Style from '@ckeditor/ckeditor5-style/src/style';
 import SpecialCharacters from '@ckeditor/ckeditor5-special-characters/src/specialcharacters';
-import SpecialCharactersCurrency from '@ckeditor/ckeditor5-special-characters/src/specialcharacterscurrency';
-import SpecialCharactersLatin from '@ckeditor/ckeditor5-special-characters/src/specialcharacterslatin';
-import SpecialCharactersMathematical from '@ckeditor/ckeditor5-special-characters/src/specialcharactersmathematical';
-import SpecialCharactersText from '@ckeditor/ckeditor5-special-characters/src/specialcharacterstext';
 
 class ClassicEditor extends ClassicEditorBase {}
 class InlineEditor extends InlineEditorBase {}
 
-const SpecialCharactersEssentials = [
-	SpecialCharactersCurrency, SpecialCharactersLatin, SpecialCharactersMathematical, SpecialCharactersText
-];
 // Plugins to include in the build.
 const plugins = [
 	Essentials,
@@ -74,7 +67,6 @@ const plugins = [
 	Paragraph,
 	PasteFromOffice,
 	SpecialCharacters,
-	SpecialCharactersEssentials,
 	Style,
 	Subscript,
 	Superscript,
