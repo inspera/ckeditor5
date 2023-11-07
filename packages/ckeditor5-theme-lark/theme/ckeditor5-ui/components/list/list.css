@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -74,6 +74,21 @@
 				color: inherit;
 			}
 		}
+	}
+}
+
+.ck-list .ck-list__group {
+	padding-top: var(--ck-spacing-medium);
+
+	/* The group should have a border when it's not the first item. */
+	*:not(.ck-hidden) ~ & {
+		border-top: 1px solid var(--ck-color-base-border);
+	}
+
+	& > span {
+		font-size: 11px;
+		font-weight: bold;
+		padding: var(--ck-spacing-medium);
 	}
 }
 

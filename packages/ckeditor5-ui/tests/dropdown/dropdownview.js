@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -183,6 +183,35 @@ describe( 'DropdownView', () => {
 							],
 							fitInViewport: true
 						} ) );
+					} );
+
+					it( 'fallback when _getOptimalPosition() will return null', () => {
+						const locale = {
+							t() {}
+						};
+
+						const buttonView = new ButtonView( locale );
+						const panelView = new DropdownPanelView( locale );
+
+						const view = new DropdownView( locale, buttonView, panelView );
+						view.render();
+
+						const parentWithOverflow = global.document.createElement( 'div' );
+						parentWithOverflow.style.width = '1px';
+						parentWithOverflow.style.height = '1px';
+						parentWithOverflow.style.marginTop = '-1000px';
+						parentWithOverflow.style.overflow = 'scroll';
+
+						parentWithOverflow.appendChild( view.element );
+
+						global.document.body.appendChild( parentWithOverflow );
+
+						view.isOpen = true;
+
+						expect( view.panelView.position ).is.equal( 'southEast' ); // first position from position list.
+
+						view.element.remove();
+						parentWithOverflow.remove();
 					} );
 				} );
 			} );

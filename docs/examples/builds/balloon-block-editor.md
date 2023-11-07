@@ -1,5 +1,6 @@
 ---
 category: examples-builds
+meta-title: Balloon block editor build example | CKEditor 5 Documentation
 order: 40
 toc: false
 classes: main__content--no-toc
@@ -10,7 +11,8 @@ classes: main__content--no-toc
 {@link installation/getting-started/predefined-builds#balloon-block-editor Balloon block editor} lets you create your content directly in its target location with the help of two toolbars:
 
 * a balloon toolbar that appears next to the selected editable document element (offering inline content formatting tools),
-* a {@link features/blocktoolbar block toolbar} accessible using a button attached to the editable content area and following the selection in the document (bringing additional block formatting tools).
+* a {@link features/blocktoolbar block toolbar} accessible using a button (`⠿`) attached to the editable content area and following the selection in the document (bringing additional block formatting tools),
+* the `⠿` toolbar is also a handle that can be used to drag and drop blocks around the content.
 
 {@snippet examples/balloon-block-editor}
 
@@ -23,7 +25,7 @@ Check out the {@link installation/getting-started/predefined-builds#installation
 
 ```js
 
-import BalloonEditor from '@ckeditor/ckeditor5-build-balloon-block/src/ckeditor';
+import BalloonEditor from '@ckeditor/ckeditor5-build-balloon-block';
 
 BalloonEditor
 	.create( document.querySelector( '#snippet-balloon-block-editor' ), {
