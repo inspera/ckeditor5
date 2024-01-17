@@ -12,6 +12,7 @@ import UploadAdapter from '@ckeditor/ckeditor5-adapter-ckfinder/src/uploadadapte
 import Autoformat from '@ckeditor/ckeditor5-autoformat/src/autoformat';
 import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
 import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
+import Strikethrough from '@ckeditor/ckeditor5-basic-styles/src/strikethrough';
 import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
 import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
 import CKFinder from '@ckeditor/ckeditor5-ckfinder/src/ckfinder';
@@ -36,6 +37,13 @@ import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformatio
 import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 import Style from '@ckeditor/ckeditor5-style/src/style';
 import SpecialCharacters from '@ckeditor/ckeditor5-special-characters/src/specialcharacters';
+import SpecialCharactersEssentials from '@ckeditor/ckeditor5-special-characters/src/specialcharactersessentials';
+import FontFamily from '@ckeditor/ckeditor5-font/src/fontfamily';
+import FontSize from '@ckeditor/ckeditor5-font/src/fontsize';
+import FontColor from '@ckeditor/ckeditor5-font/src/fontcolor';
+import FontBackgroundColor from '@ckeditor/ckeditor5-font/src/fontbackgroundcolor';
+import Alignment from '@ckeditor/ckeditor5-alignment/src/alignment';
+import RemoveFormat from '@ckeditor/ckeditor5-remove-format/src/removeformat'
 
 class ClassicEditor extends ClassicEditorBase {}
 class InlineEditor extends InlineEditorBase {}
@@ -47,6 +55,7 @@ const plugins = [
 	Autoformat,
 	Bold,
 	Italic,
+	Strikethrough,
 	BlockQuote,
 	CKFinder,
 	CloudServices,
@@ -65,12 +74,19 @@ const plugins = [
 	MediaEmbed,
 	Paragraph,
 	SpecialCharacters,
+	SpecialCharactersEssentials,
 	Style,
 	Subscript,
 	Superscript,
 	Table,
 	TableToolbar,
-	TextTransformation
+	TextTransformation,
+	FontFamily,
+	FontSize,
+	FontColor,
+	FontBackgroundColor,
+	Alignment,
+	RemoveFormat,
 ];
 
 ClassicEditor.builtinPlugins = plugins;
