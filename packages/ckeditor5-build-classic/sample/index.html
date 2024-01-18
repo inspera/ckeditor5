@@ -38,13 +38,32 @@
 	<p>You can use this sample to validate whether your <a href="https://ckeditor.com/docs/ckeditor5/latest/installation/advanced/alternative-setups/custom-builds.html">custom build</a> works fine.</p>
 </div>
 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+      MathJax.Ajax.config.path["mhchem"] = "https://cdnjs.cloudflare.com/ajax/libs/mathjax-mhchem/3.3.2";
+      MathJax.Hub.Config({
+        showMathMenu: false,
+        TeX: {
+          extensions: [ "[mhchem]/mhchem.js" ]
+        },
+        messageStyle: "none",
+          tex2jax: {
+          preview: "none"
+        }
+      });
+</script>
+
 <script src="../build/ckeditor.js"></script>
 <script>
 	CKEDITOR.ClassicEditor.create( document.querySelector( '#editor' ), {
+		math: {
+			engine: 'mathjax',
+			outputType: 'script',
+		},
 		toolbar: ['RemoveFormat', 'FontFamily', 'FontSize', 'FontColor', 'FontBackgroundColor', 'Underline', 'StrikeThrough',
 		'|', 'heading', 'Alignment',
 		'|', 'bold', 'italic', 'link', 'Strikethrough', 'underline', 'bulletedList', 'numberedList', 'blockQuote',
-		'|', 'SpecialCharacters'],
+		'|', 'SpecialCharacters', 'Math'],
 	})
 		.then( editor => {
 			window.editor = editor;

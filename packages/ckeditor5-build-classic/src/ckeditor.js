@@ -44,6 +44,8 @@ import FontColor from '@ckeditor/ckeditor5-font/src/fontcolor';
 import FontBackgroundColor from '@ckeditor/ckeditor5-font/src/fontbackgroundcolor';
 import Alignment from '@ckeditor/ckeditor5-alignment/src/alignment';
 import RemoveFormat from '@ckeditor/ckeditor5-remove-format/src/removeformat'
+import Math from 'ckeditor5-math/src/math';
+import AutoformatMath from 'ckeditor5-math/src/autoformatmath';
 
 class ClassicEditor extends ClassicEditorBase {}
 class InlineEditor extends InlineEditorBase {}
@@ -87,6 +89,8 @@ const plugins = [
 	FontBackgroundColor,
 	Alignment,
 	RemoveFormat,
+	Math,
+	AutoformatMath,
 ];
 
 ClassicEditor.builtinPlugins = plugins;
