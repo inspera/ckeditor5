@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -57,35 +57,6 @@ describe( 'EnterCommand', () => {
 	} );
 
 	describe( 'execute()', () => {
-		it( 'uses enterBlock()', () => {
-			setData( model, '<p>foo[]bar</p>' );
-
-			sinon.spy( command, 'enterBlock' );
-
-			editor.execute( 'enter' );
-
-			expect( command.enterBlock.called ).to.be.true;
-		} );
-
-		it( 'fires afterExecute() event with the current writer as a parameter', done => {
-			setData( model, '<p>foo[]bar</p>' );
-
-			let currentWriter;
-
-			command.on( 'afterExecute', ( evt, { writer } ) => {
-				expect( writer ).to.equal( currentWriter );
-
-				done();
-			} );
-
-			model.change( writer => {
-				currentWriter = writer;
-				editor.execute( 'enter' );
-			} );
-		} );
-	} );
-
-	describe( 'enterBlock()', () => {
 		describe( 'collapsed selection', () => {
 			test(
 				'does nothing in the root',
@@ -191,9 +162,7 @@ describe( 'EnterCommand', () => {
 				model.change( () => {
 					setData( model, '<p><inlineLimit>ba[r</inlineLimit></p><p>f]oo</p>' );
 
-					model.change( writer => {
-						command.enterBlock( writer );
-					} );
+					command.execute();
 
 					expect( getData( model ) ).to.equal( '<p><inlineLimit>ba[r</inlineLimit></p><p>f]oo</p>' );
 				} );
@@ -210,9 +179,7 @@ describe( 'EnterCommand', () => {
 				// @TODO: Add option for setting selection direction to model utils.
 				doc.selection._lastRangeBackward = true;
 
-				model.change( writer => {
-					command.enterBlock( writer );
-				} );
+				command.execute();
 
 				expect( getData( model ) ).to.equal( '<p>[]</p>' );
 			} );
@@ -224,9 +191,7 @@ describe( 'EnterCommand', () => {
 
 				setData( model, '<p>[x]</p>' );
 
-				model.change( writer => {
-					command.enterBlock( writer );
-				} );
+				command.execute();
 
 				expect( spy.calledOnce ).to.be.true;
 			} );
@@ -236,9 +201,7 @@ describe( 'EnterCommand', () => {
 			it( title, () => {
 				setData( model, input );
 
-				model.change( writer => {
-					command.enterBlock( writer );
-				} );
+				command.execute();
 
 				expect( getData( model ) ).to.equal( output );
 			} );

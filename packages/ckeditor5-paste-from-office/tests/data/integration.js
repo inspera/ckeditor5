@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -24,13 +24,14 @@ import PageBreak from '@ckeditor/ckeditor5-page-break/src/pagebreak';
 
 import PasteFromOffice from '../../src/pastefromoffice';
 import { generateTests } from '../_utils/utils';
-import * as fixtures from '../_utils/fixtures';
 
 const browsers = [ 'chrome', 'firefox', 'safari', 'edge' ];
 
 describe( 'PasteFromOffice - integration', () => {
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'basic-styles',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Heading, Bold, Italic, Underline, Strikethrough, PasteFromOffice ]
 		},
@@ -39,8 +40,10 @@ describe( 'PasteFromOffice - integration', () => {
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'image',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Image, Table, PasteFromOffice ]
 		},
@@ -52,8 +55,10 @@ describe( 'PasteFromOffice - integration', () => {
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'link',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Heading, Bold, Link, ShiftEnter, PasteFromOffice ]
 		},
@@ -62,8 +67,10 @@ describe( 'PasteFromOffice - integration', () => {
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'list',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Heading, Bold, Italic, Underline, Link, List, ListProperties, PasteFromOffice ]
 		},
@@ -72,36 +79,46 @@ describe( 'PasteFromOffice - integration', () => {
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'spacing',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Bold, Italic, Underline, PasteFromOffice ]
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'google-docs-bold-wrapper',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Bold, ShiftEnter, PasteFromOffice ]
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'google-docs-list',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, List, PasteFromOffice ]
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'generic-list-in-table',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, List, Table, Bold, PasteFromOffice ]
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'table',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Table, TableProperties, TableCellProperties, Bold, PasteFromOffice,
 				FontColor, FontBackgroundColor ]
@@ -109,41 +126,30 @@ describe( 'PasteFromOffice - integration', () => {
 	} );
 
 	// See: https://github.com/ckeditor/ckeditor5/issues/7684.
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'font-without-table-properties',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Table, Bold, PasteFromOffice, FontColor, FontBackgroundColor ]
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'page-break',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Bold, PasteFromOffice, PageBreak ]
 		}
 	} );
 
-	generateIntegrationTests( {
+	generateTests( {
 		input: 'google-docs-br-paragraphs',
+		type: 'integration',
+		browsers,
 		editorConfig: {
 			plugins: [ Clipboard, Paragraph, Bold, ShiftEnter, PasteFromOffice ]
 		}
 	} );
-
-	generateIntegrationTests( {
-		input: 'smart-tags',
-		editorConfig: {
-			plugins: [ Clipboard, Paragraph, Bold, PasteFromOffice, FontColor ]
-		}
-	} );
-
-	function generateIntegrationTests( config ) {
-		const commonIntegrationConfig = {
-			type: 'integration',
-			fixtures,
-			browsers
-		};
-
-		return generateTests( Object.assign( {}, config, commonIntegrationConfig ) );
-	}
 } );

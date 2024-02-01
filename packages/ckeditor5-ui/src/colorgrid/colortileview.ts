@@ -1,31 +1,24 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /**
- * @module ui/colorgrid/colortileview
+ * @module ui/colorgrid/colortile
  */
 
 import ButtonView from '../button/buttonview';
+import checkIcon from '../../theme/icons/color-tile-check.svg';
 
 import type { Locale } from '@ckeditor/ckeditor5-utils';
 
-import checkIcon from '../../theme/icons/color-tile-check.svg';
-
 /**
- * This class represents a single color tile in the {@link module:ui/colorgrid/colorgridview~ColorGridView}.
+ * This class represents a single color tile in the {@link module:ui/colorgrid/colorgrid~ColorGridView}.
+ *
+ * @extends module:ui/button/buttonview~ButtonView
  */
 export default class ColorTileView extends ButtonView {
-	/**
-	 * String representing a color shown as tile's background.
-	 */
 	declare public color: string | undefined;
-
-	/**
-	 * A flag that toggles a special CSS class responsible for displaying
-	 * a border around the button.
-	 */
 	declare public hasBorder: boolean;
 
 	constructor( locale?: Locale ) {
@@ -33,7 +26,19 @@ export default class ColorTileView extends ButtonView {
 
 		const bind = this.bindTemplate;
 
+		/**
+		 * String representing a color shown as tile's background.
+		 *
+		 * @type {String}
+		 */
 		this.set( 'color', undefined );
+
+		/**
+		 * A flag that toggles a special CSS class responsible for displaying
+		 * a border around the button.
+		 *
+		 * @type {Boolean}
+		 */
 		this.set( 'hasBorder', false );
 
 		this.icon = checkIcon;
@@ -46,7 +51,7 @@ export default class ColorTileView extends ButtonView {
 				class: [
 					'ck',
 					'ck-color-grid__tile',
-					bind.if( 'hasBorder', 'ck-color-selector__color-tile_bordered' )
+					bind.if( 'hasBorder', 'ck-color-table__color-tile_bordered' )
 				]
 			}
 		} );

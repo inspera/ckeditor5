@@ -1,11 +1,12 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console, window, document */
 
 import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
+import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
 import GeneralHtmlSupport from '@ckeditor/ckeditor5-html-support/src/generalhtmlsupport';
 import CodeBlock from '@ckeditor/ckeditor5-code-block/src/codeblock';
 
@@ -22,6 +23,7 @@ import HtmlEmbed from '@ckeditor/ckeditor5-html-embed/src/htmlembed';
 import ImageResize from '@ckeditor/ckeditor5-image/src/imageresize';
 import IndentBlock from '@ckeditor/ckeditor5-indent/src/indentblock';
 import LinkImage from '@ckeditor/ckeditor5-link/src/linkimage';
+import ListProperties from '@ckeditor/ckeditor5-list/src/listproperties';
 import Mention from '@ckeditor/ckeditor5-mention/src/mention';
 import PageBreak from '@ckeditor/ckeditor5-page-break/src/pagebreak';
 import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefromoffice';
@@ -35,47 +37,20 @@ import TableProperties from '@ckeditor/ckeditor5-table/src/tableproperties';
 import TableCaption from '@ckeditor/ckeditor5-table/src/tablecaption';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation';
 import TextPartLanguage from '@ckeditor/ckeditor5-language/src/textpartlanguage';
+import TodoList from '@ckeditor/ckeditor5-list/src/todolist';
 import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
 import WordCount from '@ckeditor/ckeditor5-word-count/src/wordcount';
 import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
-import DocumentList from '@ckeditor/ckeditor5-list/src/documentlist';
-import DocumentListProperties from '@ckeditor/ckeditor5-list/src/documentlistproperties';
-
-import { Essentials } from '@ckeditor/ckeditor5-essentials';
-import { Autoformat } from '@ckeditor/ckeditor5-autoformat';
-import { BlockQuote } from '@ckeditor/ckeditor5-block-quote';
-import { Bold, Italic } from '@ckeditor/ckeditor5-basic-styles';
-import { Heading } from '@ckeditor/ckeditor5-heading';
-import { Image, ImageCaption, ImageStyle, ImageToolbar } from '@ckeditor/ckeditor5-image';
-import { Indent } from '@ckeditor/ckeditor5-indent';
-import { Link } from '@ckeditor/ckeditor5-link';
-import { MediaEmbed } from '@ckeditor/ckeditor5-media-embed';
-import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
-import { Table, TableToolbar } from '@ckeditor/ckeditor5-table';
 
 import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config';
+
 import Style from '../../src/style';
 
 const config = {
 	plugins: [
 		Alignment,
-		Essentials,
-		Autoformat,
-		BlockQuote,
-		Bold,
-		Heading,
-		Image,
-		ImageCaption,
-		ImageStyle,
-		ImageToolbar,
-		Indent,
-		Italic,
-		Link,
-		MediaEmbed,
-		Paragraph,
-		Table,
-		TableToolbar,
+		ArticlePluginSet,
 		CloudServices,
 		Code,
 		CodeBlock,
@@ -92,8 +67,7 @@ const config = {
 		ImageUpload,
 		IndentBlock,
 		LinkImage,
-		DocumentList,
-		DocumentListProperties,
+		ListProperties,
 		Mention,
 		PageBreak,
 		PasteFromOffice,
@@ -107,6 +81,7 @@ const config = {
 		TableProperties,
 		TextPartLanguage,
 		TextTransformation,
+		TodoList,
 		Underline,
 		WordCount,
 
@@ -125,7 +100,7 @@ const config = {
 			'|',
 			'highlight', 'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor',
 			'-',
-			'bulletedList', 'numberedList',
+			'bulletedList', 'numberedList', 'todoList',
 			'|',
 			'blockQuote', 'uploadImage', 'insertTable', 'mediaEmbed', 'codeBlock',
 			'|',
@@ -171,7 +146,12 @@ const config = {
 			'imageTextAlternative', 'toggleImageCaption', '|',
 			'imageStyle:inline', 'imageStyle:wrapText', 'imageStyle:breakText', 'imageStyle:side', '|',
 			'resizeImage'
-		]
+		],
+		insert: {
+			integrations: [
+				'insertImageViaUrl'
+			]
+		}
 	},
 	placeholder: 'Type the content here!',
 	mention: {
@@ -231,36 +211,6 @@ ClassicEditor
 		style: {
 			definitions: [
 				{
-					name: 'Callout',
-					element: 'div',
-					classes: [ 'callout' ]
-				},
-				{
-					name: 'Link',
-					element: 'a',
-					classes: [ 'styled-link' ]
-				},
-				{
-					name: 'Fancy list',
-					element: 'ol',
-					classes: [ 'fancy-list' ]
-				},
-				{
-					name: 'Italic list',
-					element: 'ul',
-					classes: [ 'italic-list' ]
-				},
-				{
-					name: 'Background list item',
-					element: 'li',
-					classes: [ 'background-list-item' ]
-				},
-				{
-					name: 'Figure outline',
-					element: 'figure',
-					classes: [ 'figure-style' ]
-				},
-				{
 					name: 'Red heading',
 					element: 'h2',
 					classes: [ 'red-heading' ]
@@ -291,39 +241,14 @@ ClassicEditor
 					classes: [ 'bold-table' ]
 				},
 				{
-					name: 'Fancy table',
+					name: 'Facncy table',
 					element: 'table',
 					classes: [ 'fancy-table' ]
 				},
 				{
-					name: 'Table row',
-					element: 'tr',
-					classes: [ 'colorful-row' ]
-				},
-				{
-					name: 'Color-full cell',
+					name: 'Colorfull cell',
 					element: 'td',
 					classes: [ 'colorful-cell' ]
-				},
-				{
-					name: 'Color-full heading cell',
-					element: 'th',
-					classes: [ 'colorful-cell' ]
-				},
-				{
-					name: 'Table head',
-					element: 'thead',
-					classes: [ 'table-head' ]
-				},
-				{
-					name: 'Table body',
-					element: 'tbody',
-					classes: [ 'table-body' ]
-				},
-				{
-					name: 'Caption',
-					element: 'caption',
-					classes: [ 'fancy-caption' ]
 				},
 				{
 					name: 'Vibrant code',
@@ -335,17 +260,6 @@ ClassicEditor
 					element: 'blockquote',
 					classes: [ 'side-quote' ]
 				},
-				{
-					name: 'Code (dark)',
-					element: 'pre',
-					classes: [ 'fancy-code', 'fancy-code-dark' ]
-				},
-				{
-					name: 'Code (bright)',
-					element: 'pre',
-					classes: [ 'fancy-code', 'fancy-code-bright' ]
-				},
-
 				{
 					name: 'Marker',
 					element: 'span',

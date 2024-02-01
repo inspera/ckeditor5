@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -59,8 +59,6 @@ import contentLock from '@ckeditor/ckeditor5-restricted-editing/theme/icons/cont
 import contentUnlock from '@ckeditor/ckeditor5-restricted-editing/theme/icons/contentunlock.svg';
 
 import selectAll from '@ckeditor/ckeditor5-select-all/theme/icons/select-all.svg';
-
-import showBlocks from '@ckeditor/ckeditor5-show-blocks/theme/icons/show-blocks.svg';
 
 import sourceEditing from '@ckeditor/ckeditor5-source-editing/theme/icons/source-editing.svg';
 
@@ -131,9 +129,6 @@ const icons = {
 
 	// select-all
 	selectAll,
-
-	// show-blocks
-	showBlocks,
 
 	// source-editing
 	sourceEditing,

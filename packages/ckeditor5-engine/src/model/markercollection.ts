@@ -1,23 +1,22 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
+
+/* eslint-disable new-cap */
 
 /**
  * @module engine/model/markercollection
  */
 
 import TypeCheckable from './typecheckable';
-import LiveRange, {
-	type LiveRangeChangeContentEvent,
-	type LiveRangeChangeRangeEvent,
-	type LiveRangeChangeEvent
-} from './liverange';
+import LiveRange, { type LiveRangeChangeEvent } from './liverange';
 
 import type Position from './position';
 import type Range from './range';
 
-import { CKEditorError, EmitterMixin } from '@ckeditor/ckeditor5-utils';
+import EmitterMixin, { Emitter } from '@ckeditor/ckeditor5-utils/src/emittermixin';
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
 
 /**
  * The collection of all {@link module:engine/model/markercollection~Marker markers} attached to the document.
@@ -33,16 +32,30 @@ import { CKEditorError, EmitterMixin } from '@ckeditor/ckeditor5-utils';
  *
  * @see module:engine/model/markercollection~Marker
  */
-export default class MarkerCollection extends EmitterMixin() implements Iterable<Marker> {
+export default class MarkerCollection extends Emitter implements Iterable<Marker> {
+	private _markers: Map<string, Marker>;
+
 	/**
-	 * Stores {@link ~Marker markers} added to the collection.
+	 * Creates a markers collection.
 	 */
-	private _markers: Map<string, Marker> = new Map();
+	constructor() {
+		super();
+
+		/**
+		 * Stores {@link ~Marker markers} added to the collection.
+		 *
+		 * @private
+		 * @member {Map} #_markers
+		 */
+		this._markers = new Map();
+	}
 
 	/**
 	 * Iterable interface.
 	 *
 	 * Iterates over all {@link ~Marker markers} added to the collection.
+	 *
+	 * @returns {Iterator}
 	 */
 	public [ Symbol.iterator ](): IterableIterator<Marker> {
 		return this._markers.values();
@@ -51,8 +64,8 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 	/**
 	 * Checks if given {@link ~Marker marker} or marker name is in the collection.
 	 *
-	 * @param markerOrName Name of marker or marker instance to check.
-	 * @returns `true` if marker is in the collection, `false` otherwise.
+	 * @param {String|module:engine/model/markercollection~Marker} markerOrName Name of marker or marker instance to check.
+	 * @returns {Boolean} `true` if marker is in the collection, `false` otherwise.
 	 */
 	public has( markerOrName: string | Marker ): boolean {
 		const markerName = markerOrName instanceof Marker ? markerOrName.name : markerOrName;
@@ -63,8 +76,8 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 	/**
 	 * Returns {@link ~Marker marker} with given `markerName`.
 	 *
-	 * @param markerName Name of marker to get.
-	 * @returns Marker with given name or `null` if such marker was
+	 * @param {String} markerName Name of marker to get.
+	 * @returns {module:engine/model/markercollection~Marker|null} Marker with given name or `null` if such marker was
 	 * not added to the collection.
 	 */
 	public get( markerName: string ): Marker | null {
@@ -81,13 +94,14 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 	 * flag has changed.
 	 *
 	 * @internal
-	 * @fires update
-	 * @param markerOrName Name of marker to set or marker instance to update.
-	 * @param range Marker range.
-	 * @param managedUsingOperations Specifies whether the marker is managed using operations.
-	 * @param affectsData Specifies whether the marker affects the data produced by the data pipeline
+	 * @protected
+	 * @fires module:engine/model/markercollection~MarkerCollection#event:update
+	 * @param {String|module:engine/model/markercollection~Marker} markerOrName Name of marker to set or marker instance to update.
+	 * @param {module:engine/model/range~Range} range Marker range.
+	 * @param {Boolean} [managedUsingOperations=false] Specifies whether the marker is managed using operations.
+	 * @param {Boolean} [affectsData=false] Specifies whether the marker affects the data produced by the data pipeline
 	 * (is persisted in the editor's data).
-	 * @returns `Marker` instance which was added or updated.
+	 * @returns {module:engine/model/markercollection~Marker} `Marker` instance which was added or updated.
 	 */
 	public _set(
 		markerOrName: string | Marker,
@@ -149,9 +163,10 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 	 * Removes given {@link ~Marker marker} or a marker with given name from the `MarkerCollection`.
 	 *
 	 * @internal
-	 * @fires update
-	 * @param markerOrName Marker or name of a marker to remove.
-	 * @returns `true` if marker was found and removed, `false` otherwise.
+	 * @protected
+	 * @fires module:engine/model/markercollection~MarkerCollection#event:update
+	 * @param {String|module:engine/model/markercollection~Marker} markerOrName Marker or name of a marker to remove.
+	 * @returns {Boolean} `true` if marker was found and removed, `false` otherwise.
 	 */
 	public _remove( markerOrName: string | Marker ): boolean {
 		const markerName = markerOrName instanceof Marker ? markerOrName.name : markerOrName;
@@ -175,8 +190,9 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 	 * conversion} for the marker.
 	 *
 	 * @internal
-	 * @fires update
-	 * @param markerOrName Marker or name of a marker to refresh.
+	 * @protected
+	 * @fires module:engine/model/markercollection~MarkerCollection#event:update
+	 * @param {String|module:engine/model/markercollection~Marker} markerOrName Marker or name of a marker to refresh.
 	 */
 	public _refresh( markerOrName: string | Marker ): void {
 		const markerName = markerOrName instanceof Marker ? markerOrName.name : markerOrName;
@@ -198,6 +214,9 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 
 	/**
 	 * Returns iterator that iterates over all markers, which ranges contain given {@link module:engine/model/position~Position position}.
+	 *
+	 * @param {module:engine/model/position~Position} position
+	 * @returns {Iterable.<module:engine/model/markercollection~Marker>}
 	 */
 	public* getMarkersAtPosition( position: Position ): IterableIterator<Marker> {
 		for ( const marker of this ) {
@@ -209,6 +228,9 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 
 	/**
 	 * Returns iterator that iterates over all markers, which intersects with given {@link module:engine/model/range~Range range}.
+	 *
+	 * @param {module:engine/model/range~Range} range
+	 * @returns {Iterable.<module:engine/model/markercollection~Marker>}
 	 */
 	public* getMarkersIntersectingRange( range: Range ): Iterable<Marker> {
 		for ( const marker of this ) {
@@ -234,14 +256,15 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 	/**
 	 * Iterates over all markers that starts with given `prefix`.
 	 *
-	 * ```ts
-	 * const markerFooA = markersCollection._set( 'foo:a', rangeFooA );
-	 * const markerFooB = markersCollection._set( 'foo:b', rangeFooB );
-	 * const markerBarA = markersCollection._set( 'bar:a', rangeBarA );
-	 * const markerFooBarA = markersCollection._set( 'foobar:a', rangeFooBarA );
-	 * Array.from( markersCollection.getMarkersGroup( 'foo' ) ); // [ markerFooA, markerFooB ]
-	 * Array.from( markersCollection.getMarkersGroup( 'a' ) ); // []
-	 * ```
+	 *		const markerFooA = markersCollection.set( 'foo:a', rangeFooA );
+	 *		const markerFooB = markersCollection.set( 'foo:b', rangeFooB );
+	 *		const markerBarA = markersCollection.set( 'bar:a', rangeBarA );
+	 *		const markerFooBarA = markersCollection.set( 'foobar:a', rangeFooBarA );
+	 *		Array.from( markersCollection.getMarkersGroup( 'foo' ) ); // [ markerFooA, markerFooB ]
+	 *		Array.from( markersCollection.getMarkersGroup( 'a' ) ); // []
+	 *
+	 * @param prefix
+	 * @returns {Iterable.<module:engine/model/markercollection~Marker>}
 	 */
 	public* getMarkersGroup( prefix: string ): IterableIterator<Marker> {
 		for ( const marker of this._markers.values() ) {
@@ -253,35 +276,46 @@ export default class MarkerCollection extends EmitterMixin() implements Iterable
 
 	/**
 	 * Destroys the marker.
+	 *
+	 * @private
+	 * @param {module:engine/model/markercollection~Marker} marker Marker to destroy.
 	 */
 	private _destroyMarker( marker: Marker ): void {
 		marker.stopListening();
 		marker._detachLiveRange();
 	}
+
+	/**
+	 * Fired whenever marker is added, updated or removed from `MarkerCollection`.
+	 *
+	 * @event update
+	 * @param {module:engine/model/markercollection~Marker} marker Updated Marker.
+	 * @param {module:engine/model/range~Range|null} oldRange Marker range before the update. When is not defined it
+	 * means that marker is just added.
+	 * @param {module:engine/model/range~Range|null} newRange Marker range after update. When is not defined it
+	 * means that marker is just removed.
+	 * @param {module:engine/model/markercollection~MarkerData} oldMarkerData Data of the marker before the change.
+	 */
 }
 
+/**
+ * @typedef {Object} module:engine/model/markercollection~MarkerData
+ *
+ * @property {module:engine/model/range~Range|null} range Marker range. `null` if the marker was removed.
+ * @property {Boolean} affectsData A property defining if the marker affects data.
+ * @property {Boolean} managedUsingOperations A property defining if the marker is managed using operations.
+ */
+
 export interface MarkerData {
-
-	/**
-	 * Marker range. `null` if the marker was removed.
-	 */
 	range: Range | null;
-
-	/**
-	 * A property defining if the marker affects data.
-	 */
 	affectsData: boolean;
-
-	/**
-	 * A property defining if the marker is managed using operations.
-	 */
 	managedUsingOperations: boolean;
 }
 
 /**
- * `Marker` is a continuous part of the model (like a range), is named and represents some kind of information about the
- * marked part of the model document. In contrary to {@link module:engine/model/node~Node nodes}, which are building blocks of
- * the model document tree, markers are not stored directly in the document tree but in the
+ * `Marker` is a continuous parts of model (like a range), is named and represent some kind of information about marked
+ * part of model document. In contrary to {@link module:engine/model/node~Node nodes}, which are building blocks of
+ * model document tree, markers are not stored directly in document tree but in
  * {@link module:engine/model/model~Model#markers model markers' collection}. Still, they are document data, by giving
  * additional meaning to the part of a model document between marker start and marker end.
  *
@@ -321,15 +355,13 @@ export interface MarkerData {
  * Both type of them should be added / updated by {@link module:engine/model/writer~Writer#addMarker}
  * and removed by {@link module:engine/model/writer~Writer#removeMarker} methods.
  *
- * ```ts
- * model.change( ( writer ) => {
- * 	const marker = writer.addMarker( name, { range, usingOperation: true } );
+ *		model.change( ( writer ) => {
+ * 			const marker = writer.addMarker( name, { range, usingOperation: true } );
  *
- * 	// ...
+ * 			// ...
  *
- * 	writer.removeMarker( marker );
- * } );
- * ```
+ * 			writer.removeMarker( marker );
+ *		} );
  *
  * See {@link module:engine/model/writer~Writer} to find more examples.
  *
@@ -348,38 +380,24 @@ export interface MarkerData {
  * `Marker` instances are created and destroyed only by {@link ~MarkerCollection MarkerCollection}.
  */
 class Marker extends EmitterMixin( TypeCheckable ) {
-	/**
-	 * Marker's name.
-	 */
 	public readonly name: string;
 
-	/**
-	 * Flag indicates if the marker is managed using operations or not.
-	 *
-	 * @internal
-	 */
+	protected _liveRange: LiveRange | null;
+
+	/** @internal */
 	public _managedUsingOperations: boolean;
 
-	/**
-	 * Specifies whether the marker affects the data produced by the data pipeline
-	 * (is persisted in the editor's data).
-	 *
-	 * @internal
-	 */
+	/** @internal */
 	public _affectsData: boolean;
-
-	/**
-	 * Range marked by the marker.
-	 */
-	private _liveRange: LiveRange | null;
 
 	/**
 	 * Creates a marker instance.
 	 *
-	 * @param name Marker name.
-	 * @param liveRange Range marked by the marker.
-	 * @param managedUsingOperations Specifies whether the marker is managed using operations.
-	 * @param affectsData Specifies whether the marker affects the data produced by the data pipeline (is persisted in the editor's data).
+	 * @param {String} name Marker name.
+	 * @param {module:engine/model/liverange~LiveRange} liveRange Range marked by the marker.
+	 * @param {Boolean} managedUsingOperations Specifies whether the marker is managed using operations.
+	 * @param {Boolean} affectsData Specifies whether the marker affects the data produced by the data pipeline
+	 * (is persisted in the editor's data).
 	 */
 	constructor(
 		name: string,
@@ -389,9 +407,37 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 	) {
 		super();
 
+		/**
+		 * Marker's name.
+		 *
+		 * @readonly
+		 * @type {String}
+		 */
 		this.name = name;
+
+		/**
+		 * Range marked by the marker.
+		 *
+		 * @protected
+		 * @member {module:engine/model/liverange~LiveRange}
+		 */
 		this._liveRange = this._attachLiveRange( liveRange );
+
+		/**
+		 * Flag indicates if the marker is managed using operations or not.
+		 *
+		 * @private
+		 * @member {Boolean}
+		 */
 		this._managedUsingOperations = managedUsingOperations;
+
+		/**
+		 * Specifies whether the marker affects the data produced by the data pipeline
+		 * (is persisted in the editor's data).
+		 *
+		 * @private
+		 * @member {Boolean}
+		 */
 		this._affectsData = affectsData;
 	}
 
@@ -399,6 +445,8 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 	 * A value indicating if the marker is managed using operations.
 	 * See {@link ~Marker marker class description} to learn more about marker types.
 	 * See {@link module:engine/model/writer~Writer#addMarker}.
+	 *
+	 * @returns {Boolean}
 	 */
 	public get managedUsingOperations(): boolean {
 		if ( !this._liveRange ) {
@@ -410,6 +458,8 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 
 	/**
 	 * A value indicating if the marker changes the data.
+	 *
+	 * @returns {Boolean}
 	 */
 	public get affectsData(): boolean {
 		if ( !this._liveRange ) {
@@ -421,6 +471,8 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 
 	/**
 	 * Returns the marker data (properties defining the marker).
+	 *
+	 * @returns {module:engine/model/markercollection~MarkerData}
 	 */
 	public getData(): MarkerData {
 		return {
@@ -432,6 +484,8 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 
 	/**
 	 * Returns current marker start position.
+	 *
+	 * @returns {module:engine/model/position~Position}
 	 */
 	public getStart(): Position {
 		if ( !this._liveRange ) {
@@ -443,6 +497,8 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 
 	/**
 	 * Returns current marker end position.
+	 *
+	 * @returns {module:engine/model/position~Position}
 	 */
 	public getEnd(): Position {
 		if ( !this._liveRange ) {
@@ -461,6 +517,8 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 	 * and get `Marker` instance from {@link module:engine/model/markercollection~MarkerCollection MarkerCollection} every
 	 * time there is a need to read marker properties. This will guarantee that the marker has not been removed and
 	 * that it's data is up-to-date.
+	 *
+	 * @returns {module:engine/model/range~Range}
 	 */
 	public getRange(): Range {
 		if ( !this._liveRange ) {
@@ -474,8 +532,9 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 	 * Binds new live range to the marker and detach the old one if is attached.
 	 *
 	 * @internal
-	 * @param liveRange Live range to attach
-	 * @returns Attached live range.
+	 * @protected
+	 * @param {module:engine/model/liverange~LiveRange} liveRange Live range to attach
+	 * @returns {module:engine/model/liverange~LiveRange} Attached live range.
 	 */
 	public _attachLiveRange( liveRange: LiveRange ): LiveRange {
 		if ( this._liveRange ) {
@@ -495,6 +554,7 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 	 * Unbinds and destroys currently attached live range.
 	 *
 	 * @internal
+	 * @protected
 	 */
 	public _detachLiveRange(): void {
 		this._liveRange!.stopDelegating( 'change:range', this );
@@ -502,58 +562,58 @@ class Marker extends EmitterMixin( TypeCheckable ) {
 		this._liveRange!.detach();
 		this._liveRange = null;
 	}
+
+	/**
+	 * Fired whenever {@link ~Marker#_liveRange marker range} is changed due to changes on {@link module:engine/model/document~Document}.
+	 * This is a delegated {@link module:engine/model/liverange~LiveRange#event:change:range LiveRange change:range event}.
+	 *
+	 * When marker is removed from {@link module:engine/model/markercollection~MarkerCollection MarkerCollection},
+	 * all event listeners listening to it should be removed. It is best to do it on
+	 * {@link module:engine/model/markercollection~MarkerCollection#event:update MarkerCollection update event}.
+	 *
+	 * @see module:engine/model/liverange~LiveRange#event:change:range
+	 * @event change:range
+	 * @param {module:engine/model/range~Range} oldRange
+	 * @param {Object} data
+	 */
+
+	/**
+	 * Fired whenever change on {@link module:engine/model/document~Document} is done inside {@link ~Marker#_liveRange marker range}.
+	 * This is a delegated {@link module:engine/model/liverange~LiveRange#event:change:content LiveRange change:content event}.
+	 *
+	 * When marker is removed from {@link module:engine/model/markercollection~MarkerCollection MarkerCollection},
+	 * all event listeners listening to it should be removed. It is best to do it on
+	 * {@link module:engine/model/markercollection~MarkerCollection#event:update MarkerCollection update event}.
+	 *
+	 * @see module:engine/model/liverange~LiveRange#event:change:content
+	 * @event change:content
+	 * @param {module:engine/model/range~Range} oldRange
+	 * @param {Object} data
+	 */
 }
 
-// The magic of type inference using `is` method is centralized in `TypeCheckable` class.
-// Proper overload would interfere with that.
+/**
+ * Checks whether this object is of the given.
+ *
+ *		marker.is( 'marker' ); // -> true
+ *		marker.is( 'model:marker' ); // -> true
+ *
+ *		marker.is( 'view:element' ); // -> false
+ *		marker.is( 'documentSelection' ); // -> false
+ *
+ * {@link module:engine/model/node~Node#is Check the entire list of model objects} which implement the `is()` method.
+ *
+ * @param {String} type
+ * @returns {Boolean}
+ */
 Marker.prototype.is = function( type: string ): boolean {
 	return type === 'marker' || type === 'model:marker';
 };
 
 export type { Marker };
 
-/**
- * Fired whenever {@link ~Marker#_liveRange marker range} is changed due to changes on {@link module:engine/model/document~Document}.
- * This is a delegated {@link module:engine/model/liverange~LiveRange#event:change:range LiveRange change:range event}.
- *
- * When marker is removed from {@link module:engine/model/markercollection~MarkerCollection MarkerCollection},
- * all event listeners listening to it should be removed. It is best to do it on
- * {@link module:engine/model/markercollection~MarkerCollection#event:update MarkerCollection update event}.
- *
- * @see module:engine/model/liverange~LiveRange#event:change:range
- * @eventName ~Marker#change:range
- */
-export type MarkerChangeRangeEvent = LiveRangeChangeRangeEvent;
+export type MarkerCollectionChangeEvent = LiveRangeChangeEvent;
 
-/**
- * Fired whenever change on {@link module:engine/model/document~Document} is done inside {@link ~Marker#_liveRange marker range}.
- * This is a delegated {@link module:engine/model/liverange~LiveRange#event:change:content LiveRange change:content event}.
- *
- * When marker is removed from {@link module:engine/model/markercollection~MarkerCollection MarkerCollection},
- * all event listeners listening to it should be removed. It is best to do it on
- * {@link module:engine/model/markercollection~MarkerCollection#event:update MarkerCollection update event}.
- *
- * @see module:engine/model/liverange~LiveRange#event:change:content
- * @eventName ~Marker#change:content
- */
-export type MarkerCollectionChangeContentEvent = LiveRangeChangeContentEvent;
-
-/**
- * Describes `change:range` or `change:content` event.
- */
-export type MarkerChangeEvent = LiveRangeChangeEvent;
-
-/**
- * Fired whenever marker is added, updated or removed from `MarkerCollection`.
- *
- * @eventName ~MarkerCollection#update
- * @param marker Updated Marker.
- * @param oldRange Marker range before the update. When is not defined it
- * means that marker is just added.
- * @param newRange Marker range after update. When is not defined it
- * means that marker is just removed.
- * @param oldMarkerData Data of the marker before the change.
- */
 export type MarkerCollectionUpdateEvent = {
 	name: 'update' | `update:${ string }`;
 	args: [ marker: Marker, oldRange: Range | null, newRange: Range | null, oldMarkerData: MarkerData ];

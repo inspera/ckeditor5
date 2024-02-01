@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+# Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
 #
 #                                     !!! IMPORTANT !!!
 #
@@ -12,10 +12,9 @@
 #
 msgid ""
 msgstr ""
-"Language-Team: Albanian (https://app.transifex.com/ckeditor/teams/11143/sq/)\n"
+"Language-Team: Albanian (https://www.transifex.com/ckeditor/teams/11143/sq/)\n"
 "Language: sq\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Content-Type: text/plain; charset=UTF-8\n"
 
 msgctxt "Dropdown option label for the paragraph format."
 msgid "Paragraph"
@@ -43,20 +42,20 @@ msgstr "Nëntitulli 3"
 
 msgctxt "Dropdown option label for the heading level 4 format."
 msgid "Heading 4"
-msgstr "Titulli 4"
+msgstr ""
 
 msgctxt "Dropdown option label for the heading level 5 format."
 msgid "Heading 5"
-msgstr "Titulli 5"
+msgstr ""
 
 msgctxt "Dropdown option label for the heading level 6 format."
 msgid "Heading 6"
-msgstr "Titulli 6"
+msgstr ""
 
 msgctxt "A default value of the placeholder for the content title."
 msgid "Type your title"
-msgstr "Shkruani titullin tuaj"
+msgstr ""
 
 msgctxt "A default value of the placeholder for the content body."
 msgid "Type or paste your content here."
-msgstr "Shkruaj ose kopjo përmbajtjen këtu."
+msgstr ""

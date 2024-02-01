@@ -1,12 +1,12 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document */
 
 import Title from '../src/title';
-import Heading from '../src/heading';
+import Heading from '../src/heading.js';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import Enter from '@ckeditor/ckeditor5-enter/src/enter';
 import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
@@ -14,9 +14,7 @@ import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
 import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
 import { getData as getModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
 
-import MultiRootEditor from '@ckeditor/ckeditor5-editor-multi-root/src/multirooteditor';
-
-describe( 'Title integration with feature', () => {
+describe( 'Title integration', () => {
 	let editor, model, doc, element;
 
 	beforeEach( () => {
@@ -40,7 +38,7 @@ describe( 'Title integration with feature', () => {
 		return editor.destroy();
 	} );
 
-	describe( 'basic styles', () => {
+	describe( 'with basic styles', () => {
 		// See: https://github.com/ckeditor/ckeditor5/issues/6427
 		it( 'should work when basic styles are applied to the content', () => {
 			editor.setData( '<h1>Title</h1><p>Foo</p>' );
@@ -59,44 +57,5 @@ describe( 'Title integration with feature', () => {
 				'<title><title-content>Title</title-content></title><paragraph>[<$text bold="true">Foo</$text>]</paragraph>'
 			);
 		} );
-	} );
-} );
-
-describe( 'Title integration with multi root editor', () => {
-	let multiRoot, titlePlugin;
-
-	beforeEach( async () => {
-		multiRoot = await MultiRootEditor
-			.create( {
-				foo: '<h1>FooTitle</h1><p>Foo</p><p>Body</p>',
-				bar: '<h1>BarTitle</h1><p>Bar</p><p>Body</p>'
-			}, {
-				plugins: [ Paragraph, Heading, Enter, Title ]
-			} );
-
-		titlePlugin = multiRoot.plugins.get( Title );
-	} );
-
-	afterEach( async () => {
-		multiRoot.destroy();
-	} );
-
-	it( 'should return title value from given root', () => {
-		expect( titlePlugin.getTitle( { rootName: 'foo' } ) ).to.equal( 'FooTitle' );
-		expect( titlePlugin.getTitle( { rootName: 'bar' } ) ).to.equal( 'BarTitle' );
-	} );
-
-	it( 'should return body value from given root', () => {
-		expect( titlePlugin.getBody( { rootName: 'foo' } ) ).to.equal( '<p>Foo</p><p>Body</p>' );
-		expect( titlePlugin.getBody( { rootName: 'bar' } ) ).to.equal( '<p>Bar</p><p>Body</p>' );
-	} );
-
-	it( 'should not fix detached roots', () => {
-		multiRoot.detachRoot( 'bar' );
-
-		const barModelRoot = multiRoot.model.document.getRoot( 'bar' );
-
-		// Does not include title and body.
-		expect( barModelRoot.isEmpty ).to.be.true;
 	} );
 } );

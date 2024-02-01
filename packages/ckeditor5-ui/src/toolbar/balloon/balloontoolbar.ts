@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,36 +7,28 @@
  * @module ui/toolbar/balloon/balloontoolbar
  */
 
+import Plugin, { type PluginDependencies } from '@ckeditor/ckeditor5-core/src/plugin';
 import ContextualBalloon from '../../panel/balloon/contextualballoon';
 import ToolbarView, { type ToolbarViewGroupedItemsUpdateEvent } from '../toolbarview';
 import BalloonPanelView, { generatePositions } from '../../panel/balloon/balloonpanelview';
+import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
+import Rect from '@ckeditor/ckeditor5-utils/src/dom/rect';
 import normalizeToolbarConfig from '../normalizetoolbarconfig';
-
-import type { EditorUIReadyEvent, EditorUIUpdateEvent } from '../../editorui/editorui';
-
-import {
-	Plugin,
-	type Editor,
-	type EditorReadyEvent
-} from '@ckeditor/ckeditor5-core';
-
-import {
-	FocusTracker,
-	Rect,
-	ResizeObserver,
-	env,
-	global,
-	toUnit,
-	type ObservableChangeEvent
-} from '@ckeditor/ckeditor5-utils';
-
-import type {
-	DocumentSelection,
-	DocumentSelectionChangeRangeEvent,
-	Schema
-} from '@ckeditor/ckeditor5-engine';
-
 import { debounce, type DebouncedFunc } from 'lodash-es';
+import ResizeObserver from '@ckeditor/ckeditor5-utils/src/dom/resizeobserver';
+import toUnit from '@ckeditor/ckeditor5-utils/src/dom/tounit';
+import { env, global } from '@ckeditor/ckeditor5-utils';
+
+import type { Editor } from '@ckeditor/ckeditor5-core';
+import type { ToolbarConfig } from '@ckeditor/ckeditor5-core/src/editor/editorconfig';
+import type { EditorReadyEvent } from '@ckeditor/ckeditor5-core/src/editor/editor';
+import type { EditorUIReadyEvent, EditorUIUpdateEvent } from '@ckeditor/ckeditor5-core/src/editor/editorui';
+import type { ObservableChangeEvent } from '@ckeditor/ckeditor5-utils/src/observablemixin';
+import type {
+	default as DocumentSelection,
+	DocumentSelectionChangeRangeEvent
+} from '@ckeditor/ckeditor5-engine/src/model/documentselection';
+import type Schema from '@ckeditor/ckeditor5-engine/src/model/schema';
 
 const toPx = toUnit( 'px' );
 
@@ -44,63 +36,30 @@ const toPx = toUnit( 'px' );
  * The contextual toolbar.
  *
  * It uses the {@link module:ui/panel/balloon/contextualballoon~ContextualBalloon contextual balloon plugin}.
+ *
+ * @extends module:core/plugin~Plugin
  */
 export default class BalloonToolbar extends Plugin {
-	/**
-	 * The toolbar view displayed in the balloon.
-	 */
 	public readonly toolbarView: ToolbarView;
-
-	/**
-	 * Tracks the focus of the {@link module:ui/editorui/editorui~EditorUI#getEditableElement editable element}
-	 * and the {@link #toolbarView}. When both are blurred then the toolbar should hide.
-	 */
 	public readonly focusTracker: FocusTracker;
 
-	/**
-	 * A cached and normalized `config.balloonToolbar` object.
-	 */
 	private _balloonConfig: ReturnType<typeof normalizeToolbarConfig>;
-
-	/**
-	 * An instance of the resize observer that allows to respond to changes in editable's geometry
-	 * so the toolbar can stay within its boundaries (and group toolbar items that do not fit).
-	 *
-	 * **Note**: Used only when `shouldNotGroupWhenFull` was **not** set in the
-	 * {@link module:core/editor/editorconfig~EditorConfig#balloonToolbar configuration}.
-	 *
-	 * **Note:** Created in {@link #init}.
-	 */
-	private _resizeObserver: ResizeObserver | null = null;
-
-	/**
-	 * The contextual balloon plugin instance.
-	 */
+	private _resizeObserver: ResizeObserver | null;
 	private readonly _balloon: ContextualBalloon;
-
-	/**
-	 * Fires `_selectionChangeDebounced` event using `lodash#debounce`.
-	 *
-	 * This event is an internal plugin event which is fired 200 ms after model selection last change.
-	 * This is to makes easy test debounced action without need to use `setTimeout`.
-	 *
-	 * This function is stored as a plugin property to make possible to cancel
-	 * trailing debounced invocation on destroy.
-	 */
 	private readonly _fireSelectionChangeDebounced: DebouncedFunc<() => void>;
 
 	/**
 	 * @inheritDoc
 	 */
-	public static get pluginName() {
-		return 'BalloonToolbar' as const;
+	public static get pluginName(): 'BalloonToolbar' {
+		return 'BalloonToolbar';
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public static get requires() {
-		return [ ContextualBalloon ] as const;
+	public static get requires(): PluginDependencies {
+		return [ ContextualBalloon ];
 	}
 
 	/**
@@ -109,8 +68,28 @@ export default class BalloonToolbar extends Plugin {
 	constructor( editor: Editor ) {
 		super( editor );
 
+		/**
+		 * A cached and normalized `config.balloonToolbar` object.
+		 *
+		 * @type {module:core/editor/editorconfig~EditorConfig#balloonToolbar}
+		 * @private
+		 */
 		this._balloonConfig = normalizeToolbarConfig( editor.config.get( 'balloonToolbar' ) );
+
+		/**
+		 * The toolbar view displayed in the balloon.
+		 *
+		 * @type {module:ui/toolbar/toolbarview~ToolbarView}
+		 */
 		this.toolbarView = this._createToolbarView();
+
+		/**
+		 * Tracks the focus of the {@link module:core/editor/editorui~EditorUI#getEditableElement editable element}
+		 * and the {@link #toolbarView}. When both are blurred then the toolbar should hide.
+		 *
+		 * @readonly
+		 * @type {module:utils:focustracker~FocusTracker}
+		 */
 		this.focusTracker = new FocusTracker();
 
 		// Wait for the EditorUI#init. EditableElement is not available before.
@@ -126,7 +105,37 @@ export default class BalloonToolbar extends Plugin {
 			isContextual: true
 		} );
 
+		/**
+		 * An instance of the resize observer that allows to respond to changes in editable's geometry
+		 * so the toolbar can stay within its boundaries (and group toolbar items that do not fit).
+		 *
+		 * **Note**: Used only when `shouldNotGroupWhenFull` was **not** set in the
+		 * {@link module:core/editor/editorconfig~EditorConfig#balloonToolbar configuration}.
+		 *
+		 * **Note:** Created in {@link #init}.
+		 *
+		 * @protected
+		 * @member {module:utils/dom/resizeobserver~ResizeObserver}
+		 */
+		this._resizeObserver = null;
+
+		/**
+		 * The contextual balloon plugin instance.
+		 *
+		 * @private
+		 * @type {module:ui/panel/balloon/contextualballoon~ContextualBalloon}
+		 */
 		this._balloon = editor.plugins.get( ContextualBalloon );
+
+		/**
+		 * Fires {@link #event:_selectionChangeDebounced} event using `lodash#debounce`.
+		 *
+		 * This function is stored as a plugin property to make possible to cancel
+		 * trailing debounced invocation on destroy.
+		 *
+		 * @private
+		 * @type {Function}
+		 */
 		this._fireSelectionChangeDebounced = debounce( () => this.fire( '_selectionChangeDebounced' ), 200 );
 
 		// The appearance of the BalloonToolbar method is event–driven.
@@ -175,11 +184,11 @@ export default class BalloonToolbar extends Plugin {
 				const editableElement = editor.ui.view.editable.element!;
 
 				// Set #toolbarView's max-width on the initialization and update it on the editable resize.
-				this._resizeObserver = new ResizeObserver( editableElement, entry => {
+				this._resizeObserver = new ResizeObserver( editableElement, () => {
 					// The max-width equals 90% of the editable's width for the best user experience.
 					// The value keeps the balloon very close to the boundaries of the editable and limits the cases
 					// when the balloon juts out from the editable element it belongs to.
-					this.toolbarView.maxWidth = toPx( entry.contentRect.width * .9 );
+					this.toolbarView.maxWidth = toPx( new Rect( editableElement ).width * .9 );
 				} );
 			} );
 		}
@@ -197,6 +206,8 @@ export default class BalloonToolbar extends Plugin {
 	/**
 	 * Creates toolbar components based on given configuration.
 	 * This needs to be done when all plugins are ready.
+	 *
+	 * @inheritDoc
 	 */
 	public afterInit(): void {
 		const factory = this.editor.ui.componentFactory;
@@ -206,6 +217,9 @@ export default class BalloonToolbar extends Plugin {
 
 	/**
 	 * Creates the toolbar view instance.
+	 *
+	 * @private
+	 * @returns {module:ui/toolbar/toolbarview~ToolbarView}
 	 */
 	private _createToolbarView() {
 		const t = this.editor.locale.t;
@@ -226,7 +240,7 @@ export default class BalloonToolbar extends Plugin {
 	 *
 	 * Fires {@link #event:show} event which can be stopped to prevent the toolbar from showing up.
 	 *
-	 * @param showForCollapsedSelection When set `true`, the toolbar will show despite collapsed selection in the
+	 * @param {Boolean} [showForCollapsedSelection=false] When set `true`, the toolbar will show despite collapsed selection in the
 	 * editing view.
 	 */
 	public show( showForCollapsedSelection: boolean = false ): void {
@@ -282,6 +296,9 @@ export default class BalloonToolbar extends Plugin {
 	/**
 	 * Returns positioning options for the {@link #_balloon}. They control the way balloon is attached
 	 * to the selection.
+	 *
+	 * @private
+	 * @returns {module:utils/dom/position~Options}
 	 */
 	private _getBalloonPositionData() {
 		const editor = this.editor;
@@ -324,6 +341,8 @@ export default class BalloonToolbar extends Plugin {
 	 *
 	 * * in the geometry of the selection it is attached to (e.g. the selection moved in the viewport or expanded or shrunk),
 	 * * or the geometry of the balloon toolbar itself (e.g. the toolbar has grouped or ungrouped some items and it is shorter or longer).
+	 *
+	 * @private
 	 */
 	private _updatePosition() {
 		this._balloon.updatePosition( this._getBalloonPositionData() );
@@ -346,7 +365,25 @@ export default class BalloonToolbar extends Plugin {
 	}
 
 	/**
+	 * This event is fired just before the toolbar shows up. Stopping this event will prevent this.
+	 *
+	 * @event show
+	 */
+
+	/**
+	 * This is internal plugin event which is fired 200 ms after model selection last change.
+	 * This is to makes easy test debounced action without need to use `setTimeout`.
+	 *
+	 * @protected
+	 * @event _selectionChangeDebounced
+	 */
+
+	/**
 	 * Returns toolbar positions for the given direction of the selection.
+	 *
+	 * @private
+	 * @param {Boolean} isBackward
+	 * @returns {Array.<module:utils/dom/position~Position>}
 	 */
 	private _getBalloonPositions( isBackward: boolean ) {
 		const isSafariIniOS = env.isSafari && env.isiOS;
@@ -387,10 +424,13 @@ export default class BalloonToolbar extends Plugin {
 	}
 }
 
-/**
- * Returns "true" when the selection has multiple ranges and each range contains a selectable element
- * and nothing else.
- */
+// Returns "true" when the selection has multiple ranges and each range contains a selectable element
+// and nothing else.
+//
+// @private
+// @param {module:engine/model/selection~Selection} selection
+// @param {module:engine/model/schema~Schema} schema
+// @returns {Boolean}
 function selectionContainsOnlyMultipleSelectables( selection: DocumentSelection, schema: Schema ) {
 	// It doesn't contain multiple objects if there is only one range.
 	if ( selection.rangeCount === 1 ) {
@@ -405,11 +445,49 @@ function selectionContainsOnlyMultipleSelectables( selection: DocumentSelection,
 }
 
 /**
- * This event is fired just before the toolbar shows up. Stopping this event will prevent this.
+ * Contextual toolbar configuration. Used by the {@link module:ui/toolbar/balloon/balloontoolbar~BalloonToolbar}
+ * feature.
  *
- * @eventName ~BalloonToolbar#show
+ * ## Configuring toolbar items
+ *
+ *		const config = {
+ *			balloonToolbar: [ 'bold', 'italic', 'undo', 'redo' ]
+ *		};
+ *
+ * You can also use `'|'` to create a separator between groups of items:
+ *
+ *		const config = {
+ *			balloonToolbar: [ 'bold', 'italic', '|', 'undo', 'redo' ]
+ *		};
+ *
+ * Read also about configuring the main editor toolbar in {@link module:core/editor/editorconfig~EditorConfig#toolbar}.
+ *
+ * ## Configuring items grouping
+ *
+ * You can prevent automatic items grouping by setting the `shouldNotGroupWhenFull` option:
+ *
+ *		const config = {
+ *			balloonToolbar: {
+ *				items: [ 'bold', 'italic', 'undo', 'redo' ],
+ *				shouldNotGroupWhenFull: true
+ *			},
+ *		};
+ *
+ * @member {Array.<String>|Object} module:core/editor/editorconfig~EditorConfig#balloonToolbar
  */
-export type BalloonToolbarShowEvent = {
+declare module '@ckeditor/ckeditor5-core' {
+	interface EditorConfig {
+		balloonToolbar?: ToolbarConfig;
+	}
+}
+
+export type BaloonToolbarShowEvent = {
 	name: 'show';
 	args: [];
 };
+
+declare module '@ckeditor/ckeditor5-core' {
+	interface PluginsMap {
+		[ BalloonToolbar.pluginName ]: BalloonToolbar;
+	}
+}

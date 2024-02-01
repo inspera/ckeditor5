@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -310,8 +310,7 @@ describe( 'ClipboardPipeline feature', () => {
 			editor.enableReadOnlyMode( 'unit-test' );
 
 			viewDocument.fire( 'clipboardInput', {
-				dataTransfer: dataTransferMock,
-				method: 'paste'
+				dataTransfer: dataTransferMock
 			} );
 
 			sinon.assert.notCalled( spy );
@@ -460,29 +459,6 @@ describe( 'ClipboardPipeline feature', () => {
 	} );
 
 	describe( 'clipboard copy/cut pipeline', () => {
-		it( 'fires the outputTransformation event on the clipboardPlugin', done => {
-			const dataTransferMock = createDataTransfer();
-			const preventDefaultSpy = sinon.spy();
-
-			setModelData( editor.model, '<paragraph>a[bc</paragraph><paragraph>de]f</paragraph>' );
-
-			clipboardPlugin.on( 'outputTransformation', ( evt, data ) => {
-				expect( preventDefaultSpy.calledOnce ).to.be.true;
-
-				expect( data.method ).to.equal( 'copy' );
-				expect( data.dataTransfer ).to.equal( dataTransferMock );
-				expect( data.content ).is.instanceOf( ModelDocumentFragment );
-				expect( stringifyModel( data.content ) ).to.equal( '<paragraph>bc</paragraph><paragraph>de</paragraph>' );
-
-				done();
-			} );
-
-			viewDocument.fire( 'copy', {
-				dataTransfer: dataTransferMock,
-				preventDefault: preventDefaultSpy
-			} );
-		} );
-
 		it( 'fires clipboardOutput for copy with the selected content and correct method', done => {
 			const dataTransferMock = createDataTransfer();
 			const preventDefaultSpy = sinon.spy();

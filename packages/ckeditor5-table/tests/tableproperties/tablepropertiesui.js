@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -82,7 +82,7 @@ describe( 'table properties', () => {
 
 		describe( 'init()', () => {
 			it( 'should set a batch', () => {
-				expect( tablePropertiesUI._undoStepBatch ).to.be.undefined;
+				expect( tablePropertiesUI._undoStepBatch ).to.be.null;
 			} );
 
 			it( 'should set normalized default table properties', () => {
@@ -90,29 +90,19 @@ describe( 'table properties', () => {
 			} );
 
 			describe( '#view', () => {
-				it( 'should not be created', () => {
-					expect( tablePropertiesUI.view ).to.be.null;
-				} );
-
-				it( 'should be created on first show', () => {
-					tablePropertiesUI._showView();
+				it( 'should be created', () => {
 					expect( tablePropertiesUI.view ).to.be.instanceOf( TablePropertiesUIView );
 				} );
 
 				it( 'should be rendered', () => {
-					tablePropertiesUI._showView();
 					expect( tablePropertiesUI.view.isRendered ).to.be.true;
 				} );
 
 				it( 'should get the border colors configurations', () => {
-					tablePropertiesUI._showView();
-					tablePropertiesView = tablePropertiesUI.view;
 					expect( tablePropertiesView.options.borderColors ).to.have.length( 15 );
 				} );
 
 				it( 'should get the background colors configurations', () => {
-					tablePropertiesUI._showView();
-					tablePropertiesView = tablePropertiesUI.view;
 					expect( tablePropertiesView.options.backgroundColors ).to.have.length( 15 );
 				} );
 			} );
@@ -161,9 +151,6 @@ describe( 'table properties', () => {
 
 		describe( 'destroy()', () => {
 			it( 'should destroy the #view', () => {
-				tablePropertiesUI._showView();
-				tablePropertiesView = tablePropertiesUI.view;
-
 				const spy = sinon.spy( tablePropertiesView, 'destroy' );
 
 				tablePropertiesUI.destroy();
@@ -181,8 +168,6 @@ describe( 'table properties', () => {
 
 			it( 'should hide on #submit', () => {
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				tablePropertiesView.fire( 'submit' );
@@ -196,7 +181,6 @@ describe( 'table properties', () => {
 
 					// Show the view. New batch will be created.
 					tablePropertiesButton.fire( 'execute' );
-					tablePropertiesView = tablePropertiesUI.view;
 
 					// Cancel the view immediately.
 					tablePropertiesView.fire( 'cancel' );
@@ -209,7 +193,6 @@ describe( 'table properties', () => {
 
 					// Show the view. New batch will be created.
 					tablePropertiesButton.fire( 'execute' );
-					tablePropertiesView = tablePropertiesUI.view;
 
 					// Do the changes like a user.
 					tablePropertiesView.borderStyle = 'dotted';
@@ -244,8 +227,6 @@ describe( 'table properties', () => {
 
 				it( 'should hide the view', () => {
 					tablePropertiesButton.fire( 'execute' );
-					tablePropertiesView = tablePropertiesUI.view;
-
 					expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 					tablePropertiesView.fire( 'cancel' );
@@ -261,8 +242,6 @@ describe( 'table properties', () => {
 				};
 
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				tablePropertiesView.keystrokes.press( keyEvtData );
@@ -271,8 +250,6 @@ describe( 'table properties', () => {
 
 			it( 'should hide if the table is no longer selected on EditorUI#update', () => {
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				editor.model.change( writer => {
@@ -283,38 +260,8 @@ describe( 'table properties', () => {
 				expect( contextualBalloon.visibleView ).to.be.null;
 			} );
 
-			it( 'should not hide if the table is selected on EditorUI#update', () => {
-				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
-				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
-
-				editor.model.change( writer => {
-					// Set selection in the paragraph.
-					writer.setSelection( editor.model.document.getRoot().getChild( 0 ), 'on' );
-				} );
-
-				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
-			} );
-
-			it( 'should not hide if the selection is in the table on EditorUI#update', () => {
-				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
-				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
-
-				editor.model.change( writer => {
-					// Set selection in the paragraph.
-					writer.setSelection( editor.model.document.getRoot().getNodeByPath( [ 0, 0, 0 ] ), 'in' );
-				} );
-
-				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
-			} );
-
 			it( 'should reposition if table is still selected on on EditorUI#update', () => {
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				editor.model.change( writer => {
@@ -326,8 +273,6 @@ describe( 'table properties', () => {
 
 			it( 'should hide if clicked outside the balloon', () => {
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				document.body.dispatchEvent( new Event( 'mousedown', { bubbles: true } ) );
@@ -342,8 +287,6 @@ describe( 'table properties', () => {
 					batch = editor.model.createBatch();
 
 					tablePropertiesUI._undoStepBatch = batch;
-					tablePropertiesUI._showView();
-					tablePropertiesView = tablePropertiesUI.view;
 				} );
 
 				describe( '#borderStyle', () => {
@@ -559,8 +502,6 @@ describe( 'table properties', () => {
 
 			it( 'should create a new undoable batch for further #view cancel', () => {
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				const firstBatch = tablePropertiesUI._undoStepBatch;
@@ -580,43 +521,14 @@ describe( 'table properties', () => {
 				const spy = sinon.spy( tablePropertiesUI, 'listenTo' );
 
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
-				let count = 0;
-
-				for ( const args of spy.args ) {
-					if ( args[ 1 ] == 'update' ) {
-						expect( args[ 0 ] ).to.equal( editor.ui );
-						count++;
-					}
-				}
-
-				expect( count ).to.equal( 1 );
+				sinon.assert.calledOnce( spy );
+				sinon.assert.calledWith( spy, editor.ui, 'update' );
 			} );
 
 			describe( 'initial data', () => {
-				it( 'should not execute commands before changing the data', () => {
-					const tableBackgroundCommand = editor.commands.get( 'tableBackgroundColor' );
-					const spy = sinon.spy( tableBackgroundCommand, 'execute' );
-
-					tablePropertiesUI._showView();
-					tablePropertiesView = tablePropertiesUI.view;
-
-					expect( spy.called ).to.be.false;
-
-					tablePropertiesView.backgroundColor = 'red';
-
-					expect( spy.called ).to.be.true;
-				} );
-
 				it( 'should be set before adding the form to the the balloon to avoid unnecessary input animations', () => {
-					// Trigger lazy init.
-					tablePropertiesUI._showView();
-					tablePropertiesUI._hideView();
-					tablePropertiesView = tablePropertiesUI.view;
-
 					const balloonAddSpy = testUtils.sinon.spy( editor.plugins.get( ContextualBalloon ), 'add' );
 					const borderStyleChangeSpy = testUtils.sinon.spy();
 
@@ -640,7 +552,6 @@ describe( 'table properties', () => {
 					editor.commands.get( 'tableAlignment' ).value = 'g';
 
 					tablePropertiesButton.fire( 'execute' );
-					tablePropertiesView = tablePropertiesUI.view;
 
 					expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 					expect( tablePropertiesView ).to.include( {
@@ -664,7 +575,6 @@ describe( 'table properties', () => {
 					editor.commands.get( 'tableAlignment' ).value = null;
 
 					tablePropertiesButton.fire( 'execute' );
-					tablePropertiesView = tablePropertiesUI.view;
 
 					expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 					expect( tablePropertiesView ).to.include( {
@@ -680,11 +590,6 @@ describe( 'table properties', () => {
 			} );
 
 			it( 'should focus the form view', () => {
-				// Trigger lazy init.
-				tablePropertiesUI._showView();
-				tablePropertiesUI._hideView();
-				tablePropertiesView = tablePropertiesUI.view;
-
 				const spy = testUtils.sinon.spy( tablePropertiesView, 'focus' );
 
 				tablePropertiesButton.fire( 'execute' );
@@ -704,8 +609,6 @@ describe( 'table properties', () => {
 				const spy = testUtils.sinon.spy( tablePropertiesUI, 'stopListening' );
 
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				tablePropertiesView.fire( 'submit' );
@@ -719,8 +622,6 @@ describe( 'table properties', () => {
 				const spy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 
 				tablePropertiesView.fire( 'submit' );
@@ -736,8 +637,6 @@ describe( 'table properties', () => {
 				} );
 
 				tablePropertiesButton.fire( 'execute' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.equal( tablePropertiesView );
 			} );
 
@@ -749,22 +648,11 @@ describe( 'table properties', () => {
 				sinon.assert.calledOnce( spy );
 			} );
 
-			it( 'should not reposition the baloon if view is not visible', () => {
-				const spy = sinon.spy( contextualBalloon, 'updatePosition' );
-
-				tablePropertiesUI.view = false;
-				editor.ui.fire( 'update' );
-
-				expect( spy.called ).to.be.false;
-			} );
-
 			it( 'should hide the view and not reposition the balloon if table is no longer selected', () => {
 				const positionSpy = sinon.spy( contextualBalloon, 'updatePosition' );
 				const hideSpy = sinon.spy( tablePropertiesUI, '_hideView' );
 
 				tablePropertiesView.fire( 'submit' );
-				tablePropertiesView = tablePropertiesUI.view;
-
 				expect( contextualBalloon.visibleView ).to.be.null;
 
 				sinon.assert.calledOnce( hideSpy );
@@ -821,18 +709,6 @@ describe( 'table properties', () => {
 			} );
 
 			describe( 'init()', () => {
-				beforeEach( () => {
-					editor.model.change( writer => {
-						writer.setSelection( editor.model.document.getRoot().getChild( 0 ).getChild( 0 ).getChild( 0 ), 0 );
-					} );
-
-					// Trigger lazy init.
-					tablePropertiesUI._showView();
-					tablePropertiesUI._hideView();
-
-					tablePropertiesView = tablePropertiesUI.view;
-				} );
-
 				describe( '#view', () => {
 					it( 'should get the default table properties configurations', () => {
 						expect( tablePropertiesView.options.defaultTableProperties ).to.deep.equal( {
@@ -853,12 +729,6 @@ describe( 'table properties', () => {
 					editor.model.change( writer => {
 						writer.setSelection( editor.model.document.getRoot().getChild( 0 ).getChild( 0 ).getChild( 0 ), 0 );
 					} );
-
-					// Trigger lazy init.
-					tablePropertiesUI._showView();
-					tablePropertiesUI._hideView();
-
-					tablePropertiesView = tablePropertiesUI.view;
 				} );
 
 				describe( 'initial data', () => {
@@ -903,57 +773,6 @@ describe( 'table properties', () => {
 					} );
 				} );
 			} );
-		} );
-	} );
-
-	describe( 'table properties without color picker', () => {
-		let editor, editorElement, contextualBalloon, tablePropertiesUI;
-
-		testUtils.createSinonSandbox();
-
-		beforeEach( () => {
-			editorElement = document.createElement( 'div' );
-			document.body.appendChild( editorElement );
-
-			return ClassicTestEditor
-				.create( editorElement, {
-					plugins: [ Table, TablePropertiesEditing, TablePropertiesUI, Paragraph, Undo ],
-					initialData: '<table><tr><td>foo</td></tr></table><p>bar</p>',
-					table: {
-						tableProperties: {
-							colorPicker: false
-						}
-					}
-				} )
-				.then( newEditor => {
-					editor = newEditor;
-
-					contextualBalloon = editor.plugins.get( ContextualBalloon );
-					tablePropertiesUI = editor.plugins.get( TablePropertiesUI );
-
-					// There is no point to execute BalloonPanelView attachTo and pin methods so lets override it.
-					testUtils.sinon.stub( contextualBalloon.view, 'attachTo' ).returns( {} );
-					testUtils.sinon.stub( contextualBalloon.view, 'pin' ).returns( {} );
-				} );
-		} );
-
-		afterEach( () => {
-			editorElement.remove();
-
-			return editor.destroy();
-		} );
-
-		it( 'should define table.tableProperties.colorPicker', () => {
-			expect( editor.config.get( 'table.tableProperties.colorPicker' ) ).to.be.false;
-		} );
-
-		it( 'should render dropdown without color picker', () => {
-			tablePropertiesUI._showView();
-
-			const panelView = tablePropertiesUI.view.borderColorInput.fieldView.dropdownView.panelView;
-			const colorPicker = panelView.children.get( 0 ).colorPickerFragmentView.element;
-
-			expect( colorPicker ).to.be.null;
 		} );
 	} );
 } );

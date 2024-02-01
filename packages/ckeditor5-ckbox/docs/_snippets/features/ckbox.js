@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -11,11 +11,17 @@ ClassicEditor
 	.create( document.querySelector( '#snippet-ckbox' ), {
 		toolbar: {
 			items: [
-				'undo', 'redo',
-				'|', 'heading',
-				'|', 'bold', 'italic',
-				'|', 'link', 'uploadImage', 'ckbox', 'ckboxImageEdit', 'insertTable', 'mediaEmbed',
-				'|', 'bulletedList', 'numberedList', 'outdent', 'indent'
+				'heading',
+				'|',
+				'bold',
+				'italic',
+				'link',
+				'insertTable',
+				'|',
+				'undo',
+				'redo',
+				'|',
+				'ckbox'
 			]
 		},
 		image: {
@@ -29,9 +35,7 @@ ClassicEditor
 				'|',
 				'resizeImage:25',
 				'resizeImage:50',
-				'resizeImage:original',
-				'|',
-				'ckboxImageEdit'
+				'resizeImage:original'
 			],
 			resizeOptions: [
 				{
@@ -58,8 +62,7 @@ ClassicEditor
 			}
 		},
 		ckbox: {
-			tokenUrl: TOKEN_URL,
-			forceDemoLabel: true
+			tokenUrl: TOKEN_URL
 		}
 	} )
 	.then( editor => {

@@ -1,6 +1,5 @@
 ---
 category: examples-builds
-meta-title: Classic editor build example | CKEditor 5 Documentation
 order: 10
 toc: false
 classes: main__content--no-toc
@@ -23,19 +22,10 @@ Check out the {@link installation/getting-started/predefined-builds#installation
 
 ```js
 
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic/src/ckeditor';
 
 ClassicEditor
 	.create( document.querySelector( '#snippet-classic-editor' ), {
-		toolbar: {
-			items: [
-				'undo', 'redo',
-				'|', 'heading',
-				'|', 'bold', 'italic',
-				'|', 'link', 'insertImage', 'insertTable', 'mediaEmbed',
-				'|', 'bulletedList', 'numberedList', 'outdent', 'indent'
-			]
-		},
 		cloudServices: {
 			// All predefined builds include the Easy Image feature.
 			// Provide correct configuration values to use it.

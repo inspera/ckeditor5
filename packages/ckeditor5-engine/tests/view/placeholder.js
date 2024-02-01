@@ -1,9 +1,7 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
-
-/* globals console */
 
 import {
 	enablePlaceholder,
@@ -33,10 +31,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'foo bar baz' );
@@ -47,10 +45,10 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -62,10 +60,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div>first div</div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'foo bar baz' );
@@ -76,10 +74,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div><ui:span></ui:span><ui:span></ui:span></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'foo bar baz' );
@@ -90,10 +88,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div>[]</div><div>another div</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'foo bar baz' );
@@ -105,10 +103,10 @@ describe( 'placeholder', () => {
 			const element = viewRoot.getChild( 0 );
 			viewDocument.isFocused = false;
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			view.forceRender();
@@ -121,10 +119,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'foo bar baz' );
@@ -141,16 +139,16 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
-			element.placeholder = 'new text';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'new text'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'new text' );
@@ -161,10 +159,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 			setData( view, '<p>paragraph</p>' );
 
@@ -182,16 +180,16 @@ describe( 'placeholder', () => {
 			setData( secondView, '<div></div><div>{another div}</div>' );
 			const secondElement = secondRoot.getChild( 0 );
 
-			element.placeholder = 'first placeholder';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'first placeholder'
 			} );
 
-			secondElement.placeholder = 'second placeholder';
 			enablePlaceholder( {
 				view: secondView,
-				element: secondElement
+				element: secondElement,
+				text: 'second placeholder'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'first placeholder' );
@@ -220,10 +218,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			view.change( writer => {
@@ -242,10 +240,10 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p><p></p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -258,10 +256,10 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p><p>foobar</p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -274,17 +272,17 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo',
 				isDirectHost: false
 			} );
 
-			viewRoot.getChild( 0 ).placeholder = 'bar';
 			enablePlaceholder( {
 				view,
 				element: viewRoot.getChild( 0 ),
+				text: 'bar',
 				isDirectHost: true
 			} );
 
@@ -297,10 +295,10 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -314,10 +312,10 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p><p>foobar</p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.getChild( 0 ).placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot.getChild( 0 ),
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -330,10 +328,10 @@ describe( 'placeholder', () => {
 			setData( view, '<ui:span></ui:span>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -345,10 +343,10 @@ describe( 'placeholder', () => {
 			setData( view, '<attribute:ul><attribute:li>foo</attribute:li></attribute:ul>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -360,10 +358,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element,
+				text: 'foo bar baz',
 				keepOnFocus: true
 			} );
 
@@ -386,10 +384,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 				// Defaults: keepOnFocus = false
 			} );
 
@@ -412,10 +410,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div>[]</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element,
+				text: 'foo bar baz',
 				keepOnFocus: true
 			} );
 
@@ -442,10 +440,10 @@ describe( 'placeholder', () => {
 			setData( view, '<div></div><div>{another div}</div>' );
 			const element = viewRoot.getChild( 0 );
 
-			element.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
-				element
+				element,
+				text: 'foo bar baz'
 			} );
 
 			expect( element.getAttribute( 'data-placeholder' ) ).to.equal( 'foo bar baz' );
@@ -471,10 +469,10 @@ describe( 'placeholder', () => {
 			setData( view, '<p></p>' );
 			viewDocument.isFocused = false;
 
-			viewRoot.placeholder = 'foo bar baz';
 			enablePlaceholder( {
 				view,
 				element: viewRoot,
+				text: 'foo bar baz',
 				isDirectHost: false
 			} );
 
@@ -613,80 +611,6 @@ describe( 'placeholder', () => {
 			const element = viewRoot.getChild( 0 );
 
 			expect( needsPlaceholder( element, true ) ).to.be.false;
-		} );
-
-		it( 'should update placeholder when property in editing root is changed', () => {
-			setData( view, '<div></div><div>{another div}</div>' );
-
-			enablePlaceholder( {
-				view,
-				element: viewRoot
-			} );
-			viewRoot.placeholder = 'new placeholder';
-
-			expect( viewRoot.getAttribute( 'data-placeholder' ) ).to.equal( 'new placeholder' );
-		} );
-
-		it( 'should update placeholder when property in editing root is changed (isDirectHost=false)', () => {
-			setData( view, '<div></div><div>{another div}</div>' );
-
-			enablePlaceholder( {
-				view,
-				element: viewRoot,
-				isDirectHost: false
-			} );
-			viewRoot.placeholder = 'new placeholder';
-
-			expect( viewRoot.getChild( 0 ).getAttribute( 'data-placeholder' ) ).to.equal( 'new placeholder' );
-		} );
-
-		it( 'should through warning once if "text" is used as argument', () => {
-			sinon.stub( console, 'warn' );
-
-			setData( view, '<div></div><div>{another div}</div>' );
-
-			enablePlaceholder( {
-				view,
-				element: viewRoot,
-				isDirectHost: false,
-				text: 'foo bar'
-			} );
-
-			enablePlaceholder( {
-				view,
-				element: viewRoot,
-				isDirectHost: false,
-				text: 'foo bar baz'
-			} );
-
-			sinon.assert.calledOnce( console.warn );
-			expect( console.warn.calledWith( sinon.match( /^enableplaceholder-deprecated-text-option/ ) ) ).to.be.true;
-		} );
-
-		it( 'should set placeholder using "text" argument', () => {
-			setData( view, '<div></div><div>{another div}</div>' );
-
-			enablePlaceholder( {
-				view,
-				element: viewRoot,
-				text: 'placeholder'
-			} );
-
-			expect( viewRoot.getAttribute( 'data-placeholder' ) ).to.equal( 'placeholder' );
-		} );
-
-		it( 'should prefer element\'s placeholder value over text parameter', () => {
-			setData( view, '<div></div><div>{another div}</div>' );
-
-			enablePlaceholder( {
-				view,
-				element: viewRoot,
-				text: 'foo'
-			} );
-
-			viewRoot.placeholder = 'bar';
-
-			expect( viewRoot.getAttribute( 'data-placeholder' ) ).to.equal( 'bar' );
 		} );
 	} );
 } );

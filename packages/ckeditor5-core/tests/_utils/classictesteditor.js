@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -8,7 +8,7 @@
 import Editor from '../../src/editor/editor';
 import ElementApiMixin from '../../src/editor/utils/elementapimixin';
 import DataApiMixin from '../../src/editor/utils/dataapimixin';
-import EditorUI from '@ckeditor/ckeditor5-ui/src/editorui/editorui';
+import EditorUI from '../../src/editor/editorui';
 import BoxedEditorUIView from '@ckeditor/ckeditor5-ui/src/editorui/boxed/boxededitoruiview';
 import ElementReplacer from '@ckeditor/ckeditor5-utils/src/elementreplacer';
 import InlineEditableUIView from '@ckeditor/ckeditor5-ui/src/editableui/inline/inlineeditableuiview';
@@ -33,22 +33,8 @@ export default class ClassicTestEditor extends DataApiMixin( ElementApiMixin( Ed
 			this.sourceElement = sourceElementOrData;
 		}
 
-		// Editor in paragraph-only mode
-		const isInline = config && config.useInlineRoot;
-
-		if ( isInline ) {
-			this.model.schema.register( '$inlineRoot', {
-				isLimit: true,
-				isInline: true
-			} );
-
-			this.model.schema.extend( '$text', {
-				allowIn: '$inlineRoot'
-			} );
-		}
-
 		// Create the ("main") root element of the model tree.
-		this.model.document.createRoot( isInline ? '$inlineRoot' : '$root' );
+		this.model.document.createRoot();
 
 		this.ui = new ClassicTestEditorUI( this, new BoxedEditorUIView( this.locale ) );
 

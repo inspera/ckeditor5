@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -116,10 +116,10 @@ export function setupTestHelpers( editor ) {
 			test.test( input, output, actionCallback );
 		},
 
-		changeType( input, output, type ) {
+		changeType( input, output ) {
 			const actionCallback = selection => {
 				const element = selection.getFirstPosition().nodeAfter;
-				const newType = type || ( element.getAttribute( 'listType' ) == 'numbered' ? 'bulleted' : 'numbered' );
+				const newType = element.getAttribute( 'listType' ) == 'numbered' ? 'bulleted' : 'numbered';
 
 				model.change( writer => {
 					const itemsToChange = Array.from( selection.getSelectedBlocks() );
@@ -159,15 +159,12 @@ export function setupTestHelpers( editor ) {
 			test.test( input, output, actionCallback, testUndo );
 		},
 
-		setListAttributes( newIndentOrType, input, output ) {
-			const newIndent = typeof newIndentOrType == 'number' ? newIndentOrType : 0;
-			const newType = typeof newIndentOrType == 'string' ? newIndentOrType : 'bulleted';
-
+		setListAttributes( newIndent, input, output ) {
 			const actionCallback = selection => {
 				const element = selection.getFirstPosition().nodeAfter;
 
 				model.change( writer => {
-					writer.setAttributes( { listType: newType, listIndent: newIndent, listItemId: 'x' }, element );
+					writer.setAttributes( { listType: 'bulleted', listIndent: newIndent, listItemId: 'x' }, element );
 				} );
 			};
 
@@ -312,8 +309,6 @@ export function modelList( lines, { ignoreIdConflicts = false } = {} ) {
 	return items.join( '' );
 }
 
-modelList.defaultBlock = 'paragraph';
-
 /**
  * Returns document list pseudo markdown notation for a given document fragment or element.
  *
@@ -351,7 +346,7 @@ export function stringifyList( fragmentOrElement ) {
 function stringifyNode( node, writer ) {
 	const fragment = writer.createDocumentFragment();
 
-	if ( node.is( 'element', modelList.defaultBlock ) ) {
+	if ( node.is( 'element', 'paragraph' ) ) {
 		for ( const child of node.getChildren() ) {
 			writer.append( writer.cloneElement( child ), fragment );
 		}
@@ -371,7 +366,7 @@ function stringifyNode( node, writer ) {
 }
 
 function stringifyElement( content, listAttributes = {} ) {
-	let name = listAttributes.listItemId ? modelList.defaultBlock : 'paragraph';
+	let name = 'paragraph';
 	let elementAttributes = '';
 	let selectionBefore = '';
 	let selectionAfter = '';

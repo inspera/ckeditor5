@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,7 +7,7 @@
  * @module engine/view/observer/observer
  */
 
-import { DomEmitterMixin } from '@ckeditor/ckeditor5-utils';
+import { Emitter as DomEmitter } from '@ckeditor/ckeditor5-utils/src/dom/emittermixin';
 
 import type Document from '../document';
 import type View from '../view';
@@ -17,38 +17,45 @@ import type View from '../view';
  * processing and fire events on the {@link module:engine/view/document~Document} objects.
  * Observers can also add features to the view, for instance by updating its status or marking elements
  * which need a refresh on DOM events.
+ *
+ * @abstract
  */
-export default abstract class Observer extends DomEmitterMixin() {
-	/**
-	 * An instance of the view controller.
-	 */
+export default abstract class Observer extends DomEmitter {
 	public readonly view: View;
-
-	/**
-	 * A reference to the {@link module:engine/view/document~Document} object.
-	 */
 	public readonly document: Document;
-
-	/**
-	 * The state of the observer. If it is disabled, no events will be fired.
-	 */
-	private _isEnabled: boolean = false;
+	public readonly isEnabled: false;
 
 	/**
 	 * Creates an instance of the observer.
+	 *
+	 * @param {module:engine/view/view~View} view
 	 */
 	constructor( view: View ) {
 		super();
 
+		/**
+		 * An instance of the view controller.
+		 *
+		 * @readonly
+		 * @member {module:engine/view/view~View}
+		 */
 		this.view = view;
-		this.document = view.document;
-	}
 
-	/**
-	 * The state of the observer. If it is disabled, no events will be fired.
-	 */
-	public get isEnabled(): boolean {
-		return this._isEnabled;
+		/**
+		 * A reference to the {@link module:engine/view/document~Document} object.
+		 *
+		 * @readonly
+		 * @member {module:engine/view/document~Document}
+		 */
+		this.document = view.document;
+
+		/**
+		 * The state of the observer. If it is disabled, no events will be fired.
+		 *
+		 * @readonly
+		 * @member {Boolean}
+		 */
+		this.isEnabled = false;
 	}
 
 	/**
@@ -62,7 +69,7 @@ export default abstract class Observer extends DomEmitterMixin() {
 	 * @see module:engine/view/observer/observer~Observer#disable
 	 */
 	public enable(): void {
-		this._isEnabled = true;
+		( this as any ).isEnabled = true;
 	}
 
 	/**
@@ -72,7 +79,7 @@ export default abstract class Observer extends DomEmitterMixin() {
 	 * @see module:engine/view/observer/observer~Observer#enable
 	 */
 	public disable(): void {
-		this._isEnabled = false;
+		( this as any ).isEnabled = false;
 	}
 
 	/**
@@ -91,11 +98,11 @@ export default abstract class Observer extends DomEmitterMixin() {
 	 * {@link module:engine/view/downcastwriter~DowncastWriter#createUIElement `DowncastWriter#createUIElement()`} to ignore events
 	 * fired within a UI that should be excluded from CKEditor 5's realms.
 	 *
-	 * @param domTarget The DOM event target to check (usually an element, sometimes a text node and
+	 * @param {Node} domTarget The DOM event target to check (usually an element, sometimes a text node and
 	 * potentially sometimes a document, too).
-	 * @returns Whether this event should be ignored by the observer.
+	 * @returns {Boolean} Whether this event should be ignored by the observer.
 	 */
-	public checkShouldIgnoreEventFromTarget( domTarget: Node | null ): boolean {
+	public checkShouldIgnoreEventFromTarget( domTarget: Node ): boolean {
 		if ( domTarget && domTarget.nodeType === 3 ) {
 			domTarget = domTarget.parentNode as any;
 		}
@@ -108,20 +115,18 @@ export default abstract class Observer extends DomEmitterMixin() {
 	}
 
 	/**
-	 * Starts observing given DOM element.
+	 * Starts observing the given root element.
 	 *
-	 * @param domElement DOM element to observe.
-	 * @param name The name of the related root element.
+	 * @method #observe
+	 * @param {HTMLElement} domElement
+	 * @param {String} name The name of the root element.
 	 */
-	public abstract observe( domElement: HTMLElement, name: string ): void;
 
-	/**
-	 * Stops observing given DOM element.
-	 */
-	public abstract stopObserving( domElement: HTMLElement ): void;
+	public abstract observe( domElement: HTMLElement, name: string ): void;
 }
 
 /**
- * The constructor of {@link ~Observer} subclass.
+ * TODO
+ * The for all all classes that inherit from Observer but excludes the abstract Observer itself.
  */
 export type ObserverConstructor = new ( view: View ) => Observer;

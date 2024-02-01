@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -11,12 +11,14 @@ ClassicEditor
 	.create( document.querySelector( '#toolbar-grouping' ), {
 		toolbar: {
 			items: [
-				'undo', 'redo',
-				'|', 'heading',
-				'|', 'fontfamily', 'fontsize', 'fontColor', 'fontBackgroundColor',
-				'|', 'bold', 'italic', 'strikethrough', 'subscript', 'superscript', 'code',
-				'|', 'link', 'insertImage', 'blockQuote', 'codeBlock',
-				'|', 'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent'
+				'heading', '|',
+				'fontfamily', 'fontsize', 'fontColor', 'fontBackgroundColor', '|',
+				'bold', 'italic', 'strikethrough', 'subscript', 'superscript', 'link', '|',
+				'bulletedList', 'numberedList', 'todoList', '|',
+				'code', 'codeBlock', '|',
+				'outdent', 'indent', '|',
+				'uploadImage', 'blockQuote', '|',
+				'undo', 'redo'
 			]
 		},
 		ui: {
@@ -25,8 +27,7 @@ ClassicEditor
 			}
 		},
 		image: {
-			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side',
-				'|', 'toggleImageCaption', 'imageTextAlternative', '|', 'ckboxImageEdit' ]
+			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'toggleImageCaption', 'imageTextAlternative' ]
 		},
 		codeBlock: {
 			languages: [

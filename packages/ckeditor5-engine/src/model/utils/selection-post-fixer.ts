@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -40,25 +40,23 @@ import type Element from '../element';
  * See as an example a selection that starts in a P1 element and ends inside the text of a TD element
  * (`[` and `]` are range boundaries and `(l)` denotes an element defined as `isLimit=true`):
  *
- * ```
- * root
- *  |- element P1
- *  |   |- "foo"                                      root
- *  |- element TABLE (l)                   P1         TABLE             P2
- *  |   |- element TR (l)                 f o[o     TR      TR         b a r
- *  |   |   |- element TD (l)                       TD      TD
- *  |   |       |- "aaa"                          a]a a    b b b
- *  |   |- element TR (l)
- *  |   |   |- element TD (l)                           ||
- *  |   |       |- "bbb"                                ||
- *  |- element P2                                       VV
- *  |   |- "bar"
- *                                                    root
- *                                         P1         TABLE]            P2
- *                                        f o[o     TR      TR         b a r
- *                                                  TD      TD
- *                                                a a a    b b b
- * ```
+ *		root
+ *		 |- element P1
+ *		 |   |- "foo"                                      root
+ *		 |- element TABLE (l)                   P1         TABLE             P2
+ *		 |   |- element TR (l)                 f o[o     TR      TR         b a r
+ *		 |   |   |- element TD (l)                       TD      TD
+ *		 |   |       |- "aaa"                          a]a a    b b b
+ *		 |   |- element TR (l)
+ *		 |   |   |- element TD (l)                           ||
+ *		 |   |       |- "bbb"                                ||
+ *		 |- element P2                                       VV
+ *		 |   |- "bar"
+ *		                                                   root
+ *		                                        P1         TABLE]            P2
+ *		                                       f o[o     TR      TR         b a r
+ *		                                                 TD      TD
+ *		                                               a a a    b b b
  *
  * In the example above, the TABLE, TR and TD are defined as `isLimit=true` in the schema. The range which is not contained within
  * a single limit element must be expanded to select the outermost limit element. The range end is inside the text node of the TD element.
@@ -67,14 +65,17 @@ import type Element from '../element';
  *
  * **Note** If the selection contains multiple ranges, the method returns a minimal set of ranges that are not intersecting after expanding
  * them to select `isLimit=true` elements.
+ *
+ * @param {module:engine/model/model~Model} model
  */
 export function injectSelectionPostFixer( model: Model ): void {
 	model.document.registerPostFixer( writer => selectionPostFixer( writer, model ) );
 }
 
-/**
- * The selection post-fixer.
- */
+// The selection post-fixer.
+//
+// @param {module:engine/model/writer~Writer} writer
+// @param {module:engine/model/model~Model} model
 function selectionPostFixer( writer: Writer, model: Model ): boolean {
 	const selection = model.document.selection;
 	const schema = model.schema;
@@ -111,14 +112,12 @@ function selectionPostFixer( writer: Writer, model: Model ): boolean {
 	return false;
 }
 
-/**
- * Tries fixing a range if it's incorrect.
- *
- * **Note:** This helper is used by the selection post-fixer and to fix the `beforeinput` target ranges.
- *
- * @returns Returns fixed range or null if range is valid.
- */
-export function tryFixingRange( range: Range, schema: Schema ): Range | null {
+// Tries fixing a range if it's incorrect.
+//
+// @param {module:engine/model/range~Range} range
+// @param {module:engine/model/schema~Schema} schema
+// @returns {module:engine/model/range~Range|null} Returns fixed range or null if range is valid.
+function tryFixingRange( range: Range, schema: Schema ) {
 	if ( range.isCollapsed ) {
 		return tryFixingCollapsedRange( range, schema );
 	}
@@ -126,14 +125,13 @@ export function tryFixingRange( range: Range, schema: Schema ): Range | null {
 	return tryFixingNonCollapsedRage( range, schema );
 }
 
-/**
- * Tries to fix collapsed ranges.
- *
- * * Fixes situation when a range is in a place where $text is not allowed
- *
- * @param range Collapsed range to fix.
- * @returns Returns fixed range or null if range is valid.
- */
+// Tries to fix collapsed ranges.
+//
+// * Fixes situation when a range is in a place where $text is not allowed
+//
+// @param {module:engine/model/range~Range} range Collapsed range to fix.
+// @param {module:engine/model/schema~Schema} schema
+// @returns {module:engine/model/range~Range|null} Returns fixed range or null if range is valid.
 function tryFixingCollapsedRange( range: Range, schema: Schema ) {
 	const originalPosition = range.start;
 
@@ -167,12 +165,11 @@ function tryFixingCollapsedRange( range: Range, schema: Schema ) {
 	return new Range( fixedPosition );
 }
 
-/**
- * Tries to fix an expanded range.
- *
- * @param range Expanded range to fix.
- * @returns Returns fixed range or null if range is valid.
- */
+// Tries to fix an expanded range.
+//
+// @param {module:engine/model/range~Range} range Expanded range to fix.
+// @param {module:engine/model/schema~Schema} schema
+// @returns {module:engine/model/range~Range|null} Returns fixed range or null if range is valid.
 function tryFixingNonCollapsedRage( range: Range, schema: Schema ) {
 	const { start, end } = range;
 
@@ -242,9 +239,11 @@ function tryFixingNonCollapsedRage( range: Range, schema: Schema ) {
 	return null;
 }
 
-/**
- * Finds the outer-most ancestor.
- */
+// Finds the outer-most ancestor.
+//
+// @param {module:engine/model/node~Node} startingNode
+// @param {module:engine/model/schema~Schema} schema
+// @returns {module:engine/model/node~Node}
 function findOutermostLimitAncestor( startingNode: Node, schema: Schema ): Node {
 	let isLimitNode = startingNode;
 	let parent: Node | DocumentFragment = isLimitNode;
@@ -258,9 +257,12 @@ function findOutermostLimitAncestor( startingNode: Node, schema: Schema ): Node 
 	return isLimitNode;
 }
 
-/**
- * Checks whether any of range boundaries is placed around non-limit elements.
- */
+// Checks whether any of range boundaries is placed around non-limit elements.
+//
+// @param {module:engine/model/position~Position} start
+// @param {module:engine/model/position~Position} end
+// @param {module:engine/model/schema~Schema} schema
+// @returns {Boolean}
 function checkSelectionOnNonLimitElements( start: Position, end: Position, schema: Schema ) {
 	const startIsOnBlock = ( start.nodeAfter && !schema.isLimit( start.nodeAfter ) ) || schema.checkChild( start, '$text' );
 	const endIsOnBlock = ( end.nodeBefore && !schema.isLimit( end.nodeBefore ) ) || schema.checkChild( end, '$text' );
@@ -272,8 +274,8 @@ function checkSelectionOnNonLimitElements( start: Position, end: Position, schem
 /**
  * Returns a minimal non-intersecting array of ranges without duplicates.
  *
- * @param ranges Ranges to merge.
- * @returns Array of unique and non-intersecting ranges.
+ * @param {Array.<module:engine/model/range~Range>} Ranges to merge.
+ * @returns {Array.<module:engine/model/range~Range>} Array of unique and nonIntersecting ranges.
  */
 export function mergeIntersectingRanges( ranges: Array<Range> ): Array<Range> {
 	const rangesToMerge = [ ...ranges ];
@@ -308,9 +310,11 @@ export function mergeIntersectingRanges( ranges: Array<Range> ): Array<Range> {
 	return nonIntersectingRanges;
 }
 
-/**
- * Checks if node exists and if it's a selectable.
- */
+// Checks if node exists and if it's a selectable.
+//
+// @param {module:engine/model/node~Node} node
+// @param {module:engine/model/schema~Schema} schema
+// @returns {Boolean}
 function isSelectable( node: Node, schema: Schema ) {
 	return node && schema.isSelectable( node );
 }

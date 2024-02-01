@@ -1,19 +1,16 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* eslint-env node */
 
-const fs = require( 'fs/promises' );
 const path = require( 'path' );
 const mkdirp = require( 'mkdirp' );
 const webpack = require( 'webpack' );
 const { styles } = require( '@ckeditor/ckeditor5-dev-utils' );
-const { getLastFromChangelog } = require( '@ckeditor/ckeditor5-dev-release-tools' );
-const { loaders } = require( '@ckeditor/ckeditor5-dev-utils' );
-
-const { getCkeditor5Plugins, normalizePath, addTypeScriptLoader } = require( './utils' );
+const { getLastFromChangelog } = require( '@ckeditor/ckeditor5-dev-env/lib/release-tools/utils/versions' );
+const { writeFile, getCkeditor5Plugins, normalizePath } = require( './utils' );
 const postCssContentStylesPlugin = require( './list-content-styles-plugin' );
 
 const ROOT_DIRECTORY = path.join( __dirname, '..', '..' );
@@ -40,7 +37,7 @@ module.exports = () => {
 	return new Promise( resolve => {
 		getCkeditor5Plugins()
 			.then( ckeditor5Modules => {
-				return mkdirp( DESTINATION_DIRECTORY ).then( () => generateCKEditor5Source( ckeditor5Modules, ROOT_DIRECTORY ) );
+				return mkdirp( DESTINATION_DIRECTORY ).then( () => generateCKEditor5Source( ckeditor5Modules ) );
 			} )
 			.then( () => {
 				const webpackConfig = getWebpackConfig();
@@ -138,8 +135,8 @@ module.exports = () => {
 				data += '\n';
 				data += atRulesDefinitions.join( '\n' );
 
-				return fs.writeFile( OUTPUT_FILE_PATH, data )
-					.then( resolve );
+				writeFile( OUTPUT_FILE_PATH, data );
+				resolve();
 			} )
 			.then( () => {
 				console.log( `Content styles have been extracted to ${ OUTPUT_FILE_PATH }` );
@@ -164,18 +161,7 @@ function getWebpackConfig() {
 
 	postCssConfig.plugins.push( postCssContentStylesPlugin( contentRules ) );
 
-	const cssLoader = loaders.getStylesLoader( {
-		skipPostCssLoader: true
-	} );
-
-	cssLoader.use.push( {
-		loader: 'postcss-loader',
-		options: {
-			postcssOptions: postCssConfig
-		}
-	} );
-
-	const webpackConfig = {
+	return {
 		mode: 'development',
 		devtool: 'source-map',
 		entry: {
@@ -194,15 +180,30 @@ function getWebpackConfig() {
 		},
 		module: {
 			rules: [
-				loaders.getIconsLoader(),
-				cssLoader
+				{
+					test: /\.svg$/,
+					use: [ 'raw-loader' ]
+				},
+				{
+					test: /\.css$/,
+					use: [
+						'style-loader',
+						'css-loader',
+						{
+							loader: 'postcss-loader',
+							options: {
+								postcssOptions: postCssConfig
+							}
+						}
+					]
+				},
+				{
+					test: /\.ts$/,
+					use: [ 'ts-loader' ]
+				}
 			]
 		}
 	};
-
-	addTypeScriptLoader( webpackConfig, 'tsconfig.docs.json' );
-
-	return webpackConfig;
 }
 
 /**
@@ -271,15 +272,7 @@ function transformCssRules( rules ) {
 				} )
 				.join( '\n' );
 
-			let cssPath;
-
-			if ( rule.file.includes( 'node_modules' ) ) {
-				cssPath = rule.file.replace( /(.*)(@ckeditor\/ckeditor5-)/, '$2' );
-			} else {
-				cssPath = rule.file.replace( packagesPath, '@ckeditor' );
-			}
-
-			return `/* ${ cssPath } */\n${ css }`;
+			return `/* ${ rule.file.replace( packagesPath + path.sep, '' ) } */\n${ css }`;
 		} )
 		.filter( rule => {
 			// 1st: path to the CSS file, 2nd: selector definition - start block, 3rd: end block
@@ -293,16 +286,13 @@ function transformCssRules( rules ) {
  * Generates a source file that will be used to build the editor.
  *
  * @param {Array.<String>} ckeditor5Modules Paths to CKEditor 5 modules.
- * @param {String} cwd
  * @returns {Promise>}
  */
-function generateCKEditor5Source( ckeditor5Modules, cwd ) {
+function generateCKEditor5Source( ckeditor5Modules ) {
 	ckeditor5Modules = ckeditor5Modules.map( modulePath => {
-		const pluginName = capitalize( path.basename( modulePath.replace( /.[jt]s$/, '' ) ) );
+		const pluginName = capitalize( path.basename( modulePath, '.js' ) );
 		return { modulePath, pluginName };
 	} );
-
-	const classicEditorImportPath = path.join( cwd, 'node_modules', '@ckeditor', 'ckeditor5-editor-classic', 'src', 'classiceditor' );
 
 	const sourceFileContent = [
 		'/**',
@@ -311,7 +301,7 @@ function generateCKEditor5Source( ckeditor5Modules, cwd ) {
 		' */',
 		'',
 		'// The editor creator to use.',
-		`import ClassicEditorBase from '${ normalizePath( classicEditorImportPath ) }';`,
+		'import ClassicEditorBase from \'@ckeditor/ckeditor5-editor-classic/src/classiceditor\';',
 		''
 	];
 
@@ -331,7 +321,7 @@ function generateCKEditor5Source( ckeditor5Modules, cwd ) {
 
 	sourceFileContent.push( '];' );
 
-	return fs.writeFile( path.join( DESTINATION_DIRECTORY, 'source.js' ), sourceFileContent.join( '\n' ) )
+	return writeFile( path.join( DESTINATION_DIRECTORY, 'source.js' ), sourceFileContent.join( '\n' ) )
 		.then( () => ckeditor5Modules );
 
 	function capitalize( value ) {

@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -8,10 +8,9 @@
 const path = require( 'path' );
 const webpack = require( 'webpack' );
 const TerserPlugin = require( 'terser-webpack-plugin' );
-const FooterPlugin = require( './webpack-footer-plugin' );
-const { bundler, loaders } = require( '@ckeditor/ckeditor5-dev-utils' );
-const { CKEditorTranslationsPlugin } = require( '@ckeditor/ckeditor5-dev-translations' );
-const { addTypeScriptLoader } = require( '../docs/utils' );
+const WrapperPlugin = require( 'wrapper-webpack-plugin' );
+const { bundler, styles } = require( '@ckeditor/ckeditor5-dev-utils' );
+const CKEditorWebpackPlugin = require( '@ckeditor/ckeditor5-dev-webpack-plugin' );
 
 const ROOT_DIRECTORY = path.resolve( __dirname, '..', '..' );
 const IS_DEVELOPMENT_MODE = process.argv.includes( '--mode=development' );
@@ -43,8 +42,7 @@ function loadCKEditor5modules( window ) {
 		'typing',
 		'undo',
 		'upload',
-		'widget',
-		'watchdog'
+		'widget'
 	];
 
 	for ( const item of dllPackages ) {
@@ -74,8 +72,7 @@ const webpackConfig = {
 
 		// Other, common packages:
 		'./src/upload.js',
-		'./src/widget.js',
-		'./src/watchdog.js'
+		'./src/widget.js'
 	],
 	optimization: {
 		minimize: false,
@@ -88,7 +85,7 @@ const webpackConfig = {
 		libraryTarget: 'window'
 	},
 	plugins: [
-		new CKEditorTranslationsPlugin( {
+		new CKEditorWebpackPlugin( {
 			// UI language. Language codes follow the https://en.wikipedia.org/wiki/ISO_639-1 format.
 			language: 'en',
 			additionalLanguages: 'all',
@@ -105,26 +102,52 @@ const webpackConfig = {
 			format: true,
 			entryOnly: true
 		} ),
-		new FooterPlugin(
-			`( ( fn, root ) => fn( root ) )( ${ loadCKEditor5modules.toString() }, window );`
-		)
+		new WrapperPlugin( {
+			footer: `( ( fn, root ) => fn( root ) )( ${ loadCKEditor5modules.toString() }, window );`
+		} )
 	],
 	resolve: {
 		extensions: [ '.ts', '.js', '.json' ]
 	},
 	module: {
 		rules: [
-			loaders.getIconsLoader( { matchExtensionOnly: true } ),
-			loaders.getStylesLoader( {
-				themePath: require.resolve( '@ckeditor/ckeditor5-theme-lark' ),
-				minify: true
-			} )
-			// TypeScript is injected by the `addTypeScriptLoader()` function.
+			{
+				test: /\.svg$/,
+				use: [ 'raw-loader' ]
+			},
+			{
+				test: /\.css$/,
+				use: [
+					{
+						loader: 'style-loader',
+						options: {
+							injectType: 'singletonStyleTag',
+							attributes: {
+								'data-cke': true
+							}
+						}
+					},
+					'css-loader',
+					{
+						loader: 'postcss-loader',
+						options: {
+							postcssOptions: styles.getPostCssConfig( {
+								themeImporter: {
+									themePath: require.resolve( '@ckeditor/ckeditor5-theme-lark' )
+								},
+								minify: true
+							} )
+						}
+					}
+				]
+			},
+			{
+				test: /\.ts$/,
+				use: [ 'ts-loader' ]
+			}
 		]
 	}
 };
-
-addTypeScriptLoader( webpackConfig, 'tsconfig.dll.json' );
 
 if ( !IS_DEVELOPMENT_MODE ) {
 	webpackConfig.optimization.minimize = true;
