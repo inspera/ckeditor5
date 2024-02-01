@@ -1,37 +1,24 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-/* globals window, document, console, ClassicEditor, DocumentList, DocumentListProperties, ImageResize */
+/* globals window, document, console, ClassicEditor, DocumentList, DocumentListProperties, TodoDocumentList, ImageResize */
 
 import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config';
 
-/* import DocumentList from '@ckeditor/ckeditor5-list/src/documentlist'; */
+/* import { DocumentList, TodoDocumentList } from '@ckeditor/ckeditor5-list'; */
 
 ClassicEditor
 	.create( document.querySelector( '#snippet-lists-document' ), {
 		removePlugins: [ 'List' ],
-		extraPlugins: [ DocumentList, DocumentListProperties, ImageResize ],
+		extraPlugins: [ DocumentList, DocumentListProperties, TodoDocumentList, ImageResize ],
 		toolbar: {
 			items: [
-				'heading',
-				'|',
-				'bold',
-				'italic',
-				'|',
-				'numberedList',
-				'bulletedList',
-				'|',
-				'outdent',
-				'indent',
-				'|',
-				'link',
-				'uploadImage',
-				'insertTable',
-				'|',
-				'undo',
-				'redo'
+				'undo', 'redo', '|', 'heading',
+				'|', 'bold', 'italic',
+				'|', 'link', 'insertImage', 'insertTable', 'mediaEmbed',
+				'|', 'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent'
 			]
 		},
 		ui: {
@@ -46,7 +33,9 @@ ClassicEditor
 				'imageStyle:breakText',
 				'|',
 				'toggleImageCaption',
-				'imageTextAlternative'
+				'imageTextAlternative',
+				'|',
+				'ckboxImageEdit'
 			]
 		},
 		table: {
@@ -54,7 +43,9 @@ ClassicEditor
 		},
 		list: {
 			properties: {
-				styles: true
+				styles: true,
+				startIndex: true,
+				reversed: true
 			}
 		},
 		cloudServices: CS_CONFIG
