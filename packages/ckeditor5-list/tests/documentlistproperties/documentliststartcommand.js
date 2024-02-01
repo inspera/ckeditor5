@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -59,12 +59,6 @@ describe( 'DocumentListStartCommand', () => {
 
 		it( 'should be false if selection is inside a listItem (listType: bulleted)', () => {
 			setData( model, modelList( [ '* Foo[]' ] ) );
-
-			expect( listStartCommand.isEnabled ).to.be.false;
-		} );
-
-		it( 'should be false if selection is inside a listItem (listType: todo)', () => {
-			setData( model, '<paragraph listType="todo" listItemId="a" listIndent="0">foo[]</paragraph>' );
 
 			expect( listStartCommand.isEnabled ).to.be.false;
 		} );
@@ -148,9 +142,9 @@ describe( 'DocumentListStartCommand', () => {
 
 		it( 'should return the value of `listStart` attribute from a list where the selection starts (selection over nested list)', () => {
 			setData( model, modelList( `
-				# 1. First {start:2}
-				  # 1.1. [Second {start:3}
-				# 2. Third]
+				# 1. {start:2}
+				  # 1.1.[ {start:3}
+				# 2.]
 			` ) );
 
 			expect( listStartCommand.value ).to.equal( 3 );
@@ -385,22 +379,6 @@ describe( 'DocumentListStartCommand', () => {
 			setData( model, modelList( [ '# 1.[] {start:2}' ] ) );
 
 			listStartCommand.execute( {} );
-
-			expect( getData( model ) ).to.equalMarkup( modelList( [ '# 1.[] {start:1}' ] ) );
-		} );
-
-		it( 'should allow 0 as start index', () => {
-			setData( model, modelList( [ '# 1.[] {start:1}' ] ) );
-
-			listStartCommand.execute( { startIndex: 0 } );
-
-			expect( getData( model ) ).to.equalMarkup( modelList( [ '# 1.[] {start:0}' ] ) );
-		} );
-
-		it( 'should set start index to 1 if attempted to set a negative number', () => {
-			setData( model, modelList( [ '# 1.[] {start:1}' ] ) );
-
-			listStartCommand.execute( { startIndex: -2 } );
 
 			expect( getData( model ) ).to.equalMarkup( modelList( [ '# 1.[] {start:1}' ] ) );
 		} );

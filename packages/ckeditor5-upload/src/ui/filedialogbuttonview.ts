@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,9 +7,11 @@
  * @module upload/ui/filedialogbuttonview
  */
 
-import { ButtonView, View, type ButtonExecuteEvent } from '@ckeditor/ckeditor5-ui';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
+import View from '@ckeditor/ckeditor5-ui/src/view';
 
 import type { Locale } from '@ckeditor/ckeditor5-utils';
+import type { ButtonExecuteEvent } from '@ckeditor/ckeditor5-ui/src/button/button';
 
 /**
  * The file dialog button view.
@@ -17,52 +19,33 @@ import type { Locale } from '@ckeditor/ckeditor5-utils';
  * This component provides a button that opens the native file selection dialog.
  * It can be used to implement the UI of a file upload feature.
  *
- * ```ts
- * const view = new FileDialogButtonView( locale );
+ *		const view = new FileDialogButtonView( locale );
  *
- * view.set( {
- * 	acceptedType: 'image/*',
- * 	allowMultipleFiles: true
- * 	label: t( 'Insert image' ),
- * 	icon: imageIcon,
- * 	tooltip: true
- * } );
+ *		view.set( {
+ *			acceptedType: 'image/*',
+ *			allowMultipleFiles: true
+ *		} );
  *
- * view.on( 'done', ( evt, files ) => {
- * 	for ( const file of Array.from( files ) ) {
- * 		console.log( 'Selected file', file );
- * 	}
- * } );
- * ```
+ *		view.buttonView.set( {
+ *			label: t( 'Insert image' ),
+ *			icon: imageIcon,
+ *			tooltip: true
+ *		} );
+ *
+ *		view.on( 'done', ( evt, files ) => {
+ *			for ( const file of Array.from( files ) ) {
+ *				console.log( 'Selected file', file );
+ *			}
+ *		} );
+ *
+ * @extends module:ui/view~View
  */
-export default class FileDialogButtonView extends ButtonView {
-	/**
-	 * The button view of the component.
-	 *
-	 * @deprecated
-	 */
+export default class FileDialogButtonView extends View {
 	public buttonView: ButtonView;
 
-	/**
-	 * A hidden `<input>` view used to execute file dialog.
-	 */
 	private _fileInputView: FileInputView;
 
-	/**
-	 * Accepted file types. Can be provided in form of file extensions, media type or one of:
-	 * * `audio/*`,
-	 * * `video/*`,
-	 * * `image/*`.
-	 *
-	 * @observable
-	 */
 	declare public acceptedType: string;
-
-	/**
-	 * Indicates if multiple files can be selected. Defaults to `true`.
-	 *
-	 * @observable
-	 */
 	declare public allowMultipleFiles: boolean;
 
 	/**
@@ -71,55 +54,86 @@ export default class FileDialogButtonView extends ButtonView {
 	constructor( locale?: Locale ) {
 		super( locale );
 
-		// For backward compatibility.
-		this.buttonView = this;
+		/**
+		 * The button view of the component.
+		 *
+		 * @member {module:ui/button/buttonview~ButtonView}
+		 */
+		this.buttonView = new ButtonView( locale );
 
+		/**
+		 * A hidden `<input>` view used to execute file dialog.
+		 *
+		 * @protected
+		 * @member {module:upload/ui/filedialogbuttonview~FileInputView}
+		 */
 		this._fileInputView = new FileInputView( locale );
+
+		/**
+		 * Accepted file types. Can be provided in form of file extensions, media type or one of:
+		 * * `audio/*`,
+		 * * `video/*`,
+		 * * `image/*`.
+		 *
+		 * @observable
+		 * @member {String} #acceptedType
+		 */
 		this._fileInputView.bind( 'acceptedType' ).to( this );
+
+		/**
+		 * Indicates if multiple files can be selected. Defaults to `true`.
+		 *
+		 * @observable
+		 * @member {Boolean} #allowMultipleFiles
+		 */
 		this._fileInputView.bind( 'allowMultipleFiles' ).to( this );
 
+		/**
+		 * Fired when file dialog is closed with file selected.
+		 *
+		 *		view.on( 'done', ( evt, files ) => {
+		 *			for ( const file of files ) {
+		 *				console.log( 'Selected file', file );
+		 *			}
+		 *		}
+		 *
+		 * @event done
+		 * @param {Array.<File>} files Array of selected files.
+		 */
 		this._fileInputView.delegate( 'done' ).to( this );
 
-		this.on<ButtonExecuteEvent>( 'execute', () => {
-			this._fileInputView.open();
-		} );
-
-		this.extendTemplate( {
+		this.setTemplate( {
+			tag: 'span',
 			attributes: {
 				class: 'ck-file-dialog-button'
-			}
+			},
+			children: [
+				this.buttonView,
+				this._fileInputView
+			]
+		} );
+
+		this.buttonView.on<ButtonExecuteEvent>( 'execute', () => {
+			this._fileInputView.open();
 		} );
 	}
 
 	/**
-	 * @inheritDoc
+	 * Focuses the {@link #buttonView}.
 	 */
-	public override render(): void {
-		super.render();
-
-		this.children.add( this._fileInputView );
+	public focus(): void {
+		this.buttonView.focus();
 	}
 }
 
 /**
  * The hidden file input view class.
+ *
+ * @private
+ * @extends module:ui/view~View
  */
 class FileInputView extends View<HTMLInputElement> {
-	/**
-	 * Accepted file types. Can be provided in form of file extensions, media type or one of:
-	 * * `audio/*`,
-	 * * `video/*`,
-	 * * `image/*`.
-	 *
-	 * @observable
-	 */
 	declare public acceptedType?: string;
-
-	/**
-	 * Indicates if multiple files can be selected. Defaults to `false`.
-	 *
-	 * @observable
-	 */
 	declare public allowMultipleFiles: boolean;
 
 	/**
@@ -128,7 +142,23 @@ class FileInputView extends View<HTMLInputElement> {
 	constructor( locale?: Locale ) {
 		super( locale );
 
+		/**
+		 * Accepted file types. Can be provided in form of file extensions, media type or one of:
+		 * * `audio/*`,
+		 * * `video/*`,
+		 * * `image/*`.
+		 *
+		 * @observable
+		 * @member {String} #acceptedType
+		 */
 		this.set( 'acceptedType', undefined );
+
+		/**
+		 * Indicates if multiple files can be selected. Defaults to `false`.
+		 *
+		 * @observable
+		 * @member {Boolean} #allowMultipleFiles
+		 */
 		this.set( 'allowMultipleFiles', false );
 
 		const bind = this.bindTemplate;
@@ -148,9 +178,9 @@ class FileInputView extends View<HTMLInputElement> {
 
 			on: {
 				// Removing from code coverage since we cannot programmatically set input element files.
-				change: bind.to( /* istanbul ignore next -- @preserve */ () => {
+				change: bind.to( /* istanbul ignore next */ () => {
 					if ( this.element && this.element.files && this.element.files.length ) {
-						this.fire<FileInputViewDoneEvent>( 'done', this.element.files );
+						this.fire( 'done', this.element.files );
 					}
 
 					this.element!.value = '';
@@ -166,19 +196,3 @@ class FileInputView extends View<HTMLInputElement> {
 		this.element!.click();
 	}
 }
-
-/**
- * Fired when file dialog is closed with file selected.
- *
- * ```ts
- * view.on( 'done', ( evt, files ) => {
- * 	for ( const file of files ) {
- * 		console.log( 'Selected file', file );
- * 	}
- * }
- * ```
- */
-export type FileInputViewDoneEvent = {
-	name: 'done';
-	args: [ files: FileList ];
-};

@@ -1,9 +1,9 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-/* globals Event, document */
+/* globals Event */
 
 import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
 import ButtonView from '../../src/button/buttonview';
@@ -11,7 +11,6 @@ import IconView from '../../src/icon/iconview';
 import View from '../../src/view';
 import ViewCollection from '../../src/viewcollection';
 import env from '@ckeditor/ckeditor5-utils/src/env';
-import { ButtonLabelView } from '../../src';
 
 describe( 'ButtonView', () => {
 	let locale, view;
@@ -46,64 +45,6 @@ describe( 'ButtonView', () => {
 
 		it( 'creates #iconView', () => {
 			expect( view.iconView ).to.be.instanceOf( IconView );
-		} );
-
-		describe( 'label', () => {
-			it( 'uses ButtonLabelView by default', () => {
-				expect( view.labelView ).to.be.instanceOf( ButtonLabelView );
-
-				view.set( {
-					labelStyle: 'color: red',
-					label: 'bar'
-				} );
-
-				expect( view.labelView.id ).to.equal( view.element.getAttribute( 'aria-labelledby' ) );
-				expect( view.labelView.element.getAttribute( 'style' ) ).to.equal( 'color: red' );
-				expect( view.labelView.element.textContent ).to.equal( 'bar' );
-			} );
-
-			it( 'accepts a custom label instance that implements the same button label interface', () => {
-				class CustomLabel extends View {
-					constructor() {
-						super();
-
-						const bind = this.bindTemplate;
-
-						this.set( {
-							text: undefined,
-							style: undefined,
-							id: undefined
-						} );
-
-						this.setTemplate( {
-							tag: 'span',
-							attributes: {
-								id: bind.to( 'id' ),
-								style: bind.to( 'style' )
-							},
-							children: [
-								{ text: bind.to( 'text' ) }
-							]
-						} );
-					}
-				}
-
-				const view = new ButtonView( locale, new CustomLabel() );
-
-				view.set( {
-					labelStyle: 'color: red',
-					label: 'bar'
-				} );
-
-				view.render();
-
-				expect( view.labelView ).to.be.instanceOf( CustomLabel );
-				expect( view.labelView.element.id ).to.equal( view.element.getAttribute( 'aria-labelledby' ) );
-				expect( view.labelView.element.getAttribute( 'style' ) ).to.equal( 'color: red' );
-				expect( view.labelView.element.textContent ).to.equal( 'bar' );
-
-				view.destroy();
-			} );
 		} );
 	} );
 
@@ -277,18 +218,6 @@ describe( 'ButtonView', () => {
 			} );
 		} );
 
-		describe( 'role', () => {
-			it( 'is not initially set ', () => {
-				expect( view.element.attributes.role ).to.equal( undefined );
-			} );
-
-			it( 'reacts on view#role', () => {
-				view.role = 'foo';
-
-				expect( view.element.attributes.role.value ).to.equal( 'foo' );
-			} );
-		} );
-
 		describe( 'text', () => {
 			it( 'is not initially set ', () => {
 				expect( view.element.textContent ).to.equal( '' );
@@ -318,12 +247,6 @@ describe( 'ButtonView', () => {
 				expect( view.element.attributes[ 'aria-labelledby' ].value )
 					.to.equal( view.element.lastChild.id )
 					.to.match( /^ck-editor__aria-label_\w+$/ );
-			} );
-
-			it( '-labelledby reacts to #ariaLabelledBy', () => {
-				view.ariaLabelledBy = 'foo';
-				expect( view.element.attributes[ 'aria-labelledby' ].value )
-					.to.equal( 'foo' );
 			} );
 
 			it( '-disabled reacts to #isEnabled', () => {
@@ -356,19 +279,6 @@ describe( 'ButtonView', () => {
 				view.isOn = false;
 				expect( view.element.hasAttribute( 'aria-pressed' ) ).to.be.false;
 			} );
-
-			it( '-label reacts on #ariaLabel', () => {
-				view.ariaLabel = undefined;
-				expect( view.element.hasAttribute( 'aria-label' ) ).to.be.false;
-
-				view.ariaLabel = 'Foo';
-				expect( view.element.attributes[ 'aria-label' ].value ).to.equal( 'Foo' );
-			} );
-
-			it( '-checked is not present', () => {
-				view.isOn = true;
-				expect( view.element.hasAttribute( 'aria-checked' ) ).to.be.false;
-			} );
 		} );
 
 		describe( 'mousedown event', () => {
@@ -379,44 +289,30 @@ describe( 'ButtonView', () => {
 			} );
 
 			describe( 'in Safari', () => {
-				let view, stub, clock;
+				let view, stub;
 
 				beforeEach( () => {
 					stub = testUtils.sinon.stub( env, 'isSafari' ).value( true );
-					clock = testUtils.sinon.useFakeTimers();
 					view = new ButtonView( locale );
 					view.render();
 				} );
 
 				afterEach( () => {
 					stub.resetBehavior();
-					clock.restore();
 					view.destroy();
 				} );
 
 				it( 'the button is focused', () => {
 					const spy = sinon.spy( view.element, 'focus' );
 					view.element.dispatchEvent( new Event( 'mousedown', { cancelable: true } ) );
-					clock.tick( 0 );
 
 					expect( spy.callCount ).to.equal( 1 );
 				} );
 
-				it( 'does not steal focus from other element if the focus already moved', () => {
-					const spy = sinon.spy( view.element, 'focus' );
-					view.element.dispatchEvent( new Event( 'mousedown', { cancelable: true } ) );
-					view.element.dispatchEvent( new Event( 'mouseup', { cancelable: true } ) );
-
-					document.body.focus();
-					clock.tick( 0 );
-
-					expect( spy.callCount ).to.equal( 0 );
-				} );
-
-				it( 'the event is not prevented', () => {
+				it( 'the event is prevented', () => {
 					const ret = view.element.dispatchEvent( new Event( 'mousedown', { cancelable: true } ) );
 
-					expect( ret ).to.true;
+					expect( ret ).to.false;
 				} );
 			} );
 		} );

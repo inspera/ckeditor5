@@ -1,16 +1,18 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global setTimeout, clearTimeout */
+
+/* eslint-disable new-cap */
 
 /**
  * @module utils/focustracker
  */
 
 import DomEmitterMixin from './dom/emittermixin';
-import ObservableMixin from './observablemixin';
+import { Observable } from './observablemixin';
 import CKEditorError from './ckeditorerror';
 
 /**
@@ -23,14 +25,18 @@ import CKEditorError from './ckeditorerror';
  * which contain other `focusable` elements. But note that this wrapper element has to be focusable too
  * (have e.g. `tabindex="-1"`).
  *
- * Check out the {@glink framework/deep-dive/ui/focus-tracking "Deep dive into focus tracking"} guide to learn more.
+ * Check out the {@glink framework/guides/deep-dive/ui/focus-tracking "Deep dive into focus tracking" guide} to learn more.
+ *
+ * @mixes module:utils/dom/emittermixin~EmitterMixin
+ * @mixes module:utils/observablemixin~ObservableMixin
  */
-export default class FocusTracker extends DomEmitterMixin( ObservableMixin() ) {
+export default class FocusTracker extends DomEmitterMixin( Observable ) {
 	/**
 	 * True when one of the registered elements is focused.
 	 *
 	 * @readonly
 	 * @observable
+	 * @member {Boolean}
 	 */
 	declare public isFocused: boolean;
 
@@ -43,30 +49,40 @@ export default class FocusTracker extends DomEmitterMixin( ObservableMixin() ) {
 	 *
 	 * @readonly
 	 * @observable
+	 * @member {Element|null}
 	 */
 	declare public focusedElement: Element | null;
 
 	/**
 	 * List of registered elements.
 	 *
-	 * @internal
+	 * @private
+	 * @member {Set.<Element>}
 	 */
-	public _elements: Set<Element> = new Set();
+	private _elements: Set<Element>;
 
 	/**
 	 * Event loop timeout.
+	 *
+	 * @private
+	 * @member {Number}
 	 */
-	private _nextEventLoopTimeout: ReturnType<typeof setTimeout> | null = null;
+	private _nextEventLoopTimeout: ReturnType<typeof setTimeout> | null;
 
 	constructor() {
 		super();
 
 		this.set( 'isFocused', false );
 		this.set( 'focusedElement', null );
+
+		this._elements = new Set();
+		this._nextEventLoopTimeout = null;
 	}
 
 	/**
 	 * Starts tracking the specified element.
+	 *
+	 * @param {Element} element
 	 */
 	public add( element: Element ): void {
 		if ( this._elements.has( element ) ) {
@@ -85,6 +101,8 @@ export default class FocusTracker extends DomEmitterMixin( ObservableMixin() ) {
 
 	/**
 	 * Stops tracking the specified element and stops listening on this element.
+	 *
+	 * @param {Element} element
 	 */
 	public remove( element: Element ): void {
 		if ( element === this.focusedElement ) {
@@ -107,7 +125,10 @@ export default class FocusTracker extends DomEmitterMixin( ObservableMixin() ) {
 	}
 
 	/**
-	 * Stores currently focused element and set {@link #isFocused} as `true`.
+	 * Stores currently focused element and set {#isFocused} as `true`.
+	 *
+	 * @private
+	 * @param {Element} element Element which has been focused.
 	 */
 	private _focus( element: Element ): void {
 		clearTimeout( this._nextEventLoopTimeout! );
@@ -119,6 +140,9 @@ export default class FocusTracker extends DomEmitterMixin( ObservableMixin() ) {
 	/**
 	 * Clears currently focused element and set {@link #isFocused} as `false`.
 	 * This method uses `setTimeout` to change order of fires `blur` and `focus` events.
+	 *
+	 * @private
+	 * @fires blur
 	 */
 	private _blur(): void {
 		clearTimeout( this._nextEventLoopTimeout! );

@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+# Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
 #
 #                                     !!! IMPORTANT !!!
 #
@@ -12,38 +12,13 @@
 #
 msgid ""
 msgstr ""
-"Language-Team: Portuguese (Brazil) (https://app.transifex.com/ckeditor/teams/11143/pt_BR/)\n"
+"Language-Team: Portuguese (Brazil) (https://www.transifex.com/ckeditor/teams/11143/pt_BR/)\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"Content-Type: text/plain; charset=UTF-8\n"
 
 msgctxt "Name of the special characters plugins, visible in a dropdown and as a button tooltip."
 msgid "Special characters"
 msgstr "Caracteres especiais"
-
-msgctxt "A category name is displayed in a special characters dropdown representing all available symbols."
-msgid "All"
-msgstr "Tudo"
-
-msgctxt "A category name is displayed in a special characters dropdown representing arrow symbols."
-msgid "Arrows"
-msgstr "Setas"
-
-msgctxt "A category name is displayed in a special characters dropdown representing currency symbols."
-msgid "Currency"
-msgstr "Moeda"
-
-msgctxt "A category name is displayed in a special characters dropdown representing latin symbols."
-msgid "Latin"
-msgstr "Latim"
-
-msgctxt "A category name is displayed in a special characters dropdown representing mathematical symbols."
-msgid "Mathematical"
-msgstr "Matemática"
-
-msgctxt "A category name is displayed in a special characters dropdown representing text symbols."
-msgid "Text"
-msgstr "Texto"
 
 msgctxt "A label for the \"leftwards simple arrow\" symbol."
 msgid "leftwards simple arrow"
@@ -63,79 +38,79 @@ msgstr "seta simples para baixo"
 
 msgctxt "A label for the \"leftwards double arrow\" symbol."
 msgid "leftwards double arrow"
-msgstr "seta dupla para esquerda"
+msgstr "Seta dupla para esquerda"
 
 msgctxt "A label for the \"rightwards double arrow\" symbol."
 msgid "rightwards double arrow"
-msgstr "seta dupla para direita"
+msgstr "Seta dupla para direita"
 
 msgctxt "A label for the \"upwards double arrow\" symbol."
 msgid "upwards double arrow"
-msgstr "seta dupla para cima"
+msgstr "Seta dupla para cima"
 
 msgctxt "A label for the \"downwards double arrow\" symbol."
 msgid "downwards double arrow"
-msgstr "seta dupla para baixo"
+msgstr "Seta dupla para baixo"
 
 msgctxt "A label for the \"leftwards dashed arrow\" symbol."
 msgid "leftwards dashed arrow"
-msgstr "seta tracejada para esquerda"
+msgstr "Seta tracejada para esquerda"
 
 msgctxt "A label for the \"rightwards dashed arrow\" symbol."
 msgid "rightwards dashed arrow"
-msgstr "seta tracejada para direita"
+msgstr "Seta tracejada para direita"
 
 msgctxt "A label for the \"upwards dashed arrow\" symbol."
 msgid "upwards dashed arrow"
-msgstr "seta tracejada para cima"
+msgstr "Seta tracejada para cima"
 
 msgctxt "A label for the \"downwards dashed arrow\" symbol."
 msgid "downwards dashed arrow"
-msgstr "seta tracejada para baixo"
+msgstr "Seta tracejada para baixo"
 
 msgctxt "A label for the \"leftwards arrow to bar\" symbol."
 msgid "leftwards arrow to bar"
-msgstr "seta à esquerda para barra"
+msgstr "seta para a esquerda para barra"
 
 msgctxt "A label for the \"rightwards arrow to bar\" symbol."
 msgid "rightwards arrow to bar"
-msgstr "seta à direita para barra"
+msgstr "seta para a direita para barra"
 
 msgctxt "A label for the \"upwards arrow to bar\" symbol."
 msgid "upwards arrow to bar"
-msgstr "seta a cima para barra"
+msgstr "seta para cima para barra"
 
 msgctxt "A label for the \"downwards arrow to bar\" symbol."
 msgid "downwards arrow to bar"
-msgstr "seta a baixo para barra"
+msgstr "seta para baixo para barra"
 
 msgctxt "A label for the \"up down arrow with base\" symbol."
 msgid "up down arrow with base"
-msgstr "seta para cima e para baixo com base"
+msgstr "seta para baixo com base"
 
 msgctxt "A label for the \"back with leftwards arrow above\" symbol."
 msgid "back with leftwards arrow above"
-msgstr "símbolo BACK com a seta para esquerda acima"
+msgstr "volta com a seta esquerda acima"
 
 msgctxt "A label for the \"end with leftwards arrow above\" symbol."
 msgid "end with leftwards arrow above"
-msgstr "símbolo END com a seta para esquerda acima"
+msgstr "termina com a seta esquerda acima"
 
 msgctxt "A label for the \"on with exclamation mark with left right arrow above\" symbol."
 msgid "on with exclamation mark with left right arrow above"
-msgstr "símbolo ON com ponto de exclamação e seta para esquerda e direita acima"
+msgstr "com ponto de exclamação com a seta esquerda direita acima"
 
 msgctxt "A label for the \"soon with rightwards arrow above\" symbol."
 msgid "soon with rightwards arrow above"
-msgstr "símbolo SOON com a seta para a direita acima"
+msgstr "Símbolo soon com a seta para a direita acima"
 
 msgctxt "A label for the \"top with upwards arrow above\" symbol."
 msgid "top with upwards arrow above"
-msgstr "símbolo TOP com a seta para cima acima"
+msgstr "Símbolo topo com a seta para cima acima"
 
 msgctxt "A label for the \"dollar sign\" symbol."
 msgid "Dollar sign"
-msgstr "Símbolo do Dólar"
+msgstr "Símbolo do dólar"
 
 msgctxt "A label for the \"euro sign\" symbol."
 msgid "Euro sign"
@@ -155,7 +130,7 @@ msgstr "Símbolo de Centavo"
 
 msgctxt "A label for the \"euro-currency sign\" symbol."
 msgid "Euro-currency sign"
-msgstr "Símbolo da moeda Euro"
+msgstr "Símbolo da Moeda do Euro"
 
 msgctxt "A label for the \"colon sign\" symbol."
 msgid "Colon sign"
@@ -227,11 +202,11 @@ msgstr "Símbolo do Centavo Alemão"
 
 msgctxt "A label for the \"peso sign\" symbol."
 msgid "Peso sign"
-msgstr "Símbolo do Peso"
+msgstr "Sinal de Peso"
 
 msgctxt "A label for the \"guarani sign\" symbol."
 msgid "Guarani sign"
-msgstr "Símbolo do Guarani"
+msgstr "Símbolo de Guarani"
 
 msgctxt "A label for the \"austral sign\" symbol."
 msgid "Austral sign"
@@ -267,7 +242,7 @@ msgstr "Símbolo da Lira Turca"
 
 msgctxt "A label for the \"nordic mark sign\" symbol."
 msgid "Nordic mark sign"
-msgstr "Símbolo do Marco Nórdico"
+msgstr "Símbolo da Marca Nórdica"
 
 msgctxt "A label for the \"manat sign\" symbol."
 msgid "Manat sign"
@@ -279,11 +254,11 @@ msgstr "Símbolo do Rublo Russo"
 
 msgctxt "A label for the \"latin capital letter a with macron\" symbol."
 msgid "Latin capital letter a with macron"
-msgstr "Símbolo latim maiúsculo A com mácron"
+msgstr "Símbolo latim maiúsculo A com macron"
 
 msgctxt "A label for the \"latin small letter a with macron\" symbol."
 msgid "Latin small letter a with macron"
-msgstr "Símbolo latim minúsculo A com mácron"
+msgstr "Símbolo latim minúsculo A com macron"
 
 msgctxt "A label for the \"latin capital letter a with breve\" symbol."
 msgid "Latin capital letter a with breve"
@@ -351,11 +326,11 @@ msgstr "Símbolo latin minúsculo D com um traçado vertical"
 
 msgctxt "A label for the \"latin capital letter e with macron\" symbol."
 msgid "Latin capital letter e with macron"
-msgstr "Símbolo latim maiúsculo E com mácron"
+msgstr "Símbolo latim maiúsculo E com macron"
 
 msgctxt "A label for the \"latin small letter e with macron\" symbol."
 msgid "Latin small letter e with macron"
-msgstr "Símbolo latim minúsculo E com mácron"
+msgstr "Símbolo latim minúsculo E com macron"
 
 msgctxt "A label for the \"latin capital letter e with breve\" symbol."
 msgid "Latin capital letter e with breve"
@@ -447,11 +422,11 @@ msgstr "Símbolo latim minúsculo I com til"
 
 msgctxt "A label for the \"latin capital letter i with macron\" symbol."
 msgid "Latin capital letter i with macron"
-msgstr "Símbolo latim maiúsculo I com mácron"
+msgstr "Símbolo latim maiúsculo I com macron"
 
 msgctxt "A label for the \"latin small letter i with macron\" symbol."
 msgid "Latin small letter i with macron"
-msgstr "Símbolo latim minúsculo I com mácron"
+msgstr "Símbolo latim minúsculo I com macron"
 
 msgctxt "A label for the \"latin capital letter i with breve\" symbol."
 msgid "Latin capital letter i with breve"
@@ -583,11 +558,11 @@ msgstr "Símbolo latim minúsculo Eng"
 
 msgctxt "A label for the \"latin capital letter o with macron\" symbol."
 msgid "Latin capital letter o with macron"
-msgstr "Símbolo latim maiúsculo I com mácron"
+msgstr "Símbolo latim maiúsculo I com macron"
 
 msgctxt "A label for the \"latin small letter o with macron\" symbol."
 msgid "Latin small letter o with macron"
-msgstr "Símbolo latim minúsculo O com mácron"
+msgstr "Símbolo latim minúsculo O com macron"
 
 msgctxt "A label for the \"latin capital letter o with breve\" symbol."
 msgid "Latin capital letter o with breve"
@@ -703,11 +678,11 @@ msgstr "Símbolo latim minúsculo U com til"
 
 msgctxt "A label for the \"latin capital letter u with macron\" symbol."
 msgid "Latin capital letter u with macron"
-msgstr "Símbolo latim maiúsculo I com mácron"
+msgstr "Símbolo latim maiúsculo I com macron"
 
 msgctxt "A label for the \"latin small letter u with macron\" symbol."
 msgid "Latin small letter u with macron"
-msgstr "Símbolo latim minúsculo U com mácron"
+msgstr "Símbolo latim minúsculo U com macron"
 
 msgctxt "A label for the \"latin capital letter u with breve\" symbol."
 msgid "Latin capital letter u with breve"
@@ -815,11 +790,11 @@ msgstr "Travessão"
 
 msgctxt "A label for the \"macron\" symbol."
 msgid "Macron"
-msgstr "Mácron"
+msgstr "Macron"
 
 msgctxt "A label for the \"overline\" symbol."
 msgid "Overline"
-msgstr "Linha acima"
+msgstr "Sobrepor"
 
 msgctxt "A label for the \"degree sign\" symbol."
 msgid "Degree sign"
@@ -847,7 +822,7 @@ msgstr "Sinal de multiplicação"
 
 msgctxt "A label for the \"latin small letter f with hook\" symbol."
 msgid "Latin small letter f with hook"
-msgstr "Latim minúsculo F com gancho"
+msgstr "Símbolo latim minúsculo F com gancho"
 
 msgctxt "A label for the \"integral\" symbol."
 msgid "Integral"
@@ -899,7 +874,7 @@ msgstr "Contém como membro"
 
 msgctxt "A label for the \"n-ary product\" symbol."
 msgid "N-ary product"
-msgstr "Produto Cartesiano"
+msgstr "Símbolo Produto N-ário"
 
 msgctxt "A label for the \"logical and\" symbol."
 msgid "Logical and"
@@ -927,7 +902,7 @@ msgstr "Diferencial parcial"
 
 msgctxt "A label for the \"for all\" symbol."
 msgid "For all"
-msgstr "Para todo"
+msgstr "Para todos"
 
 msgctxt "A label for the \"there exists\" symbol."
 msgid "There exists"
@@ -1039,11 +1014,11 @@ msgstr "Sinal do ponto de exclamação duplo"
 
 msgctxt "A label for the \"question exclamation mark\" symbol."
 msgid "Question exclamation mark"
-msgstr "Ponto de interrogação com exclamação"
+msgstr "Ponto de interrogação"
 
 msgctxt "A label for the \"exclamation question mark\" symbol."
 msgid "Exclamation question mark"
-msgstr "Ponto de exclamação com interrogação"
+msgstr "Ponto de exclamação"
 
 msgctxt "A label for the \"double question mark\" symbol."
 msgid "Double question mark"
@@ -1063,7 +1038,7 @@ msgstr "Símbolo de marca registrada"
 
 msgctxt "A label for the \"section sign\" symbol."
 msgid "Section sign"
-msgstr "Símbolo de secção"
+msgstr "Símbolo de seleção"
 
 msgctxt "A label for the \"paragraph sign\" symbol."
 msgid "Paragraph sign"
@@ -1071,7 +1046,7 @@ msgstr "Símbolo de parágrafo"
 
 msgctxt "A label for the \"reversed paragraph sign\" symbol."
 msgid "Reversed paragraph sign"
-msgstr "Símbolo de parágrafo invertido"
+msgstr "Símbolo de parágrafo reverso"
 
 msgctxt "A label for a tooltip showing when the user hovers over the plugin icon."
 msgid "Character categories"

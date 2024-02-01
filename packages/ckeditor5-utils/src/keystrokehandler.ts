@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,7 +7,7 @@
  * @module utils/keystrokehandler
  */
 
-import DomEmitterMixin, { type DomEmitter } from './dom/emittermixin';
+import { Emitter as DomEmitter } from './dom/emittermixin';
 import type { Emitter } from './emittermixin';
 import { getCode, parseKeystroke, type KeystrokeInfo } from './keyboard';
 import type { PriorityString } from './priorities';
@@ -18,31 +18,27 @@ import type { PriorityString } from './priorities';
  * The most frequent use of this class is through the {@link module:core/editor/editor~Editor#keystrokes `editor.keystrokes`}
  * property. It allows listening to keystrokes executed in the editing view:
  *
- * ```ts
- * editor.keystrokes.set( 'Ctrl+A', ( keyEvtData, cancel ) => {
- * 	console.log( 'Ctrl+A has been pressed' );
- * 	cancel();
- * } );
- * ```
+ *		editor.keystrokes.set( 'Ctrl+A', ( keyEvtData, cancel ) => {
+ *			console.log( 'Ctrl+A has been pressed' );
+ *			cancel();
+ *		} );
  *
  * However, this utility class can be used in various part of the UI. For instance, a certain {@link module:ui/view~View}
  * can use it like this:
  *
- * ```ts
- * class MyView extends View {
- * 	constructor() {
- * 		this.keystrokes = new KeystrokeHandler();
+ *		class MyView extends View {
+ *			constructor() {
+ *				this.keystrokes = new KeystrokeHandler();
  *
- * 		this.keystrokes.set( 'tab', handleTabKey );
- * 	}
+ * 				this.keystrokes.set( 'tab', handleTabKey );
+ *			}
  *
- * 	render() {
- * 		super.render();
+ *			render() {
+ *				super.render();
  *
- * 		this.keystrokes.listenTo( this.element );
- * 	}
- * }
- * ```
+ *				this.keystrokes.listenTo( this.element );
+ *			}
+ *		}
  *
  * That keystroke handler will listen to `keydown` events fired in this view's main element.
  *
@@ -50,6 +46,10 @@ import type { PriorityString } from './priorities';
 export default class KeystrokeHandler {
 	/**
 	 * Listener used to listen to events for easier keystroke handler destruction.
+	 *
+	 * @protected
+	 * @readonly
+	 * @member {module:utils/dom/emittermixin~Emitter}
 	 */
 	private readonly _listener: DomEmitter;
 
@@ -57,11 +57,13 @@ export default class KeystrokeHandler {
 	 * Creates an instance of the keystroke handler.
 	 */
 	constructor() {
-		this._listener = new ( DomEmitterMixin() )();
+		this._listener = new DomEmitter();
 	}
 
 	/**
 	 * Starts listening for `keydown` events from a given emitter.
+	 *
+	 * @param {module:utils/emittermixin~Emitter|HTMLElement|Window} emitter
 	 */
 	public listenTo( emitter: Emitter | HTMLElement | Window ): void {
 		// The #_listener works here as a kind of dispatcher. It groups the events coming from the same
@@ -81,13 +83,13 @@ export default class KeystrokeHandler {
 	/**
 	 * Registers a handler for the specified keystroke.
 	 *
-	 * @param keystroke Keystroke defined in a format accepted by
+	 * @param {String|Array.<String|Number>} keystroke Keystroke defined in a format accepted by
 	 * the {@link module:utils/keyboard~parseKeystroke} function.
-	 * @param callback A function called with the
+	 * @param {Function} callback A function called with the
 	 * {@link module:engine/view/observer/keyobserver~KeyEventData key event data} object and
 	 * a helper function to call both `preventDefault()` and `stopPropagation()` on the underlying event.
-	 * @param options Additional options.
-	 * @param options.priority The priority of the keystroke
+	 * @param {Object} [options={}] Additional options.
+	 * @param {module:utils/priorities~PriorityString} [options.priority='normal'] The priority of the keystroke
 	 * callback. The higher the priority value the sooner the callback will be executed. Keystrokes having the same priority
 	 * are called in the order they were added.
 	 */
@@ -121,24 +123,17 @@ export default class KeystrokeHandler {
 	/**
 	 * Triggers a keystroke handler for a specified key combination, if such a keystroke was {@link #set defined}.
 	 *
-	 * @param keyEvtData Key event data.
-	 * @returns Whether the keystroke was handled.
+	 * @param {module:engine/view/observer/keyobserver~KeyEventData} keyEvtData Key event data.
+	 * @returns {Boolean} Whether the keystroke was handled.
 	 */
 	public press( keyEvtData: Readonly<KeystrokeInfo> ): boolean {
 		return !!this._listener.fire( '_keydown:' + getCode( keyEvtData ), keyEvtData );
 	}
 
 	/**
-	 * Stops listening to `keydown` events from the given emitter.
-	 */
-	public stopListening( emitter?: Emitter | HTMLElement | Window ): void {
-		this._listener.stopListening( emitter );
-	}
-
-	/**
 	 * Destroys the keystroke handler.
 	 */
 	public destroy(): void {
-		this.stopListening();
+		this._listener.stopListening();
 	}
 }

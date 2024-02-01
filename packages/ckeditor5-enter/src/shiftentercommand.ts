@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,21 +7,17 @@
  * @module enter/shiftentercommand
  */
 
-import { Command } from '@ckeditor/ckeditor5-core';
+import Command from '@ckeditor/ckeditor5-core/src/command';
 import { getCopyOnEnterAttributes } from './utils';
 
-import type {
-	DocumentSelection,
-	Model,
-	Position,
-	Schema,
-	Element,
-	Writer
-} from '@ckeditor/ckeditor5-engine';
+import type Writer from '@ckeditor/ckeditor5-engine/src/model/writer';
+import type { DocumentSelection, Model, Position, Schema, Element } from '@ckeditor/ckeditor5-engine';
 
 /**
  * ShiftEnter command. It is used by the {@link module:enter/shiftenter~ShiftEnter ShiftEnter feature} to handle
  * the <kbd>Shift</kbd>+<kbd>Enter</kbd> keystroke.
+ *
+ * @extends module:core/command~Command
  */
 export default class ShiftEnterCommand extends Command {
 	/**
@@ -37,9 +33,6 @@ export default class ShiftEnterCommand extends Command {
 		} );
 	}
 
-	/**
-	 * @inheritDoc
-	 */
 	public override refresh(): void {
 		const model = this.editor.model;
 		const doc = model.document;
@@ -48,19 +41,15 @@ export default class ShiftEnterCommand extends Command {
 	}
 }
 
-/**
- * Fired after the the {@link module:enter/shiftentercommand~ShiftEnterCommand} is finished executing.
- *
- * @eventName ~ShiftEnterCommand#afterExecute
- */
 export type ShiftEnterCommandAfterExecuteEvent = {
 	name: 'afterExecute';
 	args: [ { writer: Writer } ];
 };
 
-/**
- * Checks whether the ShiftEnter command should be enabled in the specified selection.
- */
+// Checks whether the ShiftEnter command should be enabled in the specified selection.
+//
+// @param {module:engine/model/schema~Schema} schema
+// @param {module:engine/model/selection~Selection|module:engine/model/documentselection~DocumentSelection} selection
 function isEnabled( schema: Schema, selection: DocumentSelection ): boolean {
 	// At this moment it is okay to support single range selections only.
 	// But in the future we may need to change that.
@@ -87,9 +76,12 @@ function isEnabled( schema: Schema, selection: DocumentSelection ): boolean {
 	return true;
 }
 
-/**
- * Creates a break in the way that the <kbd>Shift</kbd>+<kbd>Enter</kbd> keystroke is expected to work.
- */
+// Creates a break in the way that the <kbd>Shift</kbd>+<kbd>Enter</kbd> keystroke is expected to work.
+//
+// @param {module:engine/model~Model} model
+// @param {module:engine/model/writer~Writer} writer
+// @param {module:engine/model/selection~Selection|module:engine/model/documentselection~DocumentSelection} selection
+// Selection on which the action should be performed.
 function softBreakAction( model: Model, writer: Writer, selection: DocumentSelection ): void {
 	const isSelectionEmpty = selection.isCollapsed;
 	const range = selection.getFirstRange()!;
@@ -141,13 +133,15 @@ function insertBreak( model: Model, writer: Writer, position: Position ): void {
 	writer.setSelection( breakLineElement, 'after' );
 }
 
-/**
- * Checks whether the specified `element` is a child of the limit element.
- *
- * Checking whether the `<p>` element is inside a limit element:
- *   - `<$root><p>Text.</p></$root> => false`
- *   - `<$root><limitElement><p>Text</p></limitElement></$root> => true`
- */
+// Checks whether the specified `element` is a child of the limit element.
+//
+// Checking whether the `<p>` element is inside a limit element:
+//   - <$root><p>Text.</p></$root> => false
+//   - <$root><limitElement><p>Text</p></limitElement></$root> => true
+//
+// @param {module:engine/model/element~Element} element
+// @param {module:engine/schema~Schema} schema
+// @returns {Boolean}
 function isInsideLimitElement( element: Element, schema: Schema ): boolean {
 	// `$root` is a limit element but in this case is an invalid element.
 	if ( element.is( 'rootElement' ) ) {

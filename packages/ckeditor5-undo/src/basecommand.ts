@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,47 +7,52 @@
  * @module undo/basecommand
  */
 
-import { Command, type Editor } from '@ckeditor/ckeditor5-core';
-
-import {
-	transformSets,
-	type Batch,
-	type Operation,
-	type DataControllerSetEvent,
-	type Range,
-	NoOperation
-} from '@ckeditor/ckeditor5-engine';
+import Command from '@ckeditor/ckeditor5-core/src/command';
+import { transformSets } from '@ckeditor/ckeditor5-engine/src/model/operation/transform';
+import type { Editor } from '@ckeditor/ckeditor5-core';
+import type { DataControllerSetEvent } from '@ckeditor/ckeditor5-engine/src/controller/datacontroller';
+import type { Range } from '@ckeditor/ckeditor5-engine';
+import type Batch from '@ckeditor/ckeditor5-engine/src/model/batch';
+import type Operation from '@ckeditor/ckeditor5-engine/src/model/operation/operation';
 
 /**
  * Base class for the undo feature commands: {@link module:undo/undocommand~UndoCommand} and {@link module:undo/redocommand~RedoCommand}.
+ *
+ * @protected
+ * @extends module:core/command~Command
  */
 export default abstract class BaseCommand extends Command {
-	/**
-	 * Stack of items stored by the command. These are pairs of:
-	 *
-	 * * {@link module:engine/model/batch~Batch batch} saved by the command,
-	 * * {@link module:engine/model/selection~Selection selection} state at the moment of saving the batch.
-	 */
-	protected _stack: Array<{ batch: Batch; selection: { ranges: Array<Range>; isBackward: boolean } }> = [];
+	protected _stack: Array<{ batch: Batch; selection: { ranges: Array<Range>; isBackward: boolean } }>;
 
 	/**
-	 * Stores all batches that were created by this command.
-	 *
 	 * @internal
 	 */
-	public _createdBatches = new WeakSet<Batch>();
+	public _createdBatches: WeakSet<Batch>;
 
-	/**
-	 * @inheritDoc
-	 */
 	constructor( editor: Editor ) {
 		super( editor );
 
+		/**
+		 * Stack of items stored by the command. These are pairs of:
+		 *
+		 * * {@link module:engine/model/batch~Batch batch} saved by the command,
+		 * * {@link module:engine/model/selection~Selection selection} state at the moment of saving the batch.
+		 *
+		 * @protected
+		 * @member {Array} #_stack
+		 */
+		this._stack = [];
+
+		/**
+		 * Stores all batches that were created by this command.
+		 *
+		 * @protected
+		 * @member {WeakSet.<module:engine/model/batch~Batch>} #_createdBatches
+		 */
+		this._createdBatches = new WeakSet();
+
 		// Refresh state, so the command is inactive right after initialization.
 		this.refresh();
-
-		// This command should not depend on selection change.
-		this._isEnabledBasedOnSelection = false;
 
 		// Set the transparent batch for the `editor.data.set()` call if the
 		// batch type is not set already.
@@ -84,17 +89,10 @@ export default abstract class BaseCommand extends Command {
 	}
 
 	/**
-	 * Returns all batches created by this command.
-	 */
-	public get createdBatches(): WeakSet<Batch> {
-		return this._createdBatches;
-	}
-
-	/**
 	 * Stores a batch in the command, together with the selection state of the {@link module:engine/model/document~Document document}
 	 * created by the editor which this command is registered to.
 	 *
-	 * @param batch The batch to add.
+	 * @param {module:engine/model/batch~Batch} batch The batch to add.
 	 */
 	public addBatch( batch: Batch ): void {
 		const docSelection = this.editor.model.document.selection;
@@ -119,9 +117,11 @@ export default abstract class BaseCommand extends Command {
 	/**
 	 * Restores the {@link module:engine/model/document~Document#selection document selection} state after a batch was undone.
 	 *
-	 * @param ranges Ranges to be restored.
-	 * @param isBackward A flag describing whether the restored range was selected forward or backward.
-	 * @param operations Operations which has been applied since selection has been stored.
+	 * @protected
+	 * @param {Array.<module:engine/model/range~Range>} ranges Ranges to be restored.
+	 * @param {Boolean} isBackward A flag describing whether the restored range was selected forward or backward.
+	 * @param {Array.<module:engine/model/operation/operation~Operation>} operations Operations which has been applied
+	 * since selection has been stored.
 	 */
 	protected _restoreSelection(
 		ranges: Array<Range>,
@@ -173,8 +173,9 @@ export default abstract class BaseCommand extends Command {
 	 * Undoes a batch by reversing that batch, transforming reversed batch and finally applying it.
 	 * This is a helper method for {@link #execute}.
 	 *
-	 * @param batchToUndo The batch to be undone.
-	 * @param undoingBatch The batch that will contain undoing changes.
+	 * @protected
+	 * @param {module:engine/model/batch~Batch} batchToUndo The batch to be undone.
+	 * @param {module:engine/model/batch~Batch} undoingBatch The batch that will contain undoing changes.
 	 */
 	protected _undo( batchToUndo: Batch, undoingBatch: Batch ): void {
 		const model = this.editor.model;
@@ -206,14 +207,7 @@ export default abstract class BaseCommand extends Command {
 			const reversedOperations = transformedSets.operationsA;
 
 			// After reversed operation has been transformed by all history operations, apply it.
-			for ( let operation of reversedOperations ) {
-				// Do not apply any operation on non-editable space.
-				const affectedSelectable = operation.affectedSelectable;
-
-				if ( affectedSelectable && !model.canEditAt( affectedSelectable ) ) {
-					operation = new NoOperation( operation.baseVersion );
-				}
-
+			for ( const operation of reversedOperations ) {
 				// Before applying, add the operation to the `undoingBatch`.
 				undoingBatch.addOperation( operation );
 				model.applyOperation( operation );
@@ -224,12 +218,11 @@ export default abstract class BaseCommand extends Command {
 	}
 }
 
-/**
- * Normalizes list of ranges by joining intersecting or "touching" ranges.
- *
- * @param ranges Ranges to be normalized.
- */
-function normalizeRanges( ranges: Array<Range> ): void {
+// Normalizes list of ranges by joining intersecting or "touching" ranges.
+//
+// @param {Array.<module:engine/model/range~Range>} ranges
+//
+function normalizeRanges( ranges: Array<Range> ) {
 	ranges.sort( ( a, b ) => a.start.isBefore( b.start ) ? -1 : 1 );
 
 	for ( let i = 1; i < ranges.length; i++ ) {
@@ -244,6 +237,6 @@ function normalizeRanges( ranges: Array<Range> ): void {
 	}
 }
 
-function isRangeContainedByAnyOtherRange( range: Range, ranges: Array<Range> ): boolean {
+function isRangeContainedByAnyOtherRange( range: Range, ranges: Array<Range> ) {
 	return ranges.some( otherRange => otherRange !== range && otherRange.containsRange( range, true ) );
 }

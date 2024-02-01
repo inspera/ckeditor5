@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,14 +7,11 @@
 
 import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
 import { assertBinding, expectToThrowCKEditorError } from '../tests/_utils/utils';
-import ObservableMixin from '../src/observablemixin';
-import EmitterMixin from '../src/emittermixin';
+import ObservableMixin, { Observable } from '../src/observablemixin';
+import EmitterMixin, { Emitter } from '../src/emittermixin';
 import EventInfo from '../src/eventinfo';
 
 describe( 'ObservableMixin', () => {
-	const Observable = ObservableMixin();
-	const Emitter = EmitterMixin();
-
 	testUtils.createSinonSandbox();
 
 	it( 'exists', () => {
@@ -76,7 +73,7 @@ describe( 'ObservableMixin', () => {
 describe( 'Observable', () => {
 	testUtils.createSinonSandbox();
 
-	class BaseObservable extends ObservableMixin() {
+	class BaseObservable extends Observable {
 		constructor( properties ) {
 			super();
 
@@ -116,7 +113,7 @@ describe( 'Observable', () => {
 				seats: 5
 			} );
 
-			expect( car ).to.include( {
+			expect( car ).to.deep.equal( {
 				color: 'blue',
 				year: 2015,
 				wheels: 4,
@@ -128,7 +125,7 @@ describe( 'Observable', () => {
 			car.set( 'color', 'blue' );
 			car.set( 'wheels', 4 );
 
-			expect( car ).to.include( {
+			expect( car ).to.deep.equal( {
 				color: 'blue',
 				year: 2015,
 				wheels: 4

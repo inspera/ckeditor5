@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -147,9 +147,7 @@ describe( 'MediaEmbedEditing', () => {
 							testMediaUpcast( [
 								'https://www.dailymotion.com/video/foo',
 								'www.dailymotion.com/video/foo',
-								'dailymotion.com/video/foo',
-								'https://dai.ly/foo',
-								'dai.ly/foo'
+								'dailymotion.com/video/foo'
 							],
 							'<div style="position: relative; padding-bottom: 100%; height: 0; ">' +
 								'<iframe src="https://www.dailymotion.com/embed/video/foo" ' +

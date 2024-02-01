@@ -1,9 +1,9 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import type { ToolbarConfig, ToolbarConfigItem } from '@ckeditor/ckeditor5-core';
+import type { ToolbarConfig, ToolbarConfigItem } from '@ckeditor/ckeditor5-core/src/editor/editorconfig';
 
 /**
  * @module ui/toolbar/normalizetoolbarconfig
@@ -14,26 +14,22 @@ import type { ToolbarConfig, ToolbarConfigItem } from '@ckeditor/ckeditor5-core'
  *
  * * may be defined as an `Array`:
  *
- * ```
- * toolbar: [ 'heading', 'bold', 'italic', 'link', ... ]
- * ```
+ * 		toolbar: [ 'heading', 'bold', 'italic', 'link', ... ]
  *
  * * or an `Object`:
  *
- * ```
- * toolbar: {
- * 	items: [ 'heading', 'bold', 'italic', 'link', ... ],
- * 	removeItems: [ 'bold' ],
- * 	...
- * }
- * ```
+ *		toolbar: {
+ *			items: [ 'heading', 'bold', 'italic', 'link', ... ],
+ *			removeItems: [ 'bold' ],
+ *			...
+ *		}
  *
  * * or may not be defined at all (`undefined`)
  *
  * and returns it in the object form.
  *
- * @param config The value of `config.toolbar`.
- * @returns A normalized toolbar config object.
+ * @param {Array|Object|undefined} config The value of `config.toolbar`.
+ * @returns {Object} A normalized toolbar config object.
  */
 export default function normalizeToolbarConfig(
 	config: ToolbarConfig | undefined
@@ -41,7 +37,6 @@ export default function normalizeToolbarConfig(
 	items: Array<ToolbarConfigItem>;
 	removeItems: Array<string>;
 	shouldNotGroupWhenFull?: boolean;
-	icon?: string;
 } {
 	if ( Array.isArray( config ) ) {
 		return {
@@ -50,17 +45,15 @@ export default function normalizeToolbarConfig(
 		};
 	}
 
-	const predefinedConfigOptions = {
-		items: [],
-		removeItems: []
-	};
-
 	if ( !config ) {
-		return predefinedConfigOptions;
+		return {
+			items: [],
+			removeItems: []
+		};
 	}
 
-	return {
-		...predefinedConfigOptions,
-		...config
-	};
+	return Object.assign( {
+		items: [],
+		removeItems: []
+	}, config );
 }

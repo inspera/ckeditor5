@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -22,74 +22,29 @@ describe( 'StylePanelView', () => {
 				{
 					name: 'Red heading',
 					element: 'h2',
-					classes: [ 'red-heading' ],
-					previewTemplate: {
-						tag: 'h2',
-						attributes: {
-							class: 'red-heading'
-						},
-						children: [
-							{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-						]
-					}
+					classes: [ 'red-heading' ]
 				},
 				{
 					name: 'Large heading',
 					element: 'h2',
-					classes: [ 'large-heading' ],
-					previewTemplate: {
-						tag: 'h2',
-						attributes: {
-							class: 'large-heading'
-						},
-						children: [
-							{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-						]
-					}
+					classes: [ 'large-heading' ]
 				}
 			],
 			inline: [
 				{
 					name: 'Deleted text',
 					element: 'span',
-					classes: [ 'deleted' ],
-					previewTemplate: {
-						tag: 'span',
-						attributes: {
-							class: 'deleted'
-						},
-						children: [
-							{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-						]
-					}
+					classes: [ 'deleted' ]
 				},
 				{
 					name: 'Cited work',
 					element: 'span',
-					classes: [ 'cited', 'another-class' ],
-					previewTemplate: {
-						tag: 'span',
-						attributes: {
-							class: [ 'cited', 'another-class' ]
-						},
-						children: [
-							{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-						]
-					}
+					classes: [ 'cited', 'another-class' ]
 				},
 				{
 					name: 'Small text',
 					element: 'span',
-					classes: [ 'small' ],
-					previewTemplate: {
-						tag: 'span',
-						attributes: {
-							class: 'small'
-						},
-						children: [
-							{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-						]
-					}
+					classes: [ 'small' ]
 				}
 			]
 		} );
@@ -156,16 +111,7 @@ describe( 'StylePanelView', () => {
 						{
 							name: 'Deleted text',
 							element: 'span',
-							classes: [ 'deleted' ],
-							previewTemplate: {
-								tag: 'span',
-								attributes: {
-									class: 'deleted'
-								},
-								children: [
-									{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-								]
-							}
+							classes: [ 'deleted' ]
 						}
 					]
 				} );
@@ -182,16 +128,7 @@ describe( 'StylePanelView', () => {
 						{
 							name: 'Large heading',
 							element: 'h2',
-							classes: [ 'large-heading' ],
-							previewTemplate: {
-								tag: 'h2',
-								attributes: {
-									class: 'large-heading'
-								},
-								children: [
-									{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-								]
-							}
+							classes: [ 'large-heading' ]
 						}
 					],
 					inline: []
@@ -358,32 +295,14 @@ describe( 'StylePanelView', () => {
 					{
 						name: 'Red heading',
 						element: 'h2',
-						classes: [ 'red-heading' ],
-						previewTemplate: {
-							tag: 'h2',
-							attributes: {
-								class: 'red-heading'
-							},
-							children: [
-								{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-							]
-						}
+						classes: [ 'red-heading' ]
 					}
 				],
 				inline: [
 					{
 						name: 'Deleted text',
 						element: 'span',
-						classes: [ 'deleted' ],
-						previewTemplate: {
-							tag: 'span',
-							attributes: {
-								class: 'deleted'
-							},
-							children: [
-								{ text: 'AaBbCcDdEeFfGgHhIiJj' }
-							]
-						}
+						classes: [ 'deleted' ]
 					}
 				]
 			} );

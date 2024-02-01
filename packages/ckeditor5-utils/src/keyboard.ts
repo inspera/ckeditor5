@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -48,10 +48,11 @@ const keyCodeNames = Object.fromEntries(
 /**
  * Converts a key name or {@link module:utils/keyboard~KeystrokeInfo keystroke info} into a key code.
  *
- * Note: Key names are matched with {@link module:utils/keyboard#keyCodes} in a case-insensitive way.
+ * Note: Key names are matched with {@link module:utils/keyboard~keyCodes} in a case-insensitive way.
  *
- * @param key A key name (see {@link module:utils/keyboard#keyCodes}) or a keystroke data object.
- * @returns Key or keystroke code.
+ * @param {String|module:utils/keyboard~KeystrokeInfo} A key name (see {@link module:utils/keyboard~keyCodes})
+ * or a keystroke data object.
+ * @returns {Number} Key or keystroke code.
  */
 export function getCode( key: string | Readonly<KeystrokeInfo> ): number {
 	let keyCode: number | undefined;
@@ -61,7 +62,7 @@ export function getCode( key: string | Readonly<KeystrokeInfo> ): number {
 
 		if ( !keyCode ) {
 			/**
-			 * Unknown key name. Only key names included in the {@link module:utils/keyboard#keyCodes} can be used.
+			 * Unknown key name. Only key names included in the {@link module:utils/keyboard~keyCodes} can be used.
 			 *
 			 * @error keyboard-unknown-key
 			 * @param {String} key
@@ -90,7 +91,7 @@ export function getCode( key: string | Readonly<KeystrokeInfo> ): number {
  *   * `[ 'ctrl', 32 ]` (ctrl + space),
  *   * `[ 'ctrl', 'a' ]` (ctrl + A).
  *
- * Note: Key names are matched with {@link module:utils/keyboard#keyCodes} in a case-insensitive way.
+ * Note: Key names are matched with {@link module:utils/keyboard~keyCodes} in a case-insensitive way.
  *
  * Note: Only keystrokes with a single non-modifier key are supported (e.g. `ctrl+A` is OK, but `ctrl+A+B` is not).
  *
@@ -98,8 +99,8 @@ export function getCode( key: string | Readonly<KeystrokeInfo> ): number {
  * For example, a registered keystroke `Ctrl+A` will be translated to `Cmd+A` on macOS. To disable the translation of some keystroke,
  * use the forced modifier: `Ctrl!+A` (note the exclamation mark).
  *
- * @param keystroke The keystroke definition.
- * @returns Keystroke code.
+ * @param {String|Array.<Number|String>} keystroke The keystroke definition.
+ * @returns {Number} Keystroke code.
  */
 export function parseKeystroke( keystroke: string | ReadonlyArray<number | string> ): number {
 	if ( typeof keystroke == 'string' ) {
@@ -115,13 +116,13 @@ export function parseKeystroke( keystroke: string | ReadonlyArray<number | strin
  * Translates any keystroke string text like `"Ctrl+A"` to an
  * environment–specific keystroke, i.e. `"⌘A"` on macOS.
  *
- * @param keystroke The keystroke text.
- * @returns The keystroke text specific for the environment.
+ * @param {String} keystroke The keystroke text.
+ * @returns {String} The keystroke text specific for the environment.
  */
 export function getEnvKeystrokeText( keystroke: string ): string {
 	let keystrokeCode = parseKeystroke( keystroke );
 
-	const modifiersToGlyphs = Object.entries( ( env.isMac || env.isiOS ) ? modifiersToGlyphsMac : modifiersToGlyphsNonMac );
+	const modifiersToGlyphs = Object.entries( env.isMac ? modifiersToGlyphsMac : modifiersToGlyphsNonMac );
 
 	const modifiers = modifiersToGlyphs.reduce( ( modifiers, [ name, glyph ] ) => {
 		// Modifier keys are stored as a bit mask so extract those from the keystroke code.
@@ -139,7 +140,8 @@ export function getEnvKeystrokeText( keystroke: string ): string {
 /**
  * Returns `true` if the provided key code represents one of the arrow keys.
  *
- * @param keyCode A key code as in {@link module:utils/keyboard~KeystrokeInfo#keyCode}.
+ * @param {Number} keyCode A key code as in {@link module:utils/keyboard~KeystrokeInfo#keyCode}.
+ * @returns {Boolean}
  */
 export function isArrowKeyCode( keyCode: number ): boolean {
 	return keyCode == keyCodes.arrowright ||
@@ -150,6 +152,8 @@ export function isArrowKeyCode( keyCode: number ): boolean {
 
 /**
  * String representing a direction of an arrow key kode.
+ *
+ * @typedef {'left'|'up'|'right'|'down'} module:utils/keyboard~ArrowKeyCodeDirection
  */
 export type ArrowKeyCodeDirection = 'left' | 'up' | 'right' | 'down';
 
@@ -160,10 +164,10 @@ export type ArrowKeyCodeDirection = 'left' | 'up' | 'right' | 'down';
  * For instance, in right–to–left (RTL) content languages, pressing the left arrow means moving the selection right (forward)
  * in the model structure. Similarly, pressing the right arrow moves the selection left (backward).
  *
- * @param keyCode A key code as in {@link module:utils/keyboard~KeystrokeInfo#keyCode}.
- * @param contentLanguageDirection The content language direction, corresponding to
+ * @param {Number} keyCode A key code as in {@link module:utils/keyboard~KeystrokeInfo#keyCode}.
+ * @param {module:utils/language~LanguageDirection} contentLanguageDirection The content language direction, corresponding to
  * {@link module:utils/locale~Locale#contentLanguageDirection}.
- * @returns Localized arrow direction or `undefined` for non-arrow key codes.
+ * @returns {module:utils/keyboard~ArrowKeyCodeDirection|undefined} Localized arrow direction or `undefined` for non-arrow key codes.
  */
 export function getLocalizedArrowKeyCodeDirection(
 	keyCode: number,
@@ -186,14 +190,12 @@ export function getLocalizedArrowKeyCodeDirection(
 	}
 }
 
-/**
- * Converts a key name to the key code with mapping based on the env.
- *
- * See: {@link module:utils/keyboard~getCode}.
- *
- * @param key The key name (see {@link module:utils/keyboard#keyCodes}).
- * @returns Key code.
- */
+// Converts a key name to the key code with mapping based on the env.
+//
+// See: {@link module:utils/keyboard~getCode}.
+//
+// @param {String} key The key name (see {@link module:utils/keyboard~keyCodes}).
+// @returns {Number} Key code.
 function getEnvKeyCode( key: string ): number {
 	// Don't remap modifier key for forced modifiers.
 	if ( key.endsWith( '!' ) ) {
@@ -202,7 +204,7 @@ function getEnvKeyCode( key: string ): number {
 
 	const code = getCode( key );
 
-	return ( env.isMac || env.isiOS ) && code == keyCodes.ctrl ? keyCodes.cmd : code;
+	return env.isMac && code == keyCodes.ctrl ? keyCodes.cmd : code;
 }
 
 /**
@@ -212,9 +214,10 @@ function getEnvKeyCode( key: string ): number {
  * For instance, in right–to–left (RTL) languages, pressing the left arrow means moving forward
  * in the model structure. Similarly, pressing the right arrow moves the selection backward.
  *
- * @param keyCode A key code as in {@link module:utils/keyboard~KeystrokeInfo#keyCode}.
- * @param contentLanguageDirection The content language direction, corresponding to
+ * @param {Number} keyCode A key code as in {@link module:utils/keyboard~KeystrokeInfo#keyCode}.
+ * @param {module:utils/language~LanguageDirection} contentLanguageDirection The content language direction, corresponding to
  * {@link module:utils/locale~Locale#contentLanguageDirection}.
+ * @returns {Boolean}
  */
 export function isForwardArrowKeyCode(
 	keyCode: number,
@@ -277,31 +280,43 @@ function splitKeystrokeText( keystroke: string ): Array<string> {
 
 /**
  * Information about the keystroke.
+ *
+ * @interface
  */
 export interface KeystrokeInfo {
 
 	/**
 	 * The [key code](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode).
+	 *
+	 * @member {Number}
 	 */
 	keyCode: number;
 
 	/**
 	 * Whether the <kbd>Alt</kbd> modifier was pressed.
+	 *
+	 * @member {Boolean}
 	 */
 	altKey: boolean;
 
 	/**
 	 * Whether the <kbd>Cmd</kbd> modifier was pressed.
+	 *
+	 * @member {Boolean} module:utils/keyboard~KeystrokeInfo#metaKey
 	 */
 	metaKey: boolean;
 
 	/**
 	 * Whether the <kbd>Ctrl</kbd> modifier was pressed.
+	 *
+	 * @member {Boolean}
 	 */
 	ctrlKey: boolean;
 
 	/**
 	 * Whether the <kbd>Shift</kbd> modifier was pressed.
+	 *
+	 * @member {Boolean}
 	 */
 	shiftKey: boolean;
 }

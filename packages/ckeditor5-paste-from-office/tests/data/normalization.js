@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -8,7 +8,6 @@ import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import PasteFromOffice from '../../src/pastefromoffice';
 
 import { generateTests } from '../_utils/utils';
-import * as fixtures from '../_utils/fixtures';
 
 const browsers = [ 'chrome', 'firefox', 'safari', 'edge' ];
 
@@ -17,46 +16,59 @@ const editorConfig = {
 };
 
 describe( 'PasteFromOffice - normalization', () => {
-	generateNormalizationTests( {
-		input: 'basic-styles'
+	generateTests( {
+		input: 'basic-styles',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'image'
+	generateTests( {
+		input: 'image',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'link'
+	generateTests( {
+		input: 'link',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'list'
+	generateTests( {
+		input: 'list',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'spacing'
+	generateTests( {
+		input: 'spacing',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'google-docs-bold-wrapper'
+	generateTests( {
+		input: 'google-docs-bold-wrapper',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'generic-list-in-table'
+	generateTests( {
+		input: 'generic-list-in-table',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
 
-	generateNormalizationTests( {
-		input: 'google-docs-br-paragraphs'
+	generateTests( {
+		input: 'google-docs-br-paragraphs',
+		type: 'normalization',
+		browsers,
+		editorConfig
 	} );
-
-	function generateNormalizationTests( config ) {
-		const commonIntegrationConfig = {
-			type: 'normalization',
-			fixtures,
-			editorConfig,
-			browsers
-		};
-
-		return generateTests( Object.assign( {}, config, commonIntegrationConfig ) );
-	}
 } );

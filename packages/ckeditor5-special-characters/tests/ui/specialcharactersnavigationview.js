@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -19,10 +19,7 @@ describe( 'SpecialCharactersNavigationView', () => {
 			t: val => val
 		};
 
-		view = new SpecialCharactersNavigationView( locale, new Map( [
-			[ 'groupA', 'labelA' ],
-			[ 'groupB', 'labelB' ]
-		] ) );
+		view = new SpecialCharactersNavigationView( locale, [ 'groupA', 'groupB' ] );
 		view.render();
 	} );
 
@@ -59,8 +56,6 @@ describe( 'SpecialCharactersNavigationView', () => {
 
 	describe( 'currentGroupName()', () => {
 		it( 'returns the #value of #groupDropdownView', () => {
-			view.groupDropdownView.isOpen = true;
-
 			expect( view.currentGroupName ).to.equal( 'groupA' );
 
 			view.groupDropdownView.listView.items.last.children.first.fire( 'execute' );
@@ -73,7 +68,6 @@ describe( 'SpecialCharactersNavigationView', () => {
 
 		beforeEach( () => {
 			groupDropdownView = view.groupDropdownView;
-			groupDropdownView.isOpen = true;
 		} );
 
 		it( 'has a default #value', () => {
@@ -90,10 +84,7 @@ describe( 'SpecialCharactersNavigationView', () => {
 				t: val => val
 			};
 
-			view = new SpecialCharactersNavigationView( locale, new Map( [
-				[ 'groupA', 'labelA' ],
-				[ 'groupB', 'labelB' ]
-			] ) );
+			view = new SpecialCharactersNavigationView( locale, [ 'groupA', 'groupB' ] );
 			view.render();
 
 			expect( view.groupDropdownView.panelPosition ).to.equal( 'se' );
@@ -111,19 +102,17 @@ describe( 'SpecialCharactersNavigationView', () => {
 		} );
 
 		describe( 'buttonView', () => {
-			it( 'binds #label to translation #value', () => {
-				expect( groupDropdownView.buttonView.label ).to.equal( 'labelA' );
+			it( 'binds #label to #value', () => {
+				expect( groupDropdownView.buttonView.label ).to.equal( 'groupA' );
 
 				groupDropdownView.listView.items.last.children.first.fire( 'execute' );
-				expect( groupDropdownView.buttonView.label ).to.equal( 'labelB' );
+				expect( groupDropdownView.buttonView.label ).to.equal( 'groupB' );
 			} );
 
 			it( 'should be configured by the #groupDropdownView', () => {
-				expect( groupDropdownView.buttonView.isOn ).to.be.true;
+				expect( groupDropdownView.buttonView.isOn ).to.be.false;
 				expect( groupDropdownView.buttonView.withText ).to.be.true;
 				expect( groupDropdownView.buttonView.tooltip ).to.equal( 'Character categories' );
-				expect( groupDropdownView.buttonView.ariaLabel ).to.equal( 'Character categories' );
-				expect( groupDropdownView.buttonView.ariaLabelledBy ).to.be.undefined;
 			} );
 
 			it( 'should have class "ck-dropdown__button_label-width_auto"', () => {
@@ -133,26 +122,17 @@ describe( 'SpecialCharactersNavigationView', () => {
 			} );
 		} );
 
-		describe( 'character group list', () => {
-			it( 'should have properties set', () => {
-				const listView = groupDropdownView.listView;
-
-				expect( listView.element.role ).to.equal( 'menu' );
-				expect( listView.element.ariaLabel ).to.equal( 'Character categories' );
-			} );
-		} );
-
 		describe( 'character group list items', () => {
 			it( 'have basic properties', () => {
 				expect( groupDropdownView.listView.items
 					.map( item => {
-						const { name, label, withText } = item.children.first;
+						const { label, withText } = item.children.first;
 
-						return { name, label, withText };
+						return { label, withText };
 					} ) )
 					.to.deep.equal( [
-						{ name: 'groupA', label: 'labelA', withText: true },
-						{ name: 'groupB', label: 'labelB', withText: true }
+						{ label: 'groupA', withText: true },
+						{ label: 'groupB', withText: true }
 					] );
 			} );
 

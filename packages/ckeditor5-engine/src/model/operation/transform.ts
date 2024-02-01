@@ -1,10 +1,6 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
- */
-
-/**
- * @module engine/model/operation/transform
  */
 
 import InsertOperation from './insertoperation';
@@ -13,7 +9,6 @@ import RenameOperation from './renameoperation';
 import MarkerOperation from './markeroperation';
 import MoveOperation from './moveoperation';
 import RootAttributeOperation from './rootattributeoperation';
-import RootOperation from './rootoperation';
 import MergeOperation from './mergeoperation';
 import SplitOperation from './splitoperation';
 import NoOperation from './nooperation';
@@ -24,11 +19,15 @@ import type Operation from './operation';
 import type Document from '../document';
 import type History from '../history';
 
-import { compareArrays } from '@ckeditor/ckeditor5-utils';
+import compareArrays from '@ckeditor/ckeditor5-utils/src/comparearrays';
 
 type TransformationFunction = ( a: Operation, b: Operation, context: TransformationContext ) => Array<Operation>;
 
 const transformations = new Map<Function, Map<Function, TransformationFunction>>();
+
+/**
+ * @module engine/model/operation/transform
+ */
 
 /**
  * Sets a transformation function to be be used to transform instances of class `OperationA` by instances of class `OperationB`.
@@ -43,7 +42,10 @@ const transformations = new Map<Function, Map<Function, TransformationFunction>>
  * The `transformationFunction` should return transformation result, which is an array with one or multiple
  * {@link module:engine/model/operation/operation~Operation operation} instances.
  *
- * @param transformationFunction Function to use for transforming.
+ * @protected
+ * @param {Function} OperationA
+ * @param {Function} OperationB
+ * @param {Function} transformationFunction Function to use for transforming.
  */
 function setTransformation<
 	ClassA extends new ( ...args: Array<any> ) => Operation,
@@ -70,7 +72,10 @@ function setTransformation<
  * is returned. This means that if no transformation was set, the `OperationA` instance will not change when transformed
  * by the `OperationB` instance.
  *
- * @returns Function set to transform an instance of `OperationA` by an instance of `OperationB`.
+ * @private
+ * @param {Function} OperationA
+ * @param {Function} OperationB
+ * @returns {Function} Function set to transform an instance of `OperationA` by an instance of `OperationB`.
  */
 function getTransformation( OperationA: Function, OperationB: Function ): TransformationFunction {
 	const aGroup = transformations.get( OperationA );
@@ -84,6 +89,10 @@ function getTransformation( OperationA: Function, OperationB: Function ): Transf
 
 /**
  * A transformation function that only clones operation to transform, without changing it.
+ *
+ * @private
+ * @param {module:engine/model/operation/operation~Operation} a Operation to transform.
+ * @returns {Array.<module:engine/model/operation/operation~Operation>}
  */
 function noUpdateTransformation( a: Operation ): Array<Operation> {
 	return [ a ];
@@ -92,10 +101,10 @@ function noUpdateTransformation( a: Operation ): Array<Operation> {
 /**
  * Transforms operation `a` by operation `b`.
  *
- * @param a Operation to be transformed.
- * @param b Operation to transform by.
- * @param context Transformation context for this transformation.
- * @returns Transformation result.
+ * @param {module:engine/model/operation/operation~Operation} a Operation to be transformed.
+ * @param {module:engine/model/operation/operation~Operation} b Operation to transform by.
+ * @param {module:engine/model/operation/transform~TransformationContext} [context] Transformation context for this transformation.
+ * @returns {Array.<module:engine/model/operation/operation~Operation>} Transformation result.
  */
 export function transform( a: Operation, b: Operation, context: TransformationContext = {} ): Array<Operation> {
 	const transformationFunction = getTransformation( a.constructor, b.constructor );
@@ -105,7 +114,7 @@ export function transform( a: Operation, b: Operation, context: TransformationCo
 		a = a.clone();
 
 		return transformationFunction( a, b, context );
-	} catch ( e: any ) {
+	} catch ( e ) {
 		// @if CK_DEBUG // console.warn( 'Error during operation transformation!', e.message );
 		// @if CK_DEBUG // console.warn( 'Transformed operation', a );
 		// @if CK_DEBUG // console.warn( 'Operation transformed by', b );
@@ -142,17 +151,22 @@ export function transform( a: Operation, b: Operation, context: TransformationCo
  * * transformed `operationsA` start from `9` and there are `3` of them, so the last will have `baseVersion` equal to `11`,
  * * transformed `operationsB` start from `7` and there are `5` of them, so the last will have `baseVersion` equal to `11`.
  *
- * @param operationsA
- * @param operationsB
- * @param options Additional transformation options.
- * @param options.document Document which the operations change.
- * @param options.useRelations Whether during transformation relations should be used (used during undo for better conflict resolution).
- * @param options.padWithNoOps Whether additional {@link module:engine/model/operation/nooperation~NoOperation}s
+ * @param {Array.<module:engine/model/operation/operation~Operation>} operationsA
+ * @param {Array.<module:engine/model/operation/operation~Operation>} operationsB
+ * @param {Object} options Additional transformation options.
+ * @param {module:engine/model/document~Document} options.document Document which the operations change.
+ * @param {Boolean} [options.useRelations=false] Whether during transformation relations should be used (used during undo for
+ * better conflict resolution).
+ * @param {Boolean} [options.padWithNoOps=false] Whether additional {@link module:engine/model/operation/nooperation~NoOperation}s
  * should be added to the transformation results to force the same last base version for both transformed sets (in case
  * if some operations got broken into multiple operations during transformation).
- * @param options.forceWeakRemove If set to `false`, remove operation will be always stronger than move operation,
+ * @param {Boolean} [options.forceWeakRemove] If set to `false`, remove operation will be always stronger than move operation,
  * so the removed nodes won't end up back in the document root. When set to `true`, context data will be used.
- * @returns Transformation result.
+ * @returns {Object} Transformation result.
+ * @returns {Array.<module:engine/model/operation/operation~Operation>} return.operationsA Transformed `operationsA`.
+ * @returns {Array.<module:engine/model/operation/operation~Operation>} return.operationsB Transformed `operationsB`.
+ * @returns {Map} return.originalOperations A map that links transformed operations to original operations. The keys are the transformed
+ * operations and the values are the original operations from the input (`operationsA` and `operationsB`).
  */
 export function transformSets(
 	operationsA: Array<Operation>,
@@ -163,7 +177,7 @@ export function transformSets(
 		padWithNoOps?: boolean;
 		forceWeakRemove?: boolean;
 	}
-): TransformSetsResult {
+): { operationsA: Array<Operation>; operationsB: Array<Operation>; originalOperations: Map<Operation, Operation> } {
 	// Create new arrays so the originally passed arguments are not changed.
 	// No need to clone operations, they are cloned as they are transformed.
 	operationsA = operationsA.slice();
@@ -393,32 +407,8 @@ export function transformSets(
 	return { operationsA, operationsB, originalOperations };
 }
 
-/**
- * The result of {@link module:engine/model/operation/transform~transformSets}.
- */
-export interface TransformSetsResult {
-
-	/**
-	 * Transformed `operationsA`.
-	 */
-	operationsA: Array<Operation>;
-
-	/**
-	 * Transformed `operationsB`.
-	 */
-	operationsB: Array<Operation>;
-
-	/**
-	 * A map that links transformed operations to original operations. The keys are the transformed
-	 * operations and the values are the original operations from the input (`operationsA` and `operationsB`).
-	 */
-	originalOperations: Map<Operation, Operation>;
-}
-
-/**
- * Gathers additional data about operations processed during transformation. Can be used to obtain contextual information
- * about two operations that are about to be transformed. This contextual information can be used for better conflict resolution.
- */
+// Gathers additional data about operations processed during transformation. Can be used to obtain contextual information
+// about two operations that are about to be transformed. This contextual information can be used for better conflict resolution.
 class ContextFactory {
 	public readonly originalOperations: Map<Operation, Operation>;
 
@@ -427,15 +417,13 @@ class ContextFactory {
 	private readonly _forceWeakRemove: boolean;
 	private readonly _relations: Map<Operation, Map<Operation, any>>;
 
-	/**
-	 * Creates `ContextFactory` instance.
-	 *
-	 * @param document Document which the operations change.
-	 * @param useRelations Whether during transformation relations should be used (used during undo for
-	 * better conflict resolution).
-	 * @param forceWeakRemove If set to `false`, remove operation will be always stronger than move operation,
-	 * so the removed nodes won't end up back in the document root. When set to `true`, context data will be used.
-	 */
+	// Creates `ContextFactory` instance.
+	//
+	// @param {module:engine/model/document~Document} document Document which the operations change.
+	// @param {Boolean} useRelations Whether during transformation relations should be used (used during undo for
+	// better conflict resolution).
+	// @param {Boolean} [forceWeakRemove=false] If set to `false`, remove operation will be always stronger than move operation,
+	// so the removed nodes won't end up back in the document root. When set to `true`, context data will be used.
 	constructor( document: Document, useRelations: boolean | undefined, forceWeakRemove = false ) {
 		// For each operation that is created during transformation process, we keep a reference to the original operation
 		// which it comes from. The original operation works as a kind of "identifier". Every contextual information
@@ -458,23 +446,24 @@ class ContextFactory {
 		this._relations = new Map();
 	}
 
-	/**
-	 * Sets "original operation" for given operations.
-	 *
-	 * During transformation process, operations are cloned, then changed, then processed again, sometimes broken into two
-	 * or multiple operations. When gathering additional data it is important that all operations can be somehow linked
-	 * so a cloned and transformed "version" still kept track of the data assigned earlier to it.
-	 *
-	 * The original operation object will be used as such an universal linking id. Throughout the transformation process
-	 * all cloned operations will refer to "the original operation" when storing and reading additional data.
-	 *
-	 * If `takeFrom` is not set, each operation from `operations` array will be assigned itself as "the original operation".
-	 * This should be used as an initialization step.
-	 *
-	 * If `takeFrom` is set, each operation from `operations` will be assigned the same original operation as assigned
-	 * for `takeFrom` operation. This should be used to update original operations. It should be used in a way that
-	 * `operations` are the result of `takeFrom` transformation to ensure proper "original operation propagation".
-	 */
+	// Sets "original operation" for given operations.
+	//
+	// During transformation process, operations are cloned, then changed, then processed again, sometimes broken into two
+	// or multiple operations. When gathering additional data it is important that all operations can be somehow linked
+	// so a cloned and transformed "version" still kept track of the data assigned earlier to it.
+	//
+	// The original operation object will be used as such an universal linking id. Throughout the transformation process
+	// all cloned operations will refer to "the original operation" when storing and reading additional data.
+	//
+	// If `takeFrom` is not set, each operation from `operations` array will be assigned itself as "the original operation".
+	// This should be used as an initialization step.
+	//
+	// If `takeFrom` is set, each operation from `operations` will be assigned the same original operation as assigned
+	// for `takeFrom` operation. This should be used to update original operations. It should be used in a way that
+	// `operations` are the result of `takeFrom` transformation to ensure proper "original operation propagation".
+	//
+	// @param {Array.<module:engine/model/operation/operation~Operation>} operations
+	// @param {module:engine/model/operation/operation~Operation|null} [takeFrom=null]
 	public setOriginalOperations( operations: Array<Operation>, takeFrom: Operation | null = null ): void {
 		const originalOperation = takeFrom ? this.originalOperations.get( takeFrom ) : null;
 
@@ -483,11 +472,12 @@ class ContextFactory {
 		}
 	}
 
-	/**
-	 * Saves a relation between operations `opA` and `opB`.
-	 *
-	 * Relations are then later used to help solve conflicts when operations are transformed.
-	 */
+	// Saves a relation between operations `opA` and `opB`.
+	//
+	// Relations are then later used to help solve conflicts when operations are transformed.
+	//
+	// @param {module:engine/model/operation/operation~Operation} opA
+	// @param {module:engine/model/operation/operation~Operation} opB
 	public updateRelation( opA: Operation, opB: Operation ): void {
 		// The use of relations is described in a bigger detail in transformation functions.
 		//
@@ -589,9 +579,11 @@ class ContextFactory {
 		}
 	}
 
-	/**
-	 * Evaluates and returns contextual information about two given operations `opA` and `opB` which are about to be transformed.
-	 */
+	// Evaluates and returns contextual information about two given operations `opA` and `opB` which are about to be transformed.
+	//
+	// @param {module:engine/model/operation/operation~Operation} opA
+	// @param {module:engine/model/operation/operation~Operation} opB
+	// @returns {module:engine/model/operation/transform~TransformationContext}
 	public getContext( opA: Operation, opB: Operation, aIsStrong: boolean ): TransformationContext {
 		return {
 			aIsStrong,
@@ -603,11 +595,12 @@ class ContextFactory {
 		};
 	}
 
-	/**
-	 * Returns whether given operation `op` has already been undone.
-	 *
-	 * Information whether an operation was undone gives more context when making a decision when two operations are in conflict.
-	 */
+	// Returns whether given operation `op` has already been undone.
+	//
+	// Information whether an operation was undone gives more context when making a decision when two operations are in conflict.
+	//
+	// @param {module:engine/model/operation/operation~Operation} op
+	// @returns {Boolean}
 	public _wasUndone( op: Operation ): boolean {
 		// For `op`, get its original operation. After all, if `op` is a clone (or even transformed clone) of another
 		// operation, literally `op` couldn't be undone. It was just generated. If anything, it was the operation it origins
@@ -618,28 +611,30 @@ class ContextFactory {
 		return ( originalOp as any ).wasUndone || this._history.isUndoneOperation( originalOp );
 	}
 
-	/**
-	 * Returns a relation between `opA` and an operation which is undone by `opB`. This can be `String` value if a relation
-	 * was set earlier or `null` if there was no relation between those operations.
-	 *
-	 * This is a little tricky to understand, so let's compare it to `ContextFactory#_wasUndone`.
-	 *
-	 * When `wasUndone( opB )` is used, we check if the `opB` has already been undone. It is obvious, that the
-	 * undoing operation must happen after the undone operation. So, essentially, we have `opB`, we take document history,
-	 * we look forward in the future and ask if in that future `opB` was undone.
-	 *
-	 * Relations is a backward process to `wasUndone()`.
-	 *
-	 * Long story short - using relations is asking what happened in the past. Looking back. This time we have an undoing
-	 * operation `opB` which has undone some other operation. When there is a transformation `opA` x `opB` and there is
-	 * a conflict to solve and `opB` is an undoing operation, we can look back in the history and see what was a relation
-	 * between `opA` and the operation which `opB` undone. Basing on that relation from the past, we can now make
-	 * a better decision when resolving a conflict between two operations, because we know more about the context of
-	 * those two operations.
-	 *
-	 * This is why this function does not return a relation directly between `opA` and `opB` because we need to look
-	 * back to search for a meaningful contextual information.
-	 */
+	// Returns a relation between `opA` and an operation which is undone by `opB`. This can be `String` value if a relation
+	// was set earlier or `null` if there was no relation between those operations.
+	//
+	// This is a little tricky to understand, so let's compare it to `ContextFactory#_wasUndone`.
+	//
+	// When `wasUndone( opB )` is used, we check if the `opB` has already been undone. It is obvious, that the
+	// undoing operation must happen after the undone operation. So, essentially, we have `opB`, we take document history,
+	// we look forward in the future and ask if in that future `opB` was undone.
+	//
+	// Relations is a backward process to `wasUndone()`.
+	//
+	// Long story short - using relations is asking what happened in the past. Looking back. This time we have an undoing
+	// operation `opB` which has undone some other operation. When there is a transformation `opA` x `opB` and there is
+	// a conflict to solve and `opB` is an undoing operation, we can look back in the history and see what was a relation
+	// between `opA` and the operation which `opB` undone. Basing on that relation from the past, we can now make
+	// a better decision when resolving a conflict between two operations, because we know more about the context of
+	// those two operations.
+	//
+	// This is why this function does not return a relation directly between `opA` and `opB` because we need to look
+	// back to search for a meaningful contextual information.
+	//
+	// @param {module:engine/model/operation/operation~Operation} opA
+	// @param {module:engine/model/operation/operation~Operation} opB
+	// @returns {String|null}
 	public _getRelation( opA: Operation, opB: Operation ): any {
 		// Get the original operation. Similarly as in `wasUndone()` it is used as an universal identifier for stored data.
 		const origB = this.originalOperations.get( opB )!;
@@ -661,9 +656,12 @@ class ContextFactory {
 		return null;
 	}
 
-	/**
-	 * Helper function for `ContextFactory#updateRelations`.
-	 */
+	// Helper function for `ContextFactory#updateRelations`.
+	//
+	// @private
+	// @param {module:engine/model/operation/operation~Operation} opA
+	// @param {module:engine/model/operation/operation~Operation} opB
+	// @param {String} relation
 	private _setRelation( opA: Operation, opB: Operation, relation: any ): void {
 		// As always, setting is for original operations, not the clones/transformed operations.
 		const origA = this.originalOperations.get( opA )!;
@@ -683,35 +681,22 @@ class ContextFactory {
 /**
  * Holds additional contextual information about a transformed pair of operations (`a` and `b`). Those information
  * can be used for better conflict resolving.
+ *
+ * @typedef {Object} module:engine/model/operation/transform~TransformationContext
+ *
+ * @property {Boolean} aIsStrong Whether `a` is strong operation in this transformation, or weak.
+ * @property {Boolean} aWasUndone Whether `a` operation was undone.
+ * @property {Boolean} bWasUndone Whether `b` operation was undone.
+ * @property {String|Object|null} abRelation The relation between `a` operation and an operation undone by `b` operation.
+ * @property {String|Object|null} baRelation The relation between `b` operation and an operation undone by `a` operation.
  */
 
 export type TransformationContext = {
-
-	/**
-	 * Whether `a` is strong operation in this transformation, or weak.
-	 */
 	aIsStrong?: boolean;
-
-	/**
-	 * Whether `a` operation was undone.
-	 */
 	aWasUndone?: boolean;
-
-	/**
-	 * Whether `b` operation was undone.
-	 */
 	bWasUndone?: boolean;
-
-	/**
-	 * The relation between `a` operation and an operation undone by `b` operation.
-	 */
 	abRelation?: any;
-
-	/**
-	 * The relation between `b` operation and an operation undone by `a` operation.
-	 */
 	baRelation?: any;
-
 	forceWeakRemove?: boolean;
 };
 
@@ -722,8 +707,9 @@ export type TransformationContext = {
  * The function simply sets `baseVersion` as a base version of the first passed operation and then increments it for
  * each following operation in `operations`.
  *
- * @param operations Operations to update.
- * @param baseVersion Base version to set for the first operation in `operations`.
+ * @private
+ * @param {Array.<module:engine/model/operation/operation~Operation>} operations Operations to update.
+ * @param {Number} baseVersion Base version to set for the first operation in `operations`.
  */
 function updateBaseVersions( operations: ReadonlyArray<Operation>, baseVersion: number ) {
 	for ( const operation of operations ) {
@@ -733,6 +719,10 @@ function updateBaseVersions( operations: ReadonlyArray<Operation>, baseVersion: 
 
 /**
  * Adds `howMany` instances of {@link module:engine/model/operation/nooperation~NoOperation} to `operations` set.
+ *
+ * @private
+ * @param {Array.<module:engine/model/operation/operation~Operation>} operations
+ * @param {Number} howMany
  */
 function padWithNoOps( operations: Array<Operation>, howMany: number ) {
 	for ( let i = 0; i < howMany; i++ ) {
@@ -860,6 +850,12 @@ setTransformation( AttributeOperation, InsertOperation, ( a, b ) => {
  *
  * For given `insertOperation` it checks the inserted node if it has an attribute `key` set to a value different
  * than `newValue`. If so, it generates an `AttributeOperation` which changes the value of `key` attribute to `newValue`.
+ *
+ * @private
+ * @param {module:engine/model/operation/insertoperation~InsertOperation} insertOperation
+ * @param {String} key
+ * @param {*} newValue
+ * @returns {module:engine/model/operation/attributeoperation~AttributeOperation|null}
  */
 function _getComplementaryAttributeOperations( insertOperation: InsertOperation, key: string, newValue: unknown ) {
 	const nodes = insertOperation.nodes;
@@ -910,17 +906,20 @@ setTransformation( AttributeOperation, MoveOperation, ( a, b ) => {
 	return ranges.map( range => new AttributeOperation( range, a.key, a.oldValue, a.newValue, a.baseVersion ) );
 } );
 
-/**
- * Helper function for `AttributeOperation` x `MoveOperation` transformation.
- *
- * Takes the passed `range` and transforms it by move operation `moveOp` in a specific way. Only top-level nodes of `range`
- * are considered to be in the range. If move operation moves nodes deep from inside of the range, those nodes won't
- * be included in the result. In other words, top-level nodes of the ranges from the result are exactly the same as
- * top-level nodes of the original `range`.
- *
- * This is important for `AttributeOperation` because, for its range, it changes only the top-level nodes. So we need to
- * track only how those nodes have been affected by `MoveOperation`.
- */
+// Helper function for `AttributeOperation` x `MoveOperation` transformation.
+//
+// Takes the passed `range` and transforms it by move operation `moveOp` in a specific way. Only top-level nodes of `range`
+// are considered to be in the range. If move operation moves nodes deep from inside of the range, those nodes won't
+// be included in the result. In other words, top-level nodes of the ranges from the result are exactly the same as
+// top-level nodes of the original `range`.
+//
+// This is important for `AttributeOperation` because, for its range, it changes only the top-level nodes. So we need to
+// track only how those nodes have been affected by `MoveOperation`.
+//
+// @private
+// @param {module:engine/model/range~Range} range
+// @param {module:engine/model/operation/moveoperation~MoveOperation} moveOp
+// @returns {Array.<module:engine/model/range~Range>}
 function _breakRangeByMoveOperation( range: Range, moveOp: MoveOperation ) {
 	const moveRange = Range._createFromPositionAndShift( moveOp.sourcePosition, moveOp.howMany );
 
@@ -1156,12 +1155,12 @@ setTransformation( MarkerOperation, MoveOperation, ( a, b, context ) => {
 
 			if ( context.abRelation.side == 'left' && b.targetPosition.isEqual( a.newRange.start ) ) {
 				( a.newRange as any ).end = aNewRange.end;
-				( a.newRange.start as any ).path = context.abRelation.path;
+				a.newRange.start.path = context.abRelation.path;
 
 				return [ a ];
 			} else if ( context.abRelation.side == 'right' && b.targetPosition.isEqual( a.newRange.end ) ) {
 				( a.newRange as any ).start = aNewRange.start;
-				( a.newRange.end as any ).path = context.abRelation.path;
+				a.newRange.end.path = context.abRelation.path;
 
 				return [ a ];
 			}
@@ -1977,16 +1976,6 @@ setTransformation( RootAttributeOperation, RootAttributeOperation, ( a, b, conte
 
 // -----------------------
 
-setTransformation( RootOperation, RootOperation, ( a, b ) => {
-	if ( a.rootName === b.rootName && a.isAdd === b.isAdd ) {
-		return [ new NoOperation( 0 ) ];
-	}
-
-	return [ a ];
-} );
-
-// -----------------------
-
 setTransformation( SplitOperation, InsertOperation, ( a, b ) => {
 	// The default case.
 	//
@@ -2330,23 +2319,29 @@ setTransformation( SplitOperation, SplitOperation, ( a, b, context ) => {
 	return [ a ];
 } );
 
-/**
- * Checks whether `MoveOperation` `targetPosition` is inside a node from the moved range of the other `MoveOperation`.
- */
+// Checks whether `MoveOperation` `targetPosition` is inside a node from the moved range of the other `MoveOperation`.
+//
+// @private
+// @param {module:engine/model/operation/moveoperation~MoveOperation} a
+// @param {module:engine/model/operation/moveoperation~MoveOperation} b
+// @returns {Boolean}
 function _moveTargetIntoMovedRange( a: MoveOperation, b: MoveOperation ) {
 	return a.targetPosition._getTransformedByDeletion( b.sourcePosition, b.howMany ) === null;
 }
 
-/**
- * Helper function for `MoveOperation` x `MoveOperation` transformation. Converts given ranges and target position to
- * move operations and returns them.
- *
- * Ranges and target position will be transformed on-the-fly when generating operations.
- *
- * Given `ranges` should be in the order of how they were in the original transformed operation.
- *
- * Given `targetPosition` is the target position of the first range from `ranges`.
- */
+// Helper function for `MoveOperation` x `MoveOperation` transformation. Converts given ranges and target position to
+// move operations and returns them.
+//
+// Ranges and target position will be transformed on-the-fly when generating operations.
+//
+// Given `ranges` should be in the order of how they were in the original transformed operation.
+//
+// Given `targetPosition` is the target position of the first range from `ranges`.
+//
+// @private
+// @param {Array.<module:engine/model/range~Range>} ranges
+// @param {module:engine/model/position~Position} targetPosition
+// @returns {Array.<module:engine/model/operation/moveoperation~MoveOperation>}
 function _makeMoveOperationsFromRanges( ranges: Array<Range>, targetPosition: Position ) {
 	// At this moment we have some ranges and a target position, to which those ranges should be moved.
 	// Order in `ranges` array is the go-to order of after transformation.

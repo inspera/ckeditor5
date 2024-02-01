@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -8,19 +8,18 @@
 'use strict';
 
 const path = require( 'path' );
-const { getChangesForVersion, getChangelog } = require( '@ckeditor/ckeditor5-dev-release-tools' );
+const { getChangesForVersion, getChangelog } = require( '@ckeditor/ckeditor5-dev-env/lib/release-tools/utils/changelog' );
 
 const ROOT_DIRECTORY = path.join( __dirname, '..', '..' );
 const VERSIONS_TO_PRINT = 3;
 
 /**
  * Returns changelogs formatted in markdown for the last three versions of the CKEditor 5 releases.
- * Additionally, the following sections for each entry are modified:
+ * Additional, the following sections for each entry are modified:
  *
  * - The "ℹ️" symbol is removed.
  * - The "Released packages" section is removed.
- * - If the "Release highlights" section contains a paragraph with link to a blog post,
- *   then the entire section except for the paragraph with the link is removed.
+ * - The "Release highlights" section is removed.
  *
  * @returns {String}
  */
@@ -46,16 +45,7 @@ module.exports = () => {
 					const blogPostParagraphRegexp = new RegExp( `(?<=\n).*?${ blogPostLink }.*?(?=\n)` );
 					const result = section.match( blogPostParagraphRegexp );
 
-					// If there is no blog post link, then keep the highlights section.
-					if ( !result ) {
-						return section;
-					}
-
-					// Replace the raw text url with a functioning link.
-					return result[ 0 ].replace(
-						new RegExp( blogPostLink + '\\S+' ),
-						url => `[${ url }](${ url })`
-					);
+					return result ? result[ 0 ] : '';
 				} )
 				// Remove `Released packages` section.
 				.replace( getSectionRegexp( 'Released packages' ), '' );

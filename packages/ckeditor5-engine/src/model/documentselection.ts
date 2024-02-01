@@ -1,7 +1,9 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
+
+/* eslint-disable new-cap */
 
 /**
  * @module engine/model/documentselection
@@ -22,17 +24,14 @@ import type { Marker, MarkerCollectionUpdateEvent } from './markercollection';
 import type Batch from './batch';
 import type Element from './element';
 import type Item from './item';
-import type { default as Position, PositionOffset } from './position';
+import type Position from './position';
 import type Range from './range';
-import type Schema from './schema';
 
-import {
-	CKEditorError,
-	Collection,
-	EmitterMixin,
-	toMap,
-	uid
-} from '@ckeditor/ckeditor5-utils';
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
+import Collection from '@ckeditor/ckeditor5-utils/src/collection';
+import EmitterMixin from '@ckeditor/ckeditor5-utils/src/emittermixin';
+import toMap from '@ckeditor/ckeditor5-utils/src/tomap';
+import uid from '@ckeditor/ckeditor5-utils/src/uid';
 
 const storePrefix = 'selection:';
 
@@ -59,21 +58,25 @@ const storePrefix = 'selection:';
  * that are inside {@link module:engine/model/documentfragment~DocumentFragment document fragment}.
  * If you need to represent a selection in document fragment,
  * use {@link module:engine/model/selection~Selection Selection class} instead.
+ *
+ * @mixes module:utils/emittermixin~EmitterMixin
  */
 export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
-	/**
-	 * Selection used internally by that class (`DocumentSelection` is a proxy to that selection).
-	 */
-	private _selection: LiveSelection;
+	protected _selection: LiveSelection;
 
 	/**
 	 * Creates an empty live selection for given {@link module:engine/model/document~Document}.
 	 *
-	 * @param doc Document which owns this selection.
+	 * @param {module:engine/model/document~Document} doc Document which owns this selection.
 	 */
 	constructor( doc: Document ) {
 		super();
 
+		/**
+		 * Selection used internally by that class (`DocumentSelection` is a proxy to that selection).
+		 *
+		 * @protected
+		 */
 		this._selection = new LiveSelection( doc );
 
 		this._selection.delegate( 'change:range' ).to( this );
@@ -82,8 +85,11 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	}
 
 	/**
-	 * Describes whether the selection is collapsed. Selection is collapsed when there is exactly one range which is
+	 * Returns whether the selection is collapsed. Selection is collapsed when there is exactly one range which is
 	 * collapsed.
+	 *
+	 * @readonly
+	 * @type {Boolean}
 	 */
 	public get isCollapsed(): boolean {
 		return this._selection.isCollapsed;
@@ -98,6 +104,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Is set to `null` if there are no ranges in selection.
 	 *
 	 * @see #focus
+	 * @readonly
+	 * @type {module:engine/model/position~Position|null}
 	 */
 	public get anchor(): Position | null {
 		return this._selection.anchor;
@@ -109,13 +117,18 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Is set to `null` if there are no ranges in selection.
 	 *
 	 * @see #anchor
+	 * @readonly
+	 * @type {module:engine/model/position~Position|null}
 	 */
 	public get focus(): Position | null {
 		return this._selection.focus;
 	}
 
 	/**
-	 * Number of ranges in selection.
+	 * Returns number of ranges in selection.
+	 *
+	 * @readonly
+	 * @type {Number}
 	 */
 	public get rangeCount(): number {
 		return this._selection.rangeCount;
@@ -124,6 +137,9 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	/**
 	 * Describes whether `Documentselection` has own range(s) set, or if it is defaulted to
 	 * {@link module:engine/model/document~Document#_getDefaultRange document's default range}.
+	 *
+	 * @readonly
+	 * @type {Boolean}
 	 */
 	public get hasOwnRange(): boolean {
 		return this._selection.hasOwnRange;
@@ -144,6 +160,9 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Describes whether the gravity is overridden (using {@link module:engine/model/writer~Writer#overrideSelectionGravity}) or not.
 	 *
 	 * Note that the gravity remains overridden as long as will not be restored the same number of times as it was overridden.
+	 *
+	 * @readonly
+	 * @returns {Boolean}
 	 */
 	public get isGravityOverridden(): boolean {
 		return this._selection.isGravityOverridden;
@@ -154,8 +173,11 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Marker is a selection marker when selection range is inside the marker range.
 	 *
 	 * **Note**: Only markers from {@link ~DocumentSelection#observeMarkers observed markers groups} are collected.
+	 *
+	 * @readonly
+	 * @type {module:utils/collection~Collection}
 	 */
-	public get markers(): Collection<Marker> {
+	public get markers(): Collection<Marker, 'name'> {
 		return this._selection.markers;
 	}
 
@@ -163,13 +185,16 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Used for the compatibility with the {@link module:engine/model/selection~Selection#isEqual} method.
 	 *
 	 * @internal
+	 * @protected
 	 */
 	public get _ranges(): Array<Range> {
-		return this._selection._ranges;
+		return ( this._selection as any )._ranges;
 	}
 
 	/**
 	 * Returns an iterable that iterates over copies of selection ranges.
+	 *
+	 * @returns {Iterable.<module:engine/model/range~Range>}
 	 */
 	public getRanges(): IterableIterator<Range> {
 		return this._selection.getRanges();
@@ -181,6 +206,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * any other position in the selection.
 	 *
 	 * Returns `null` if there are no ranges in selection.
+	 *
+	 * @returns {module:engine/model/position~Position|null}
 	 */
 	public getFirstPosition(): Position | null {
 		return this._selection.getFirstPosition();
@@ -192,6 +219,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * any other position in the selection.
 	 *
 	 * Returns `null` if there are no ranges in selection.
+	 *
+	 * @returns {module:engine/model/position~Position|null}
 	 */
 	public getLastPosition(): Position | null {
 		return this._selection.getLastPosition();
@@ -204,6 +233,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * (not to confuse with the first range added to the selection).
 	 *
 	 * Returns `null` if there are no ranges in selection.
+	 *
+	 * @returns {module:engine/model/range~Range|null}
 	 */
 	public getFirstRange(): Range | null {
 		return this._selection.getFirstRange();
@@ -216,6 +247,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * recently added to the selection).
 	 *
 	 * Returns `null` if there are no ranges in selection.
+	 *
+	 * @returns {module:engine/model/range~Range|null}
 	 */
 	public getLastRange(): Range | null {
 		return this._selection.getLastRange();
@@ -231,48 +264,40 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * In this case the function will return exactly all 3 paragraphs (note: `<blockQuote>` is not a block itself):
 	 *
-	 * ```
-	 * <paragraph>[a</paragraph>
-	 * <blockQuote>
-	 * 	<paragraph>b</paragraph>
-	 * </blockQuote>
-	 * <paragraph>c]d</paragraph>
-	 * ```
+	 *		<paragraph>[a</paragraph>
+	 *		<blockQuote>
+	 *			<paragraph>b</paragraph>
+	 *		</blockQuote>
+	 *		<paragraph>c]d</paragraph>
 	 *
 	 * In this case the paragraph will also be returned, despite the collapsed selection:
 	 *
-	 * ```
-	 * <paragraph>[]a</paragraph>
-	 * ```
+	 *		<paragraph>[]a</paragraph>
 	 *
 	 * In such a scenario, however, only blocks A, B & E will be returned as blocks C & D are nested in block B:
 	 *
-	 * ```
-	 * [<blockA></blockA>
-	 * <blockB>
-	 * 	<blockC></blockC>
-	 * 	<blockD></blockD>
-	 * </blockB>
-	 * <blockE></blockE>]
-	 * ```
+	 *		[<blockA></blockA>
+	 *		<blockB>
+	 *			<blockC></blockC>
+	 *			<blockD></blockD>
+	 *		</blockB>
+	 *		<blockE></blockE>]
 	 *
 	 * If the selection is inside a block all the inner blocks (A & B) are returned:
 	 *
-	 * ```
-	 * <block>
-	 * 	<blockA>[a</blockA>
-	 * 	<blockB>b]</blockB>
-	 * </block>
-	 * ```
+	 * 		<block>
+	 *			<blockA>[a</blockA>
+	 * 			<blockB>b]</blockB>
+	 * 		</block>
 	 *
 	 * **Special case**: If a selection ends at the beginning of a block, that block is not returned as from user perspective
 	 * this block wasn't selected. See [#984](https://github.com/ckeditor/ckeditor5-engine/issues/984) for more details.
 	 *
-	 * ```
-	 * <paragraph>[a</paragraph>
-	 * <paragraph>b</paragraph>
-	 * <paragraph>]c</paragraph> // this block will not be returned
-	 * ```
+	 *		<paragraph>[a</paragraph>
+	 *		<paragraph>b</paragraph>
+	 *		<paragraph>]c</paragraph> // this block will not be returned
+	 *
+	 * @returns {Iterable.<module:engine/model/element~Element>}
 	 */
 	public getSelectedBlocks(): IterableIterator<Element> {
 		return this._selection.getSelectedBlocks();
@@ -282,6 +307,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Returns the selected element. {@link module:engine/model/element~Element Element} is considered as selected if there is only
 	 * one range in the selection, and that range contains exactly one element.
 	 * Returns `null` if there is no selected element.
+	 *
+	 * @returns {module:engine/model/element~Element|null}
 	 */
 	public getSelectedElement(): Element | null {
 		return this._selection.getSelectedElement();
@@ -294,6 +321,9 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * By default, this method will check whether the entire content of the selection's current root is selected.
 	 * Useful to check if e.g. the user has just pressed <kbd>Ctrl</kbd> + <kbd>A</kbd>.
+	 *
+	 * @param {module:engine/model/element~Element} [element=this.anchor.root]
+	 * @returns {Boolean}
 	 */
 	public containsEntireContent( element: Element ): boolean {
 		return this._selection.containsEntireContent( element );
@@ -308,6 +338,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 
 	/**
 	 * Returns iterable that iterates over this selection's attribute keys.
+	 *
+	 * @returns {Iterable.<String>}
 	 */
 	public getAttributeKeys(): IterableIterator<string> {
 		return this._selection.getAttributeKeys();
@@ -318,6 +350,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * Attributes are returned as arrays containing two items. First one is attribute key and second is attribute value.
 	 * This format is accepted by native `Map` object and also can be passed in `Node` constructor.
+	 *
+	 * @returns {Iterable.<*>}
 	 */
 	public getAttributes(): IterableIterator<[ string, unknown ]> {
 		return this._selection.getAttributes();
@@ -326,8 +360,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	/**
 	 * Gets an attribute value for given key or `undefined` if that attribute is not set on the selection.
 	 *
-	 * @param key Key of attribute to look for.
-	 * @returns Attribute value or `undefined`.
+	 * @param {String} key Key of attribute to look for.
+	 * @returns {*} Attribute value or `undefined`.
 	 */
 	public getAttribute( key: string ): unknown {
 		return this._selection.getAttribute( key );
@@ -336,8 +370,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	/**
 	 * Checks if the selection has an attribute for given key.
 	 *
-	 * @param key Key of attribute to check.
-	 * @returns `true` if attribute with given key is set on selection, `false` otherwise.
+	 * @param {String} key Key of attribute to check.
+	 * @returns {Boolean} `true` if attribute with given key is set on selection, `false` otherwise.
 	 */
 	public hasAttribute( key: string ): boolean {
 		return this._selection.hasAttribute( key );
@@ -357,7 +391,7 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * See also {@link module:engine/model/markercollection~MarkerCollection#getMarkersGroup `MarkerCollection#getMarkersGroup()`}.
 	 *
-	 * @param prefixOrName The marker group prefix or marker name.
+	 * @param {String} prefixOrName The marker group prefix or marker name.
 	 */
 	public observeMarkers( prefixOrName: string ): void {
 		this._selection.observeMarkers( prefixOrName );
@@ -372,10 +406,12 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * @see module:engine/model/writer~Writer#setSelectionFocus
 	 * @internal
-	 * @param offset Offset or one of the flags. Used only when
+	 * @protected
+	 * @param {module:engine/model/item~Item|module:engine/model/position~Position} itemOrPosition
+	 * @param {Number|'end'|'before'|'after'} [offset] Offset or one of the flags. Used only when
 	 * first parameter is a {@link module:engine/model/item~Item model item}.
 	 */
-	public _setFocus( itemOrPosition: Item | Position, offset?: PositionOffset ): void {
+	public _setFocus( itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after' ): void {
 		this._selection.setFocus( itemOrPosition, offset );
 	}
 
@@ -386,6 +422,11 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * @see module:engine/model/writer~Writer#setSelection
 	 * @internal
+	 * @protected
+	 * @param {module:engine/model/selection~Selectable} selectable
+	 * @param {Number|'before'|'end'|'after'|'on'|'in'} [placeOrOffset] Sets place or offset of the selection.
+	 * @param {Object} [options]
+	 * @param {Boolean} [options.backward] Sets this selection instance to be backward.
 	 */
 	public _setTo( ...args: Parameters<Selection[ 'setTo' ]> ): void {
 		this._selection.setTo( ...args );
@@ -397,8 +438,9 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * @see module:engine/model/writer~Writer#setSelectionAttribute
 	 * @internal
-	 * @param key Key of the attribute to set.
-	 * @param value Attribute value.
+	 * @protected
+	 * @param {String} key Key of the attribute to set.
+	 * @param {*} value Attribute value.
 	 */
 	public _setAttribute( key: string, value: unknown ): void {
 		this._selection.setAttribute( key, value );
@@ -412,7 +454,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * @see module:engine/model/writer~Writer#removeSelectionAttribute
 	 * @internal
-	 * @param key Key of the attribute to remove.
+	 * @protected
+	 * @param {String} key Key of the attribute to remove.
 	 */
 	public _removeAttribute( key: string ): void {
 		this._selection.removeAttribute( key );
@@ -421,9 +464,10 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	/**
 	 * Returns an iterable that iterates through all selection attributes stored in current selection's parent.
 	 *
-	 * @internal
+	 * @protected
+	 * @returns {Iterable.<*>}
 	 */
-	public _getStoredAttributes(): Iterable<[ string, unknown ]> {
+	protected _getStoredAttributes(): Iterable<unknown> {
 		return this._selection.getStoredAttributes();
 	}
 
@@ -439,7 +483,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * @see module:engine/model/writer~Writer#overrideSelectionGravity
 	 * @internal
-	 * @returns The unique id which allows restoring the gravity.
+	 * @protected
+	 * @returns {String} The unique id which allows restoring the gravity.
 	 */
 	public _overrideGravity(): string {
 		return this._selection.overrideGravity();
@@ -454,7 +499,8 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 *
 	 * @see module:engine/model/writer~Writer#restoreSelectionGravity
 	 * @internal
-	 * @param uid The unique id returned by {@link #_overrideGravity}.
+	 * @protected
+	 * @param {String} uid The unique id returned by {@link #_overrideGravity}.
 	 */
 	public _restoreGravity( uid: string ): void {
 		this._selection.restoreGravity( uid );
@@ -464,8 +510,9 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	 * Generates and returns an attribute key for selection attributes store, basing on original attribute key.
 	 *
 	 * @internal
-	 * @param key Attribute key to convert.
-	 * @returns Converted attribute key, applicable for selection store.
+	 * @protected
+	 * @param {String} key Attribute key to convert.
+	 * @returns {String} Converted attribute key, applicable for selection store.
 	 */
 	public static _getStoreAttributeKey( key: string ): string {
 		return storePrefix + key;
@@ -474,15 +521,32 @@ export default class DocumentSelection extends EmitterMixin( TypeCheckable ) {
 	/**
 	 * Checks whether the given attribute key is an attribute stored on an element.
 	 *
-	 * @internal
+	 * @protected
+	 * @param {String} key
+	 * @returns {Boolean}
 	 */
-	public static _isStoreAttributeKey( key: string ): boolean {
+	protected static _isStoreAttributeKey( key: string ): boolean {
 		return key.startsWith( storePrefix );
 	}
 }
 
-// The magic of type inference using `is` method is centralized in `TypeCheckable` class.
-// Proper overload would interfere with that.
+/**
+ * Checks whether this object is of the given type.
+ *
+ *		selection.is( 'selection' ); // -> true
+ *		selection.is( 'documentSelection' ); // -> true
+ *		selection.is( 'model:selection' ); // -> true
+ *		selection.is( 'model:documentSelection' ); // -> true
+ *
+ *		selection.is( 'view:selection' ); // -> false
+ *		selection.is( 'element' ); // -> false
+ *		selection.is( 'node' ); // -> false
+ *
+ * {@link module:engine/model/node~Node#is Check the entire list of model objects} which implement the `is()` method.
+ *
+ * @param {String} type
+ * @returns {Boolean}
+ */
 DocumentSelection.prototype.is = function( type: string ): boolean {
 	return type === 'selection' ||
 		type == 'model:selection' ||
@@ -493,8 +557,8 @@ DocumentSelection.prototype.is = function( type: string ): boolean {
 /**
  * Fired when selection range(s) changed.
  *
- * @eventName ~DocumentSelection#change:range
- * @param directChange In case of {@link module:engine/model/selection~Selection} class it is always set
+ * @event change:range
+ * @param {Boolean} directChange In case of {@link module:engine/model/selection~Selection} class it is always set
  * to `true` which indicates that the selection change was caused by a direct use of selection's API.
  * The {@link module:engine/model/documentselection~DocumentSelection}, however, may change because its position
  * was directly changed through the {@link module:engine/model/writer~Writer writer} or because its position was
@@ -502,33 +566,36 @@ DocumentSelection.prototype.is = function( type: string ): boolean {
  * The indirect change does not occur in case of normal (detached) selections because they are "static" (as "not live")
  * which mean that they are not updated once the document changes.
  */
+
 export type DocumentSelectionChangeRangeEvent = SelectionChangeRangeEvent;
 
 /**
  * Fired when selection attribute changed.
  *
- * @eventName ~DocumentSelection#change:attribute
- * @param directChange In case of {@link module:engine/model/selection~Selection} class it is always set
+ * @event change:attribute
+ * @param {Boolean} directChange In case of {@link module:engine/model/selection~Selection} class it is always set
  * to `true` which indicates that the selection change was caused by a direct use of selection's API.
  * The {@link module:engine/model/documentselection~DocumentSelection}, however, may change because its attributes
  * were directly changed through the {@link module:engine/model/writer~Writer writer} or because its position was
  * changed in the model and its attributes were refreshed (which means an indirect change).
  * The indirect change does not occur in case of normal (detached) selections because they are "static" (as "not live")
  * which mean that they are not updated once the document changes.
- * @param attributeKeys Array containing keys of attributes that changed.
+ * @param {Array.<String>} attributeKeys Array containing keys of attributes that changed.
 */
+
 export type DocumentSelectionChangeAttributeEvent = SelectionChangeAttributeEvent;
 
 /**
  * Fired when selection marker(s) changed.
  *
- * @eventName ~DocumentSelection#change:marker
- * @param directChange This is always set to `false` in case of `change:marker` event as there is no possibility
+ * @event change:marker
+ * @param {Boolean} directChange This is always set to `false` in case of `change:marker` event as there is no possibility
  * to change markers directly through {@link module:engine/model/documentselection~DocumentSelection} API.
  * See also {@link module:engine/model/documentselection~DocumentSelection#event:change:range} and
  * {@link module:engine/model/documentselection~DocumentSelection#event:change:attribute}.
- * @param oldMarkers Markers in which the selection was before the change.
+ * @param {Array.<module:engine/model/markercollection~Marker>} oldMarkers Markers in which the selection was before the change.
  */
+
 export type DocumentSelectionChangeMarkerEvent = {
 	name: 'change:marker';
 	args: [ {
@@ -537,17 +604,6 @@ export type DocumentSelectionChangeMarkerEvent = {
 	} ];
 };
 
-/**
- * Fired when selection range(s), attribute(s) or marker(s) changed.
- *
- * @eventName ~DocumentSelection#change
- * @param directChange This is always set to `false` in case of `change:marker` event as there is no possibility
- * to change markers directly through {@link module:engine/model/documentselection~DocumentSelection} API.
- * See also {@link module:engine/model/documentselection~DocumentSelection#event:change:range} and
- * {@link module:engine/model/documentselection~DocumentSelection#event:change:attribute}.
- * @param attributeKeys Array containing keys of attributes that changed.
- * @param oldMarkers Markers in which the selection was before the change.
- */
 export type DocumentSelectionChangeEvent = {
 	name: 'change' | 'change:attribute' | 'change:marker' | 'change:range';
 	args: [ {
@@ -557,84 +613,89 @@ export type DocumentSelectionChangeEvent = {
 	} ];
 };
 
-/**
- * `LiveSelection` is used internally by {@link module:engine/model/documentselection~DocumentSelection} and shouldn't be used directly.
- *
- * LiveSelection` is automatically updated upon changes in the {@link module:engine/model/document~Document document}
- * to always contain valid ranges. Its attributes are inherited from the text unless set explicitly.
- *
- * Differences between {@link module:engine/model/selection~Selection} and `LiveSelection` are:
- * * there is always a range in `LiveSelection` - even if no ranges were added there is a "default range"
- * present in the selection,
- * * ranges added to this selection updates automatically when the document changes,
- * * attributes of `LiveSelection` are updated automatically according to selection ranges.
- */
+// `LiveSelection` is used internally by {@link module:engine/model/documentselection~DocumentSelection} and shouldn't be used directly.
+//
+// LiveSelection` is automatically updated upon changes in the {@link module:engine/model/document~Document document}
+// to always contain valid ranges. Its attributes are inherited from the text unless set explicitly.
+//
+// Differences between {@link module:engine/model/selection~Selection} and `LiveSelection` are:
+// * there is always a range in `LiveSelection` - even if no ranges were added there is a "default range"
+// present in the selection,
+// * ranges added to this selection updates automatically when the document changes,
+// * attributes of `LiveSelection` are updated automatically according to selection ranges.
+//
+// @extends module:engine/model/selection~Selection
+//
 class LiveSelection extends Selection {
-	/**
-	 * List of selection markers.
-	 * Marker is a selection marker when selection range is inside the marker range.
-	 */
-	public markers: Collection<Marker> = new Collection( { idProperty: 'name' } );
+	public markers: Collection<Marker, 'name'>;
 
-	/**
-	 * Document which owns this selection.
-	 */
-	private _model: Model;
+	protected _model: Model;
+	protected _document: Document;
 
-	/**
-	 * Document which owns this selection.
-	 */
-	private _document: Document;
-
-	/**
-	 * Stores selection ranges.
-	 *
-	 * @internal
-	 */
+	/** @internal */
 	public declare _ranges: Array<LiveRange>;
 
-	/**
-	 * Keeps mapping of attribute name to priority with which the attribute got modified (added/changed/removed)
-	 * last time. Possible values of priority are: `'low'` and `'normal'`.
-	 *
-	 * Priorities are used by internal `LiveSelection` mechanisms. All attributes set using `LiveSelection`
-	 * attributes API are set with `'normal'` priority.
-	 */
-	private _attributePriority: Map<string, 'low' | 'normal'> = new Map();
+	private _attributePriority: Map<string, 'low' | 'normal'>;
+	private _selectionRestorePosition: Position | null;
+	private _hasChangedRange: boolean;
+	private _overriddenGravityRegister: Set<string>;
+	private _observedMarkers: Set<string>;
 
-	/**
-	 * Position to which the selection should be set if the last selection range was moved to the graveyard.
-	 */
-	private _selectionRestorePosition: Position | null = null;
-
-	/**
-	 * Flag that informs whether the selection ranges have changed. It is changed on true when `LiveRange#change:range` event is fired.
-	 */
-	private _hasChangedRange: boolean = false;
-
-	/**
-	 * Each overriding gravity adds an UID to the set and each removal removes it.
-	 * Gravity is overridden when there's at least one UID in the set.
-	 * Gravity is restored when the set is empty.
-	 * This is to prevent conflicts when gravity is overridden by more than one feature at the same time.
-	 */
-	private _overriddenGravityRegister: Set<string> = new Set();
-
-	/**
-	 * Prefixes of marker names that should affect `LiveSelection#markers` collection.
-	 */
-	private _observedMarkers: Set<string> = new Set();
-
-	/**
-	 * Creates an empty live selection for given {@link module:engine/model/document~Document}.
-	 *
-	 * @param doc Document which owns this selection.
-	 */
+	// Creates an empty live selection for given {@link module:engine/model/document~Document}.
+	// @param {module:engine/model/document~Document} doc Document which owns this selection.
 	constructor( doc: Document ) {
 		super();
 
+		// List of selection markers.
+		// Marker is a selection marker when selection range is inside the marker range.
+		//
+		// @type {module:utils/collection~Collection}
+		this.markers = new Collection( { idProperty: 'name' } );
+
+		// Document which owns this selection.
+		//
+		// @protected
+		// @member {module:engine/model/model~Model}
 		this._model = doc.model;
+
+		// Document which owns this selection.
+		//
+		// @protected
+		// @member {module:engine/model/document~Document}
 		this._document = doc;
+
+		// Keeps mapping of attribute name to priority with which the attribute got modified (added/changed/removed)
+		// last time. Possible values of priority are: `'low'` and `'normal'`.
+		//
+		// Priorities are used by internal `LiveSelection` mechanisms. All attributes set using `LiveSelection`
+		// attributes API are set with `'normal'` priority.
+		//
+		// @private
+		// @member {Map} module:engine/model/liveselection~LiveSelection#_attributePriority
+		this._attributePriority = new Map();
+
+		// Position to which the selection should be set if the last selection range was moved to the graveyard.
+		// @private
+		// @member {module:engine/model/position~Position} module:engine/model/liveselection~LiveSelection#_selectionRestorePosition
+		this._selectionRestorePosition = null;
+
+		// Flag that informs whether the selection ranges have changed. It is changed on true when `LiveRange#change:range` event is fired.
+		// @private
+		// @member {Array} module:engine/model/liveselection~LiveSelection#_hasChangedRange
+		this._hasChangedRange = false;
+
+		// Each overriding gravity adds an UID to the set and each removal removes it.
+		// Gravity is overridden when there's at least one UID in the set.
+		// Gravity is restored when the set is empty.
+		// This is to prevent conflicts when gravity is overridden by more than one feature at the same time.
+		// @private
+		// @type {Set}
+		this._overriddenGravityRegister = new Set();
+
+		// Prefixes of marker names that should affect `LiveSelection#markers` collection.
+		// @private
+		// @type {Set}
+		this._observedMarkers = new Set();
 
 		// Ensure selection is correct after each operation.
 		this.listenTo<ModelApplyOperationEvent>( this._model, 'applyOperation', ( evt, args ) => {
@@ -693,25 +754,25 @@ class LiveSelection extends Selection {
 		return this._ranges.length ? this._ranges.length : 1;
 	}
 
-	/**
-	 * Describes whether `LiveSelection` has own range(s) set, or if it is defaulted to
-	 * {@link module:engine/model/document~Document#_getDefaultRange document's default range}.
-	 */
+	// Describes whether `LiveSelection` has own range(s) set, or if it is defaulted to
+	// {@link module:engine/model/document~Document#_getDefaultRange document's default range}.
+	//
+	// @readonly
+	// @type {Boolean}
 	public get hasOwnRange(): boolean {
 		return this._ranges.length > 0;
 	}
 
-	/**
-	 * When set to `true` then selection attributes on node before the caret won't be taken
-	 * into consideration while updating selection attributes.
-	 */
+	// When set to `true` then selection attributes on node before the caret won't be taken
+	// into consideration while updating selection attributes.
+	//
+	// @protected
+	// @type {Boolean}
 	public get isGravityOverridden(): boolean {
 		return !!this._overriddenGravityRegister.size;
 	}
 
-	/**
-	 * Unbinds all events previously bound by live selection.
-	 */
+	// Unbinds all events previously bound by live selection.
 	public destroy(): void {
 		for ( let i = 0; i < this._ranges.length; i++ ) {
 			this._ranges[ i ].detach();
@@ -742,7 +803,7 @@ class LiveSelection extends Selection {
 		this.updateMarkers();
 	}
 
-	public override setFocus( itemOrPosition: Item | Position, offset?: PositionOffset ): void {
+	public override setFocus( itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after' ): void {
 		super.setFocus( itemOrPosition, offset );
 		this._updateAttributes( true );
 		this.updateMarkers();
@@ -785,7 +846,7 @@ class LiveSelection extends Selection {
 			 * UID obtained from the {@link module:engine/model/writer~Writer#overrideSelectionGravity} to restore.
 			 *
 			 * @error document-selection-gravity-wrong-restore
-			 * @param uid The unique identifier returned by
+			 * @param {String} uid The unique identifier returned by
 			 * {@link module:engine/model/documentselection~DocumentSelection#_overrideGravity}.
 			 */
 			throw new CKEditorError(
@@ -835,7 +896,7 @@ class LiveSelection extends Selection {
 				 * starts or ends at incorrect position.
 				 *
 				 * @error document-selection-wrong-position
-				 * @param range
+				 * @param {module:engine/model/range~Range} range
 				 */
 				throw new CKEditorError(
 					'document-selection-wrong-position',
@@ -846,11 +907,12 @@ class LiveSelection extends Selection {
 		}
 	}
 
-	/**
-	 * Prepares given range to be added to selection. Checks if it is correct,
-	 * converts it to {@link module:engine/model/liverange~LiveRange LiveRange}
-	 * and sets listeners listening to the range's change event.
-	 */
+	// Prepares given range to be added to selection. Checks if it is correct,
+	// converts it to {@link module:engine/model/liverange~LiveRange LiveRange}
+	// and sets listeners listening to the range's change event.
+	//
+	// @private
+	// @param {module:engine/model/range~Range} range
 	private _prepareRange( range: Range ): LiveRange | undefined {
 		this._checkRange( range );
 
@@ -970,9 +1032,11 @@ class LiveSelection extends Selection {
 		}
 	}
 
-	/**
-	 * Updates this selection attributes according to its ranges and the {@link module:engine/model/document~Document model document}.
-	 */
+	// Updates this selection attributes according to its ranges and the {@link module:engine/model/document~Document model document}.
+	//
+	// @protected
+	// @param {Boolean} clearAll
+	// @fires change:attribute
 	public _updateAttributes( clearAll: boolean ): void {
 		const newAttributes = toMap( this._getSurroundingAttributes() );
 		const oldAttributes = toMap( this.getAttributes() );
@@ -1017,10 +1081,15 @@ class LiveSelection extends Selection {
 		}
 	}
 
-	/**
-	 * Internal method for setting `LiveSelection` attribute. Supports attribute priorities (through `directChange`
-	 * parameter).
-	 */
+	// Internal method for setting `LiveSelection` attribute. Supports attribute priorities (through `directChange`
+	// parameter).
+	//
+	// @private
+	// @param {String} key Attribute key.
+	// @param {*} value Attribute value.
+	// @param {Boolean} [directChange=true] `true` if the change is caused by `Selection` API, `false` if change
+	// is caused by `Batch` API.
+	// @returns {Boolean} Whether value has changed.
 	private _setAttribute( key: string, value: unknown, directChange: boolean = true ): boolean {
 		const priority = directChange ? 'normal' : 'low';
 
@@ -1044,13 +1113,18 @@ class LiveSelection extends Selection {
 		return true;
 	}
 
-	/**
-	 * Internal method for removing `LiveSelection` attribute. Supports attribute priorities (through `directChange`
-	 * parameter).
-	 *
-	 * NOTE: Even if attribute is not present in the selection but is provided to this method, it's priority will
-	 * be changed according to `directChange` parameter.
-	 */
+	// Internal method for removing `LiveSelection` attribute. Supports attribute priorities (through `directChange`
+	// parameter).
+	//
+	// NOTE: Even if attribute is not present in the selection but is provided to this method, it's priority will
+	// be changed according to `directChange` parameter.
+	//
+	// @private
+	// @param {String} key Attribute key.
+	// @param {Boolean} [directChange=true] `true` if the change is caused by `Selection` API, `false` if change
+	// is caused by `Batch` API.
+	// @returns {Boolean} Whether attribute was removed. May not be true if such attributes didn't exist or the
+	// existing attribute had higher priority.
 	private _removeAttribute( key: string, directChange: boolean = true ): boolean {
 		const priority = directChange ? 'normal' : 'low';
 
@@ -1072,10 +1146,12 @@ class LiveSelection extends Selection {
 		return true;
 	}
 
-	/**
-	 * Internal method for setting multiple `LiveSelection` attributes. Supports attribute priorities (through
-	 * `directChange` parameter).
-	 */
+	// Internal method for setting multiple `LiveSelection` attributes. Supports attribute priorities (through
+	// `directChange` parameter).
+	//
+	// @private
+	// @param {Map.<String,*>} attrs Iterable object containing attributes to be set.
+	// @returns {Set.<String>} Changed attribute keys.
 	private _setAttributesTo( attrs: Map<string, unknown> ): Set<string> {
 		const changed = new Set<string>();
 
@@ -1101,9 +1177,10 @@ class LiveSelection extends Selection {
 		return changed;
 	}
 
-	/**
-	 * Returns an iterable that iterates through all selection attributes stored in current selection's parent.
-	 */
+	// Returns an iterable that iterates through all selection attributes stored in current selection's parent.
+	//
+	// @public
+	// @returns {Iterable.<*>}
 	public* getStoredAttributes(): IterableIterator<[ string, unknown ]> {
 		const selectionParent = this.getFirstPosition()!.parent as Element;
 
@@ -1118,18 +1195,15 @@ class LiveSelection extends Selection {
 		}
 	}
 
-	/**
-	 * Checks model text nodes that are closest to the selection's first position and returns attributes of first
-	 * found element. If there are no text nodes in selection's first position parent, it returns selection
-	 * attributes stored in that parent.
-	 */
+	// Checks model text nodes that are closest to the selection's first position and returns attributes of first
+	// found element. If there are no text nodes in selection's first position parent, it returns selection
+	// attributes stored in that parent.
+	//
+	// @private
+	// @returns {Iterable.<*>} Collection of attributes.
 	private _getSurroundingAttributes(): Iterable<[ string, unknown ]> | null {
 		const position = this.getFirstPosition()!;
 		const schema = this._model.schema;
-
-		if ( position.root.rootName == '$graveyard' ) {
-			return null;
-		}
 
 		let attrs = null;
 
@@ -1139,10 +1213,8 @@ class LiveSelection extends Selection {
 
 			// ...look for a first character node in that range and take attributes from it.
 			for ( const value of range ) {
-				// If the item is an object, we don't want to get attributes from its children...
+				// If the item is an object, we don't want to get attributes from its children.
 				if ( value.item.is( 'element' ) && schema.isObject( value.item ) ) {
-					// ...but collect attributes from inline object.
-					attrs = getTextAttributes( value.item, schema );
 					break;
 				}
 
@@ -1160,12 +1232,12 @@ class LiveSelection extends Selection {
 			// When gravity is overridden then don't take node before into consideration.
 			if ( !this.isGravityOverridden ) {
 				// ...look at the node before caret and take attributes from it if it is a character node.
-				attrs = getTextAttributes( nodeBefore, schema );
+				attrs = getAttrsIfCharacter( nodeBefore! );
 			}
 
 			// 3. If not, look at the node after caret...
 			if ( !attrs ) {
-				attrs = getTextAttributes( nodeAfter, schema );
+				attrs = getAttrsIfCharacter( nodeAfter! );
 			}
 
 			// 4. If not, try to find the first character on the left, that is in the same node.
@@ -1173,9 +1245,9 @@ class LiveSelection extends Selection {
 			if ( !this.isGravityOverridden && !attrs ) {
 				let node = nodeBefore;
 
-				while ( node && !attrs ) {
+				while ( node && !schema.isInline( node ) && !attrs ) {
 					node = node.previousSibling;
-					attrs = getTextAttributes( node, schema );
+					attrs = getAttrsIfCharacter( node! );
 				}
 			}
 
@@ -1183,9 +1255,9 @@ class LiveSelection extends Selection {
 			if ( !attrs ) {
 				let node = nodeAfter;
 
-				while ( node && !attrs ) {
+				while ( node && !schema.isInline( node ) && !attrs ) {
 					node = node.nextSibling;
-					attrs = getTextAttributes( node, schema );
+					attrs = getAttrsIfCharacter( node! );
 				}
 			}
 
@@ -1198,10 +1270,10 @@ class LiveSelection extends Selection {
 		return attrs;
 	}
 
-	/**
-	 * Fixes the selection after all its ranges got removed.
-	 * @param deletionPosition Position where the deletion happened.
-	 */
+	// Fixes the selection after all its ranges got removed.
+	//
+	// @private
+	// @param {module:engine/model/position~Position} deletionPosition Position where the deletion happened.
 	private _fixGraveyardSelection( deletionPosition: Position ): void {
 		// Find a range that is a correct selection range and is closest to the position where the deletion happened.
 		const selectionRange = this._model.schema.getNearestSelectionRange( deletionPosition );
@@ -1215,48 +1287,24 @@ class LiveSelection extends Selection {
 	}
 }
 
-/**
- * Helper function for {@link module:engine/model/liveselection~LiveSelection#_updateAttributes}.
- *
- * It checks if the passed model item is a text node (or text proxy) and, if so, returns it's attributes.
- * If not, it checks if item is an inline object and does the same. Otherwise it returns `null`.
- */
-function getTextAttributes( node: Item | null, schema: Schema ): Iterable<[string, unknown]> | null {
-	if ( !node ) {
-		return null;
-	}
-
+// Helper function for {@link module:engine/model/liveselection~LiveSelection#_updateAttributes}.
+//
+// It takes model item, checks whether it is a text node (or text proxy) and, if so, returns it's attributes. If not, returns `null`.
+//
+// @param {module:engine/model/item~Item|null}  node
+// @returns {Boolean}
+function getAttrsIfCharacter( node: Item ) {
 	if ( node instanceof TextProxy || node instanceof Text ) {
 		return node.getAttributes();
 	}
 
-	if ( !schema.isInline( node ) ) {
-		return null;
-	}
-
-	// Stop on inline elements (such as `<softBreak>`) that are not objects (such as `<imageInline>` or `<mathml>`).
-	if ( !schema.isObject( node ) ) {
-		return [];
-	}
-
-	const attributes: Array<[string, unknown]> = [];
-
-	// Collect all attributes that can be applied to the text node.
-	for ( const [ key, value ] of node.getAttributes() ) {
-		if (
-			schema.checkAttribute( '$text', key ) &&
-			schema.getAttributeProperties( key ).copyFromObject !== false
-		) {
-			attributes.push( [ key, value ] );
-		}
-	}
-
-	return attributes;
+	return null;
 }
 
-/**
- * Removes selection attributes from element which is not empty anymore.
- */
+// Removes selection attributes from element which is not empty anymore.
+//
+// @param {module:engine/model/model~Model} model
+// @param {module:engine/model/batch~Batch} batch
 function clearAttributesStoredInElement( model: Model, batch: Batch ) {
 	const differ = model.document.differ;
 

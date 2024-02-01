@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -18,7 +18,7 @@ import { StylesProcessor } from '../../src/view/stylesmap';
 describe( 'TreeWalker', () => {
 	let doc, root, img1, paragraph, bold, textAbcd, charY, img2, charX, rootBeginning, rootEnding;
 
-	beforeEach( () => {
+	before( () => {
 		doc = new Document( new StylesProcessor() );
 		root = createViewRoot( doc );
 
@@ -47,10 +47,6 @@ describe( 'TreeWalker', () => {
 
 		rootBeginning = new Position( root, 0 );
 		rootEnding = new Position( root, 2 );
-	} );
-
-	afterEach( () => {
-		doc.destroy();
 	} );
 
 	describe( 'constructor()', () => {
@@ -224,7 +220,7 @@ describe( 'TreeWalker', () => {
 		describe( 'range starts between elements', () => {
 			let expected, range;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'elementStart',
@@ -299,7 +295,7 @@ describe( 'TreeWalker', () => {
 		describe( 'range starts inside the text', () => {
 			let expected, range;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'text',
@@ -366,7 +362,7 @@ describe( 'TreeWalker', () => {
 		describe( 'range ends inside the text', () => {
 			let expected, range;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'elementStart',
@@ -434,7 +430,7 @@ describe( 'TreeWalker', () => {
 		describe( 'range starts and ends inside the same text', () => {
 			let expected, range;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'text',
@@ -557,7 +553,7 @@ describe( 'TreeWalker', () => {
 		describe( 'whole root', () => {
 			let expected;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'elementStart',
@@ -676,7 +672,7 @@ describe( 'TreeWalker', () => {
 		describe( 'range', () => {
 			let range, expected;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'text',
@@ -753,87 +749,10 @@ describe( 'TreeWalker', () => {
 		} );
 	} );
 
-	describe( '`shallow` iterates only through elements in the range', () => {
-		it( '`shallow` only iterates elements in the range (forward)', () => {
-			const walker = new TreeWalker( {
-				boundaries: new Range(
-					new Position( root, 0 ),
-					new Position( img1, 0 )
-				),
-				shallow: true
-			} );
-
-			const items = Array.from( walker );
-
-			expect( items.length ).to.equal( 1 );
-			expect( items[ 0 ].type ).to.equal( 'elementStart' );
-			expect( items[ 0 ].item ).to.equal( img1 );
-		} );
-
-		it( '`shallow` only iterates elements in the range that ends inside some element (forward)', () => {
-			const p2 = new ContainerElement( doc, 'p', null, [ new Text( doc, 'abc' ) ] );
-			const p3 = new ContainerElement( doc, 'p', null, [ new Text( doc, 'abc' ) ] );
-
-			root._insertChild( 2, [ p2, p3 ] );
-
-			const walker = new TreeWalker( {
-				boundaries: new Range(
-					new Position( root, 1 ),
-					new Position( paragraph, 3 )
-				),
-				shallow: true
-			} );
-
-			const items = Array.from( walker );
-
-			expect( items.length ).to.equal( 1 );
-			expect( items[ 0 ].type ).to.equal( 'elementStart' );
-			expect( items[ 0 ].item ).to.equal( paragraph );
-		} );
-
-		it( '`shallow` only iterates elements in the range ends deep inside some element (forward)', () => {
-			const p2 = new ContainerElement( doc, 'p', null, [ new Text( doc, 'abc' ) ] );
-			const p3 = new ContainerElement( doc, 'p', null, [ new Text( doc, 'abc' ) ] );
-
-			root._insertChild( 2, [ p2, p3 ] );
-
-			const walker = new TreeWalker( {
-				boundaries: new Range(
-					new Position( root, 1 ),
-					new Position( img2, 0 )
-				),
-				shallow: true
-			} );
-
-			const items = Array.from( walker );
-
-			expect( items.length ).to.equal( 1 );
-			expect( items[ 0 ].type ).to.equal( 'elementStart' );
-			expect( items[ 0 ].item ).to.equal( paragraph );
-		} );
-
-		it( '`shallow` only iterates elements in the range (backwards)', () => {
-			const walker = new TreeWalker( {
-				boundaries: new Range(
-					new Position( root, 0 ),
-					new Position( img1, 0 )
-				),
-				shallow: true,
-				direction: 'backward'
-			} );
-
-			const items = Array.from( walker );
-
-			expect( items.length ).to.equal( 1 );
-			expect( items[ 0 ].type ).to.equal( 'elementStart' );
-			expect( items[ 0 ].item ).to.equal( img1 );
-		} );
-	} );
-
 	describe( 'iterate omitting child nodes and elementEnd `shallow`', () => {
 		let expected;
 
-		beforeEach( () => {
+		before( () => {
 			expected = [
 				{
 					type: 'elementStart',
@@ -877,7 +796,7 @@ describe( 'TreeWalker', () => {
 		describe( 'merged text', () => {
 			let expected;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'elementStart',
@@ -954,7 +873,7 @@ describe( 'TreeWalker', () => {
 		describe( 'single character', () => {
 			let expected;
 
-			beforeEach( () => {
+			before( () => {
 				expected = [
 					{
 						type: 'elementStart',

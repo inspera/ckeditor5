@@ -1,30 +1,17 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals window, document, location, console */
 
-import { HtmlEmbed } from '@ckeditor/ckeditor5-html-embed';
-import { CodeBlock } from '@ckeditor/ckeditor5-code-block';
-import { CKBox, CKBoxImageEdit } from '@ckeditor/ckeditor5-ckbox';
-import { PictureEditing, ImageInsert, ImageResize, AutoImage } from '@ckeditor/ckeditor5-image';
-import { LinkImage } from '@ckeditor/ckeditor5-link';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic/src/ckeditor';
 import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config';
+import HtmlEmbed from '@ckeditor/ckeditor5-html-embed/src/htmlembed';
+import CodeBlock from '@ckeditor/ckeditor5-code-block/src/codeblock';
 
-// Umberto combines all `packages/*/docs` into the `docs/` directory. The import path must be valid after merging all directories.
-import ClassicEditor from '../build-classic';
-
-ClassicEditor.builtinPlugins.push(
-	HtmlEmbed,
-	CodeBlock,
-	PictureEditing,
-	ImageInsert,
-	ImageResize,
-	AutoImage,
-	LinkImage,
-	CKBox,
-	CKBoxImageEdit );
+ClassicEditor.builtinPlugins.push( HtmlEmbed );
+ClassicEditor.builtinPlugins.push( CodeBlock );
 
 /* eslint-disable max-len */
 const initialData =
@@ -44,7 +31,7 @@ const initialData =
 <p>See:</p>
 <ul>
 	<li><a href="https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/installation.html">Installation</a> for how to install this package and what it contains.</li>
-	<li><a href="https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/editor-lifecycle.html">Editor lifecycle</a> for how to create an editor and interact with it.</li>
+	<li><a href="https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/basic-api.html">Basic API</a> for how to create an editor and interact with it.</li>
 	<li><a href="https://ckeditor.com/docs/ckeditor5/latest/installation/getting-started/configuration.html">Configuration</a> for how to configure the editor.</li>
 </ul>
 
@@ -92,10 +79,26 @@ ClassicEditor
 		initialData,
 		toolbar: {
 			items: [
-				'undo', 'redo', '|', 'heading',
-				'|', 'bold', 'italic',
-				'|', 'link', 'insertImage', 'insertTable', 'mediaEmbed', 'htmlEmbed',
-				'|', 'bulletedList', 'numberedList', 'outdent', 'indent'
+				'heading',
+				'|',
+				'bold',
+				'italic',
+				'bulletedList',
+				'numberedList',
+				'|',
+				'htmlEmbed',
+				'codeBlock',
+				'blockQuote',
+				'link',
+				'uploadImage',
+				'mediaEmbed',
+				'insertTable',
+				'|',
+				'outdent',
+				'indent',
+				'|',
+				'undo',
+				'redo'
 			]
 		},
 		ui: {
@@ -110,9 +113,7 @@ ClassicEditor
 				'imageStyle:breakText',
 				'|',
 				'toggleImageCaption',
-				'imageTextAlternative',
-				'|',
-				'ckboxImageEdit'
+				'imageTextAlternative'
 			]
 		},
 		table: {

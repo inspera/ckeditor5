@@ -2,13 +2,12 @@
 category: examples-framework
 order: 100
 toc: false
-meta-title: Custom UI with Bootstrap example | CKEditor 5 Documentation
 classes: main__content--no-toc
 ---
 
 # Custom UI (with Bootstrap)
 
-The editor below runs a completely custom user interface written in [Bootstrap](http://getbootstrap.com/), while the editing is provided by CKEditor&nbsp;5. To learn more, check out the {@link framework/external-ui detailed guide} on how to integrate an external UI with the editor.
+The editor below runs a completely custom user interface written in [Bootstrap](http://getbootstrap.com/), while the editing is provided by CKEditor 5. To learn more, check out the {@link framework/guides/external-ui detailed guide} on how to integrate an external UI with the editor.
 
 {@snippet examples/bootstrap-ui}
 ## Editor example configuration
@@ -18,37 +17,43 @@ The editor below runs a completely custom user interface written in [Bootstrap](
 
 ```js
 // Basic classes to create an editor.
-import { Editor } from '@ckeditor/ckeditor5-core';
-import { EditorUI, EditorUIView, InlineEditableUIView } from '@ckeditor/ckeditor5-ui';
-import { ElementReplacer } from '@ckeditor/ckeditor5-utils';
+import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
+import EditorUI from '@ckeditor/ckeditor5-core/src/editor/editorui';
+import EditorUIView from '@ckeditor/ckeditor5-ui/src/editorui/editoruiview';
+import InlineEditableUIView from '@ckeditor/ckeditor5-ui/src/editableui/inline/inlineeditableuiview';
+import ElementReplacer from '@ckeditor/ckeditor5-utils/src/elementreplacer';
 
 // Interfaces to extend basic Editor API.
-import { DataApiMixin, ElementApiMixin } from '@ckeditor/ckeditor5-core';
+import DataApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/dataapimixin';
+import ElementApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/elementapimixin';
 
 // Helper function for adding interfaces to the Editor class.
-import { mix } from '@ckeditor/ckeditor5-utils';
+import mix from '@ckeditor/ckeditor5-utils/src/mix';
 
 // Helper function that gets data from HTML element that the Editor is attached to.
-import { getDataFromElement } from '@ckeditor/ckeditor5-utils';
+import getDataFromElement from '@ckeditor/ckeditor5-utils/src/dom/getdatafromelement';
 
 // Helper function that binds editor with HTMLForm element.
-import { attachToForm } from '@ckeditor/ckeditor5-core';
+import attachToForm from '@ckeditor/ckeditor5-core/src/editor/utils/attachtoform';
 
 // Basic features that every editor should enable.
-import { Clipboard } from '@ckeditor/ckeditor5-clipboard';
-import { Enter } from '@ckeditor/ckeditor5-enter';
-import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
-import { Typing } from '@ckeditor/ckeditor5-typing';
-import { UndoEditing } from '@ckeditor/ckeditor5-undo';
+import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard';
+import Enter from '@ckeditor/ckeditor5-enter/src/enter';
+import Typing from '@ckeditor/ckeditor5-typing/src/typing';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
 
 // Basic features to associated with the edited content.
-import { BoldEditing, ItalicEditing, UnderlineEditing } from '@ckeditor/ckeditor5-basic-styles';
-import { HeadingEditing } from '@ckeditor/ckeditor5-heading';
+import BoldEditing from '@ckeditor/ckeditor5-basic-styles/src/bold/boldediting';
+import ItalicEditing from '@ckeditor/ckeditor5-basic-styles/src/italic/italicediting';
+import UnderlineEditing from '@ckeditor/ckeditor5-basic-styles/src/underline/underlineediting';
+import HeadingEditing from '@ckeditor/ckeditor5-heading/src/headingediting';
 
 // The easy image integration.
-import { CloudServices } from '@ckeditor/ckeditor5-cloud-services';
-import { EasyImage } from '@ckeditor/ckeditor5-easy-image';
-import { Image, ImageUpload } from '@ckeditor/ckeditor5-image';
+import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
+import Image from '@ckeditor/ckeditor5-image/src/image';
+import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
+import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 
 // Extending the Editor class, which brings base editor API.
 export default class BootstrapEditor extends Editor {

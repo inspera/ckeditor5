@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -15,8 +15,9 @@ import type { Schema } from '@ckeditor/ckeditor5-engine';
  * Filtering is realized based on `copyOnEnter` attribute property. Read more about attribute properties
  * {@link module:engine/model/schema~Schema#setAttributeProperties here}.
  *
- * @param schema Model's schema.
- * @param allAttributes Attributes to filter.
+ * @param {module:engine/model/schema~Schema} schema
+ * @param {Iterable.<*>} allAttributes attributes to filter.
+ * @returns {Iterable.<*>}
  */
 export function* getCopyOnEnterAttributes(
 	schema: Schema,

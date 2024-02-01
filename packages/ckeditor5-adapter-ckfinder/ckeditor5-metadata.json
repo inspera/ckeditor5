@@ -1,7 +1,7 @@
 {
 	"plugins": [
 		{
-			"name": "CKFinder upload adapter",
+			"name": "CKFinder Upload Adapter",
 			"className": "CKFinderUploadAdapter",
 			"path": "src/uploadadapter.js",
 			"description": "Implements the CKEditor 5 upload adapter compatible with the CKFinder file manager and uploader's server–side connector.",

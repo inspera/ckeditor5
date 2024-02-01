@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -20,7 +20,7 @@ git commit -am "Internal: Bumped the year." && git push
 
 */
 
-require( '@ckeditor/ckeditor5-dev-bump-year' )
+require( '@ckeditor/ckeditor5-dev-env' )
 	.bumpYear( {
 		cwd: process.cwd(),
 		globPatterns: [
@@ -34,16 +34,9 @@ require( '@ckeditor/ckeditor5-dev-bump-year' )
 				pattern: '!(build|coverage|external)/**',
 				options: {
 					ignore: [
-						'**/ckeditor5-*/build/**',
-						'**/ckeditor5-*/lang/translations/*.po'
+						'**/ckeditor5-*/build/**'
 					]
 				}
-			},
-			{
-				pattern: '.husky/*'
-			},
-			{
-				pattern: 'packages/*/.eslintrc.js'
 			}
 		]
 	} );

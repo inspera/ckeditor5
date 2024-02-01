@@ -1,18 +1,17 @@
 ---
 category: features
 classes: keyboard-shortcuts
-meta-title: Keyboard support | CKEditor 5 Documentation
 ---
 
 # Keyboard support
 
-CKEditor&nbsp;5 offers plenty of features to boost your productivity. One of them is support for keyboard shortcuts.
+CKEditor 5 offers plenty of features to help you create your content in the most productive way. Using keyboard shortcuts is one of the simplest yet most efficient and popular ways to improve interaction with the software.
 
 <info-box info>
 	Keyboard support is enabled by default.
 </info-box>
 
-Below is a list of the most important keystrokes supported by CKEditor&nbsp;5 and its features.
+Below is a list of the most important keystrokes supported by CKEditor 5 and its features.
 
 ## Content editing
 
@@ -133,7 +132,7 @@ Below is a list of the most important keystrokes supported by CKEditor&nbsp;5 an
 
 ## User interface and navigation
 
-Use the following keystrokes for more efficient navigation in the CKEditor&nbsp;5 user interface:
+Use the following keystrokes for more efficient navigation in the CKEditor 5 user interface:
 
 <table>
 	<thead>
@@ -167,7 +166,7 @@ Use the following keystrokes for more efficient navigation in the CKEditor&nbsp;
 		</tr>
 		<tr>
 			<td>Execute the currently focused button</td>
-			<td colspan="2"><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+			<td colspan="2"><kbd>Enter</kbd></td>
 		</tr>
 	</tbody>
 </table>

@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -12,7 +12,8 @@
 /**
  * Checks whether given `character` is a combining mark.
  *
- * @param character Character to check.
+ * @param {String} character Character to check.
+ * @returns {Boolean}
  */
 export function isCombiningMark( character: string ): boolean {
 	// eslint-disable-next-line no-misleading-character-class
@@ -25,7 +26,8 @@ export function isCombiningMark( character: string ): boolean {
  * Using UTF-16 terminology, a surrogate pair denotes UTF-16 character using two UTF-8 characters. The surrogate pair
  * consist of high surrogate pair character followed by low surrogate pair character.
  *
- * @param character Character to check.
+ * @param {String} character Character to check.
+ * @returns {Boolean}
  */
 export function isHighSurrogateHalf( character: string ): boolean {
 	return !!character && character.length == 1 && /[\ud800-\udbff]/.test( character );
@@ -37,7 +39,8 @@ export function isHighSurrogateHalf( character: string ): boolean {
  * Using UTF-16 terminology, a surrogate pair denotes UTF-16 character using two UTF-8 characters. The surrogate pair
  * consist of high surrogate pair character followed by low surrogate pair character.
  *
- * @param character Character to check.
+ * @param {String} character Character to check.
+ * @returns {Boolean}
  */
 export function isLowSurrogateHalf( character: string ): boolean {
 	return !!character && character.length == 1 && /[\udc00-\udfff]/.test( character );
@@ -46,8 +49,9 @@ export function isLowSurrogateHalf( character: string ): boolean {
 /**
  * Checks whether given offset in a string is inside a surrogate pair (between two surrogate halves).
  *
- * @param string String to check.
- * @param offset Offset to check.
+ * @param {String} string String to check.
+ * @param {Number} offset Offset to check.
+ * @returns {Boolean}
  */
 export function isInsideSurrogatePair( string: string, offset: number ): boolean {
 	return isHighSurrogateHalf( string.charAt( offset - 1 ) ) && isLowSurrogateHalf( string.charAt( offset ) );
@@ -56,8 +60,9 @@ export function isInsideSurrogatePair( string: string, offset: number ): boolean
 /**
  * Checks whether given offset in a string is between base character and combining mark or between two combining marks.
  *
- * @param string String to check.
- * @param offset Offset to check.
+ * @param {String} string String to check.
+ * @param {Number} offset Offset to check.
+ * @returns {Boolean}
  */
 export function isInsideCombinedSymbol( string: string, offset: number ): boolean {
 	return isCombiningMark( string.charAt( offset ) );
@@ -68,8 +73,9 @@ const EMOJI_PATTERN = buildEmojiRegexp();
 /**
  * Checks whether given offset in a string is inside multi-character emoji sequence.
  *
- * @param string String to check.
- * @param offset Offset to check.
+ * @param {String} string String to check.
+ * @param {Number} offset Offset to check.
+ * @returns {Boolean}
  */
 export function isInsideEmojiSequence( string: string, offset: number ): boolean {
 	const matches = String( string ).matchAll( EMOJI_PATTERN );

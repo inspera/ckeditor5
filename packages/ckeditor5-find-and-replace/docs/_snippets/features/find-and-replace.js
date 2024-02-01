@@ -1,27 +1,26 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals ClassicEditor, console, window, document */
 
-import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config';
-
 ClassicEditor
 	.create( document.querySelector( '#snippet-findandreplace' ), {
-		cloudServices: CS_CONFIG,
 		toolbar: {
 			items: [
-				'undo', 'redo', '|', 'findAndReplace', '|', 'heading',
-				'|', 'bold', 'italic',
-				'|', 'link', 'insertImage', 'insertTable', 'mediaEmbed',
-				'|', 'bulletedList', 'numberedList', 'outdent', 'indent'
-			]
-		},
-		image: {
-			toolbar: [
-				'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|',
-				'toggleImageCaption', 'imageTextAlternative', 'ckboxImageEdit'
+				'heading',
+				'|',
+				'bold',
+				'italic',
+				'underline',
+				'link',
+				'insertTable',
+				'|',
+				'undo',
+				'redo',
+				'|',
+				'findAndReplace'
 			]
 		},
 		ui: {
@@ -37,10 +36,7 @@ ClassicEditor
 			target: window.findToolbarItem( editor.ui.view.toolbar,
 				item => item.buttonView && item.buttonView.label === 'Find and replace' ),
 			text: 'Click here to search.',
-			editor,
-			tippyOptions: {
-				placement: 'bottom-start'
-			}
+			editor
 		} );
 	} )
 	.catch( err => {

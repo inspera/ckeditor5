@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -74,8 +74,6 @@ describe( 'HeadingUI', () => {
 			expect( dropdown.buttonView.isOn ).to.be.false;
 			expect( dropdown.buttonView.label ).to.equal( 'Paragraph' );
 			expect( dropdown.buttonView.tooltip ).to.equal( 'Heading' );
-			expect( dropdown.buttonView.ariaLabel ).to.equal( 'Heading' );
-			expect( dropdown.buttonView.ariaLabelledBy ).to.be.undefined;
 		} );
 
 		it( 'should execute format command on model execute event for paragraph', () => {
@@ -230,12 +228,6 @@ describe( 'HeadingUI', () => {
 				} );
 			} );
 
-			it( 'display default title if none of the commands is active', () => {
-				return localizedEditor( [] ).then( () => {
-					expect( dropdown.buttonView.label ).to.equal( 'Wybierz nagłówek' );
-				} );
-			} );
-
 			function localizedEditor( options ) {
 				const editorElement = document.createElement( 'div' );
 				document.body.appendChild( editorElement );
@@ -255,9 +247,6 @@ describe( 'HeadingUI', () => {
 						command = editor.commands.get( 'heading' );
 						paragraphCommand = editor.commands.get( 'paragraph' );
 
-						// Trigger lazy init.
-						dropdown.isOpen = true;
-
 						editorElement.remove();
 
 						return editor.destroy();
@@ -267,9 +256,6 @@ describe( 'HeadingUI', () => {
 
 		describe( 'class', () => {
 			it( 'is set for the listView#items in the panel', () => {
-				// Trigger lazy init.
-				dropdown.isOpen = true;
-
 				const listView = dropdown.listView;
 
 				expect( listView.items.map( item => item.children.first.class ) ).to.deep.equal( [
@@ -281,9 +267,6 @@ describe( 'HeadingUI', () => {
 			} );
 
 			it( 'reflects the #value of the commands', () => {
-				// Trigger lazy init.
-				dropdown.isOpen = true;
-
 				const listView = dropdown.listView;
 
 				setData( editor.model, '<heading2>f{}oo</heading2>' );
@@ -294,18 +277,6 @@ describe( 'HeadingUI', () => {
 					true,
 					false
 				] );
-			} );
-		} );
-
-		describe( 'listview', () => {
-			it( 'should have properties set', () => {
-				// Trigger lazy init.
-				dropdown.isOpen = true;
-
-				const listView = dropdown.listView;
-
-				expect( listView.element.role ).to.equal( 'menu' );
-				expect( listView.element.ariaLabel ).to.equal( 'Heading' );
 			} );
 		} );
 	} );

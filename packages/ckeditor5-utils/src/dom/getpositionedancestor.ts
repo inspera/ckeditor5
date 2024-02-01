@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -12,7 +12,8 @@ import global from './global';
 /**
  * For a given element, returns the nearest ancestor element which CSS position is not "static".
  *
- * @param element The native DOM element to be checked.
+ * @param {HTMLElement} [element] The native DOM element to be checked.
+ * @returns {HTMLElement|null}
  */
 export default function getPositionedAncestor( element?: HTMLElement ): HTMLElement | null {
 	if ( !element || !element.parentNode ) {

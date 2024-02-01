@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,7 +7,7 @@
  * @module utils/collection
  */
 
-import EmitterMixin from './emittermixin';
+import { Emitter } from './emittermixin';
 import CKEditorError from './ckeditorerror';
 import uid from './uid';
 import isIterable from './isiterable';
@@ -22,29 +22,41 @@ import isIterable from './isiterable';
  * By default an item in the collection is identified by its `id` property. The name of the identifier can be
  * configured through the constructor of the collection.
  *
- * @typeParam T The type of the collection element.
+ * @mixes module:utils/emittermixin~EmitterMixin
  */
-export default class Collection<T extends Record<string, any>> extends EmitterMixin() implements Iterable<T> {
+export default class Collection<T extends { [ id in I ]?: string }, I extends string = 'id'> extends Emitter implements Iterable<T> {
 	/**
 	 * The internal list of items in the collection.
+	 *
+	 * @private
+	 * @member {Object[]}
 	 */
 	private readonly _items: Array<T>;
 
 	/**
 	 * The internal map of items in the collection.
+	 *
+	 * @private
+	 * @member {Map}
 	 */
 	private readonly _itemMap: Map<string, T>;
 
 	/**
 	 * The name of the property which is considered to identify an item.
+	 *
+	 * @private
+	 * @member {String}
 	 */
-	private readonly _idProperty: string;
+	private readonly _idProperty: I;
 
 	/**
 	 * A collection instance this collection is bound to as a result
 	 * of calling {@link #bindTo} method.
+	 *
+	 * @private
+	 * @member {module:utils/collection~Collection} #_bindToCollection
 	 */
-	private _bindToCollection?: Collection<any> | null;
+	private _bindToCollection?: Collection<any, any> | null;
 
 	/**
 	 * A helper mapping external items of a bound collection ({@link #bindTo})
@@ -52,6 +64,9 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 * necessary to properly remove items bound to another collection.
 	 *
 	 * See {@link #_bindToInternalToExternalMap}.
+	 *
+	 * @private
+	 * @member {WeakMap}
 	 */
 	private readonly _bindToExternalToInternalMap: WeakMap<any, T>;
 
@@ -61,73 +76,60 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 * to avoid loops in two–way bindings.
 	 *
 	 * See {@link #_bindToExternalToInternalMap}.
+	 *
+	 * @private
+	 * @member {WeakMap}
 	 */
 	private readonly _bindToInternalToExternalMap: WeakMap<T, any>;
 
 	/**
 	 * Stores indexes of skipped items from bound external collection.
+	 *
+	 * @private
+	 * @member {Array}
 	 */
 	private _skippedIndexesFromExternal: Array<number>;
+
+	constructor( options?: { readonly idProperty?: I } );
+	constructor( initialItems: Iterable<T>, options?: { readonly idProperty?: I } );
 
 	/**
 	 * Creates a new Collection instance.
 	 *
-	 * You can pass a configuration object as the argument of the constructor:
+	 * You can provide an iterable of initial items the collection will be created with:
 	 *
-	 * ```ts
-	 * const emptyCollection = new Collection<{ name: string }>( { idProperty: 'name' } );
-	 * emptyCollection.add( { name: 'John' } );
-	 * console.log( collection.get( 'John' ) ); // -> { name: 'John' }
-	 * ```
+	 *		const collection = new Collection( [ { id: 'John' }, { id: 'Mike' } ] );
 	 *
-	 * The collection is empty by default. You can add new items using the {@link #add} method:
+	 *		console.log( collection.get( 0 ) ); // -> { id: 'John' }
+	 *		console.log( collection.get( 1 ) ); // -> { id: 'Mike' }
+	 *		console.log( collection.get( 'Mike' ) ); // -> { id: 'Mike' }
 	 *
-	 * ```ts
-	 * const collection = new Collection<{ id: string }>();
+	 * Or you can first create a collection and then add new items using the {@link #add} method:
 	 *
-	 * collection.add( { id: 'John' } );
-	 * console.log( collection.get( 0 ) ); // -> { id: 'John' }
-	 * ```
+	 *		const collection = new Collection();
 	 *
-	 * @label NO_ITEMS
-	 * @param options The options object.
-	 * @param options.idProperty The name of the property which is used to identify an item.
+	 *		collection.add( { id: 'John' } );
+	 *		console.log( collection.get( 0 ) ); // -> { id: 'John' }
+	 *
+	 * Whatever option you choose, you can always pass a configuration object as the last argument
+	 * of the constructor:
+	 *
+	 *		const emptyCollection = new Collection( { idProperty: 'name' } );
+	 *		emptyCollection.add( { name: 'John' } );
+	 *		console.log( collection.get( 'John' ) ); // -> { name: 'John' }
+	 *
+	 *		const nonEmptyCollection = new Collection( [ { name: 'John' } ], { idProperty: 'name' } );
+	 *		nonEmptyCollection.add( { name: 'George' } );
+	 *		console.log( collection.get( 'George' ) ); // -> { name: 'George' }
+	 *		console.log( collection.get( 'John' ) ); // -> { name: 'John' }
+	 *
+	 * @param {Iterable.<Object>|Object} [initialItemsOrOptions] The initial items of the collection or
+	 * the options object.
+	 * @param {Object} [options={}] The options object, when the first argument is an array of initial items.
+	 * @param {String} [options.idProperty='id'] The name of the property which is used to identify an item.
 	 * Items that do not have such a property will be assigned one when added to the collection.
 	 */
-	constructor( options?: { readonly idProperty?: string } );
-
-	/**
-	 * Creates a new Collection instance with specified initial items.
-	 *
-	 * ```ts
-	 * const collection = new Collection<{ id: string }>( [ { id: 'John' }, { id: 'Mike' } ] );
-	 *
-	 * console.log( collection.get( 0 ) ); // -> { id: 'John' }
-	 * console.log( collection.get( 1 ) ); // -> { id: 'Mike' }
-	 * console.log( collection.get( 'Mike' ) ); // -> { id: 'Mike' }
-	 * ```
-	 *
-	 * You can always pass a configuration object as the last argument of the constructor:
-	 *
-	 * ```ts
-	 * const nonEmptyCollection = new Collection<{ name: string }>( [ { name: 'John' } ], { idProperty: 'name' } );
-	 * nonEmptyCollection.add( { name: 'George' } );
-	 * console.log( collection.get( 'George' ) ); // -> { name: 'George' }
-	 * console.log( collection.get( 'John' ) ); // -> { name: 'John' }
-	 * ```
-	 *
-	 * @label INITIAL_ITEMS
-	 * @param initialItems The initial items of the collection.
-	 * @param options The options object.
-	 * @param options.idProperty The name of the property which is used to identify an item.
-	 * Items that do not have such a property will be assigned one when added to the collection.
-	 */
-	constructor( initialItems: Iterable<T>, options?: { readonly idProperty?: string } );
-
-	constructor(
-		initialItemsOrOptions: Iterable<T> | { readonly idProperty?: string } = {},
-		options: { readonly idProperty?: string } = {}
-	) {
+	constructor( initialItemsOrOptions: Iterable<T> | { readonly idProperty?: I } = {}, options: { readonly idProperty?: I } = {} ) {
 		super();
 
 		const hasInitialItems = isIterable( initialItemsOrOptions );
@@ -138,7 +140,7 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 
 		this._items = [];
 		this._itemMap = new Map();
-		this._idProperty = options.idProperty || 'id';
+		this._idProperty = options.idProperty || 'id' as I;
 		this._bindToExternalToInternalMap = new WeakMap();
 		this._bindToInternalToExternalMap = new WeakMap();
 		this._skippedIndexesFromExternal = [];
@@ -154,6 +156,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 
 	/**
 	 * The number of items available in the collection.
+	 *
+	 * @member {Number} #length
 	 */
 	public get length(): number {
 		return this._items.length;
@@ -161,6 +165,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 
 	/**
 	 * Returns the first item from the collection or null when collection is empty.
+	 *
+	 * @returns {Object|null} The first item or `null` if collection is empty.
 	 */
 	public get first(): T | null {
 		return this._items[ 0 ] || null;
@@ -168,6 +174,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 
 	/**
 	 * Returns the last item from the collection or null when collection is empty.
+	 *
+	 * @returns {Object|null} The last item or `null` if collection is empty.
 	 */
 	public get last(): T | null {
 		return this._items[ this.length - 1 ] || null;
@@ -178,8 +186,9 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 *
 	 * If the item does not have an id, then it will be automatically generated and set on the item.
 	 *
-	 * @param item
-	 * @param index The position of the item in the collection. The item
+	 * @chainable
+	 * @param {Object} item
+	 * @param {Number} [index] The position of the item in the collection. The item
 	 * is pushed to the collection when `index` not specified.
 	 * @fires add
 	 * @fires change
@@ -193,8 +202,9 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 *
 	 * Any item not containing an id will get an automatically generated one.
 	 *
-	 * @param items
-	 * @param index The position of the insertion. Items will be appended if no `index` is specified.
+	 * @chainable
+	 * @param {Iterable.<Object>} items
+	 * @param {Number} [index] The position of the insertion. Items will be appended if no `index` is specified.
 	 * @fires add
 	 * @fires change
 	 */
@@ -237,8 +247,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	/**
 	 * Gets an item by its ID or index.
 	 *
-	 * @param idOrIndex The item ID or index in the collection.
-	 * @returns The requested item or `null` if such item does not exist.
+	 * @param {String|Number} idOrIndex The item ID or index in the collection.
+	 * @returns {Object|null} The requested item or `null` if such item does not exist.
 	 */
 	public get( idOrIndex: string | number ): T | null {
 		let item: T | undefined;
@@ -262,8 +272,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	/**
 	 * Returns a Boolean indicating whether the collection contains an item.
 	 *
-	 * @param itemOrId The item or its ID in the collection.
-	 * @returns `true` if the collection contains the item, `false` otherwise.
+	 * @param {Object|String} itemOrId The item or its ID in the collection.
+	 * @returns {Boolean} `true` if the collection contains the item, `false` otherwise.
 	 */
 	public has( itemOrId: T | string ): boolean {
 		if ( typeof itemOrId == 'string' ) {
@@ -280,8 +290,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 * Gets an index of an item in the collection.
 	 * When an item is not defined in the collection, the index will equal -1.
 	 *
-	 * @param itemOrId The item or its ID in the collection.
-	 * @returns The index of a given item.
+	 * @param {Object|String} itemOrId The item or its ID in the collection.
+	 * @returns {Number} The index of a given item.
 	 */
 	public getIndex( itemOrId: T | string ): number {
 		let item: T | undefined;
@@ -298,8 +308,8 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	/**
 	 * Removes an item from the collection.
 	 *
-	 * @param subject The item to remove, its ID or index in the collection.
-	 * @returns The removed item.
+	 * @param {Object|Number|String} subject The item to remove, its ID or index in the collection.
+	 * @returns {Object} The removed item.
 	 * @fires remove
 	 * @fires change
 	 */
@@ -318,10 +328,11 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	/**
 	 * Executes the callback for each item in the collection and composes an array or values returned by this callback.
 	 *
-	 * @typeParam U The result type of the callback.
-	 * @param callback
-	 * @param ctx Context in which the `callback` will be called.
-	 * @returns The result of mapping.
+	 * @param {Function} callback
+	 * @param {Object} callback.item
+	 * @param {Number} callback.index
+	 * @param {Object} [ctx] Context in which the `callback` will be called.
+	 * @returns {Array} The result of mapping.
 	 */
 	public map<U>(
 		callback: ( item: T, index: number ) => U,
@@ -331,23 +342,13 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	}
 
 	/**
-	 * Performs the specified action for each item in the collection.
-	 *
-	 * @param ctx Context in which the `callback` will be called.
-	 */
-	public forEach(
-		callback: ( item: T, index: number ) => unknown,
-		ctx?: any
-	): void {
-		this._items.forEach( callback, ctx );
-	}
-
-	/**
 	 * Finds the first item in the collection for which the `callback` returns a true value.
 	 *
-	 * @param callback
-	 * @param ctx Context in which the `callback` will be called.
-	 * @returns The item for which `callback` returned a true value.
+	 * @param {Function} callback
+	 * @param {Object} callback.item
+	 * @param {Number} callback.index
+	 * @param {Object} [ctx] Context in which the `callback` will be called.
+	 * @returns {Object|undefined} The item for which `callback` returned a true value.
 	 */
 	public find(
 		callback: ( item: T, index: number ) => boolean,
@@ -359,9 +360,11 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	/**
 	 * Returns an array with items for which the `callback` returned a true value.
 	 *
-	 * @param callback
-	 * @param ctx Context in which the `callback` will be called.
-	 * @returns The array with matching items.
+	 * @param {Function} callback
+	 * @param {Object} callback.item
+	 * @param {Number} callback.index
+	 * @param {Object} [ctx] Context in which the `callback` will be called.
+	 * @returns {Array} The array with matching items.
 	 */
 	public filter(
 		callback: ( item: T, index: number ) => boolean,
@@ -401,114 +404,99 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 *
 	 * The binding can be a simple factory:
 	 *
-	 * ```ts
-	 * class FactoryClass {
-	 * 	public label: string;
+	 *		class FactoryClass {
+	 *			constructor( data ) {
+	 *				this.label = data.label;
+	 *			}
+	 *		}
 	 *
-	 * 	constructor( data: { label: string } ) {
-	 * 		this.label = data.label;
-	 * 	}
-	 * }
+	 *		const source = new Collection( { idProperty: 'label' } );
+	 *		const target = new Collection();
 	 *
-	 * const source = new Collection<{ label: string }>( { idProperty: 'label' } );
-	 * const target = new Collection<FactoryClass>();
+	 *		target.bindTo( source ).as( FactoryClass );
 	 *
-	 * target.bindTo( source ).as( FactoryClass );
+	 *		source.add( { label: 'foo' } );
+	 *		source.add( { label: 'bar' } );
 	 *
-	 * source.add( { label: 'foo' } );
-	 * source.add( { label: 'bar' } );
+	 *		console.log( target.length ); // 2
+	 *		console.log( target.get( 1 ).label ); // 'bar'
 	 *
-	 * console.log( target.length ); // 2
-	 * console.log( target.get( 1 ).label ); // 'bar'
-	 *
-	 * source.remove( 0 );
-	 * console.log( target.length ); // 1
-	 * console.log( target.get( 0 ).label ); // 'bar'
-	 * ```
+	 *		source.remove( 0 );
+	 *		console.log( target.length ); // 1
+	 *		console.log( target.get( 0 ).label ); // 'bar'
 	 *
 	 * or the factory driven by a custom callback:
 	 *
-	 * ```ts
-	 * class FooClass {
-	 * 	public label: string;
+	 *		class FooClass {
+	 *			constructor( data ) {
+	 *				this.label = data.label;
+	 *			}
+	 *		}
 	 *
-	 * 	constructor( data: { label: string } ) {
-	 * 		this.label = data.label;
-	 * 	}
-	 * }
+	 *		class BarClass {
+	 *			constructor( data ) {
+	 *				this.label = data.label;
+	 *			}
+	 *		}
 	 *
-	 * class BarClass {
-	 * 	public label: string;
+	 *		const source = new Collection( { idProperty: 'label' } );
+	 *		const target = new Collection();
 	 *
-	 * 	constructor( data: { label: string } ) {
-	 * 		this.label = data.label;
-	 * 	}
-	 * }
+	 *		target.bindTo( source ).using( ( item ) => {
+	 *			if ( item.label == 'foo' ) {
+	 *				return new FooClass( item );
+	 *			} else {
+	 *				return new BarClass( item );
+	 *			}
+	 *		} );
 	 *
-	 * const source = new Collection<{ label: string }>( { idProperty: 'label' } );
-	 * const target = new Collection<FooClass | BarClass>();
+	 *		source.add( { label: 'foo' } );
+	 *		source.add( { label: 'bar' } );
 	 *
-	 * target.bindTo( source ).using( ( item ) => {
-	 * 	if ( item.label == 'foo' ) {
-	 * 		return new FooClass( item );
-	 * 	} else {
-	 * 		return new BarClass( item );
-	 * 	}
-	 * } );
-	 *
-	 * source.add( { label: 'foo' } );
-	 * source.add( { label: 'bar' } );
-	 *
-	 * console.log( target.length ); // 2
-	 * console.log( target.get( 0 ) instanceof FooClass ); // true
-	 * console.log( target.get( 1 ) instanceof BarClass ); // true
-	 * ```
+	 *		console.log( target.length ); // 2
+	 *		console.log( target.get( 0 ) instanceof FooClass ); // true
+	 *		console.log( target.get( 1 ) instanceof BarClass ); // true
 	 *
 	 * or the factory out of property name:
 	 *
-	 * ```ts
-	 * const source = new Collection<{ nested: { value: string } }>();
-	 * const target = new Collection<{ value: string }>();
+	 *		const source = new Collection( { idProperty: 'label' } );
+	 *		const target = new Collection();
 	 *
-	 * target.bindTo( source ).using( 'nested' );
+	 *		target.bindTo( source ).using( 'label' );
 	 *
-	 * source.add( { nested: { value: 'foo' } } );
-	 * source.add( { nested: { value: 'bar' } } );
+	 *		source.add( { label: { value: 'foo' } } );
+	 *		source.add( { label: { value: 'bar' } } );
 	 *
-	 * console.log( target.length ); // 2
-	 * console.log( target.get( 0 ).value ); // 'foo'
-	 * console.log( target.get( 1 ).value ); // 'bar'
-	 * ```
+	 *		console.log( target.length ); // 2
+	 *		console.log( target.get( 0 ).value ); // 'foo'
+	 *		console.log( target.get( 1 ).value ); // 'bar'
 	 *
-	 * It's possible to skip specified items by returning null value:
+	 * It's possible to skip specified items by returning falsy value:
 	 *
-	 * ```ts
-	 * const source = new Collection<{ hidden: boolean }>();
-	 * const target = new Collection<{ hidden: boolean }>();
+	 *		const source = new Collection();
+	 *		const target = new Collection();
 	 *
-	 * target.bindTo( source ).using( item => {
-	 * 	if ( item.hidden ) {
-	 * 		return null;
-	 * 	}
+	 *		target.bindTo( source ).using( item => {
+	 *			if ( item.hidden ) {
+	 *				return null;
+	 *			}
 	 *
-	 * 	return item;
-	 * } );
+	 *			return item;
+	 *		} );
 	 *
-	 * source.add( { hidden: true } );
-	 * source.add( { hidden: false } );
+	 *		source.add( { hidden: true } );
+	 *		source.add( { hidden: false } );
 	 *
-	 * console.log( source.length ); // 2
-	 * console.log( target.length ); // 1
-	 * ```
+	 *		console.log( source.length ); // 2
+	 *		console.log( target.length ); // 1
 	 *
 	 * **Note**: {@link #clear} can be used to break the binding.
 	 *
-	 * @typeParam S The type of `externalCollection` element.
-	 * @param externalCollection A collection to be bound.
-	 * @returns The binding chain object.
+	 * @param {module:utils/collection~Collection} externalCollection A collection to be bound.
+	 * @returns {module:utils/collection~CollectionBindToChain} The binding chain object.
 	 */
-	public bindTo<S extends Record<string, any>>(
-		externalCollection: Collection<S>
+	public bindTo<S extends { [id in I2]?: string }, I2 extends string>(
+		externalCollection: Collection<S, I2>
 	): CollectionBindToChain<S, T> {
 		if ( this._bindToCollection ) {
 			/**
@@ -530,21 +518,24 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 				if ( typeof callbackOrProperty == 'function' ) {
 					this._setUpBindToBinding<S>( callbackOrProperty );
 				} else {
-					this._setUpBindToBinding<S>( item => item[ callbackOrProperty ] );
+					this._setUpBindToBinding<S>( item => item[ callbackOrProperty ] as any );
 				}
 			}
 		};
 	}
 
 	/**
-	 * Finalizes and activates a binding initiated by {@link #bindTo}.
+	 * Finalizes and activates a binding initiated by {#bindTo}.
 	 *
-	 * @param factory A function which produces collection items.
+	 * @private
+	 * @param {Function} factory A function which produces collection items.
 	 */
-	private _setUpBindToBinding<S>( factory: ( item: S ) => T | null ): void {
+	private _setUpBindToBinding<S extends object>( factory: ( item: S ) => T | null ): void {
 		const externalCollection = this._bindToCollection!;
 
 		// Adds the item to the collection once a change has been done to the external collection.
+		//
+		// @private
 		const addItem = ( evt: unknown, externalItem: S, index: number ) => {
 			const isExternalBoundToThis = externalCollection._bindToCollection == this;
 			const externalItemBound = externalCollection._bindToInternalToExternalMap.get( externalItem );
@@ -663,9 +654,11 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 *
 	 * The method will generate new id and assign it to the `item` if it doesn't have any.
 	 *
-	 * @param item Item to be added.
+	 * @private
+	 * @param {Object} item Item to be added.
+	 * @returns {String}
 	 */
-	private _getItemIdBeforeAdding( item: any ): string {
+	private _getItemIdBeforeAdding( item: { [ id in I ]?: string } ): string {
 		const idProperty = this._idProperty;
 		let itemId: string | undefined;
 
@@ -701,8 +694,9 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 	 *
 	 * In contrast this method **does not** fire the {@link #event:change} event.
 	 *
-	 * @param subject The item to remove, its id or index in the collection.
-	 * @returns Returns an array with the removed item and its index.
+	 * @private
+	 * @param {Object|Number|String} subject The item to remove, its id or index in the collection.
+	 * @returns {Array} Returns an array with the removed item and its index.
 	 * @fires remove
 	 */
 	private _remove( subject: T | number | string ): [ item: T, index: number ] {
@@ -756,63 +750,52 @@ export default class Collection<T extends Record<string, any>> extends EmitterMi
 
 	/**
 	 * Iterable interface.
+	 *
+	 * @returns {Iterator.<*>}
 	 */
 	public [ Symbol.iterator ](): Iterator<T> {
 		return this._items[ Symbol.iterator ]();
 	}
+
+	/**
+	 * Fired when an item is added to the collection.
+	 *
+	 * @event add
+	 * @param {Object} item The added item.
+	 */
+
+	/**
+	 * Fired when the collection was changed due to adding or removing items.
+	 *
+	 * @event change
+	 * @param {Iterable.<Object>} added A list of added items.
+	 * @param {Iterable.<Object>} removed A list of removed items.
+	 * @param {Number} index An index where the addition or removal occurred.
+	 */
+
+	/**
+	 * Fired when an item is removed from the collection.
+	 *
+	 * @event remove
+	 * @param {Object} item The removed item.
+	 * @param {Number} index Index from which item was removed.
+	 */
 }
 
-/**
- * Fired when an item is added to the collection.
- *
- * @eventName ~Collection#add
- * @param item The added item.
- * @param index An index where the addition occurred.
- */
 export type CollectionAddEvent<T = any> = {
 	name: 'add';
 	args: [ item: T, index: number ];
 };
 
-/**
- * Fired when the collection was changed due to adding or removing items.
- *
- * @eventName ~Collection#change
- * @param data Changed items.
- */
 export type CollectionChangeEvent<T = any> = {
 	name: 'change';
-	args: [ data: CollectionChangeEventData<T> ];
+	args: [ {
+		added: Iterable<T>;
+		removed: Iterable<T>;
+		index: number;
+	} ];
 };
 
-/**
- * A structure describing the {@link ~Collection#event:change `Collection#change`} event.
- */
-export type CollectionChangeEventData<T = any> = {
-
-	/**
-	 * A list of added items.
-	 */
-	added: Iterable<T>;
-
-	/**
-	 * A list of removed items.
-	 */
-	removed: Iterable<T>;
-
-	/**
-	 * An index where the addition or removal occurred.
-	 */
-	index: number;
-};
-
-/**
- * Fired when an item is removed from the collection.
- *
- * @eventName ~Collection#remove
- * @param item The removed item.
- * @param index Index from which item was removed.
- */
 export type CollectionRemoveEvent<T = any> = {
 	name: 'remove';
 	args: [ item: T, index: number ];
@@ -823,6 +806,8 @@ export type CollectionRemoveEvent<T = any> = {
  * providing functions that specify the type of the binding.
  *
  * See the {@link module:utils/collection~Collection#bindTo `bindTo()`} documentation for examples.
+ *
+ * @interface
  */
 export interface CollectionBindToChain<S, T> {
 
@@ -830,14 +815,16 @@ export interface CollectionBindToChain<S, T> {
 	 * Creates the class factory binding in which items of the source collection are passed to
 	 * the constructor of the specified class.
 	 *
-	 * @param Class The class constructor used to create instances in the factory.
+	 * @method #as
+	 * @param {Function} Class The class constructor used to create instances in the factory.
 	 */
 	as( Class: new ( item: S ) => T ): void;
 
 	/**
 	 * Creates a callback or a property binding.
 	 *
-	 * @param callbackOrProperty When the function is passed, it should return
+	 * @method #using
+	 * @param {Function|String} callbackOrProperty  When the function is passed, it should return
 	 * the collection items. When the string is provided, the property value is used to create the bound collection items.
 	 */
 	using( callbackOrProperty: keyof S | ( ( item: S ) => T | null ) ): void;

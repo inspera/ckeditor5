@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -9,12 +9,11 @@
 
 import InputTextView from '../inputtext/inputtextview';
 import InputNumberView from '../inputnumber/inputnumberview';
-import TextareaView from '../textarea/textareaview';
 import { createDropdown } from '../dropdown/utils';
 
+import type LabeledFieldView from './labeledfieldview';
 import type DropdownView from '../dropdown/dropdownview';
 import type { InputViewInputEvent } from '../input/inputview';
-import type { LabeledFieldViewCreator } from './labeledfieldview';
 
 /**
  * A helper for creating labeled inputs.
@@ -31,19 +30,21 @@ import type { LabeledFieldViewCreator } from './labeledfieldview';
  *
  * Usage:
  *
- * ```ts
- * const labeledInputView = new LabeledFieldView( locale, createLabeledInputText );
- * console.log( labeledInputView.fieldView ); // A text input instance.
- * ```
+ *		const labeledInputView = new LabeledFieldView( locale, createLabeledInputText );
+ *		console.log( labeledInputView.fieldView ); // A text input instance.
  *
- * @param labeledFieldView The instance of the labeled field view.
- * @param viewUid An UID string that allows DOM logical connection between the
+ * @param {module:ui/labeledfield/labeledfieldview~LabeledFieldView} labeledFieldView The instance of the labeled field view.
+ * @param {String} viewUid An UID string that allows DOM logical connection between the
  * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#labelView labeled view's label} and the input.
- * @param statusUid An UID string that allows DOM logical connection between the
+ * @param {String} statusUid An UID string that allows DOM logical connection between the
  * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#statusView labeled view's status} and the input.
- * @returns The input text view instance.
+ * @returns {module:ui/inputtext/inputtextview~InputTextView} The input text view instance.
  */
-const createLabeledInputText: LabeledFieldViewCreator<InputTextView> = ( labeledFieldView, viewUid, statusUid ) => {
+export function createLabeledInputText(
+	labeledFieldView: LabeledFieldView,
+	viewUid: string,
+	statusUid: string
+): InputTextView {
 	const inputView = new InputTextView( labeledFieldView.locale );
 
 	inputView.set( {
@@ -63,7 +64,7 @@ const createLabeledInputText: LabeledFieldViewCreator<InputTextView> = ( labeled
 	labeledFieldView.bind( 'isEmpty', 'isFocused', 'placeholder' ).to( inputView );
 
 	return inputView;
-};
+}
 
 /**
  * A helper for creating labeled number inputs.
@@ -80,19 +81,21 @@ const createLabeledInputText: LabeledFieldViewCreator<InputTextView> = ( labeled
  *
  * Usage:
  *
- * ```ts
- * const labeledInputView = new LabeledFieldView( locale, createLabeledInputNumber );
- * console.log( labeledInputView.fieldView ); // A number input instance.
- * ```
+ *		const labeledInputView = new LabeledFieldView( locale, createLabeledInputNumber );
+ *		console.log( labeledInputView.fieldView ); // A number input instance.
  *
- * @param labeledFieldView The instance of the labeled field view.
- * @param viewUid An UID string that allows DOM logical connection between the
+ * @param {module:ui/labeledfield/labeledfieldview~LabeledFieldView} labeledFieldView The instance of the labeled field view.
+ * @param {String} viewUid An UID string that allows DOM logical connection between the
  * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#labelView labeled view's label} and the input.
- * @param statusUid An UID string that allows DOM logical connection between the
+ * @param {String} statusUid An UID string that allows DOM logical connection between the
  * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#statusView labeled view's status} and the input.
- * @returns The input number view instance.
+ * @returns {module:ui/inputnumber/inputnumberview~InputNumberView} The input number view instance.
  */
-const createLabeledInputNumber: LabeledFieldViewCreator<InputNumberView> = ( labeledFieldView, viewUid, statusUid ) => {
+export function createLabeledInputNumber(
+	labeledFieldView: LabeledFieldView,
+	viewUid: string,
+	statusUid: string
+): InputNumberView {
 	const inputView = new InputNumberView( labeledFieldView.locale );
 
 	inputView.set( {
@@ -113,56 +116,7 @@ const createLabeledInputNumber: LabeledFieldViewCreator<InputNumberView> = ( lab
 	labeledFieldView.bind( 'isEmpty', 'isFocused', 'placeholder' ).to( inputView );
 
 	return inputView;
-};
-
-/**
- * A helper for creating labeled textarea.
- *
- * It creates an instance of a {@link module:ui/textarea/textareaview~TextareaView textarea} that is
- * logically related to a {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView labeled view} in DOM.
- *
- * The helper does the following:
- *
- * * It sets textarea's `id` and `ariaDescribedById` attributes.
- * * It binds textarea's `isReadOnly` to the labeled view.
- * * It binds textarea's `hasError` to the labeled view.
- * * It enables a logic that cleans up the error when user starts typing in the textarea.
- *
- * Usage:
- *
- * ```ts
- * const labeledTextarea = new LabeledFieldView( locale, createLabeledTextarea );
- * console.log( labeledTextarea.fieldView ); // A textarea instance.
- * ```
- *
- * @param labeledFieldView The instance of the labeled field view.
- * @param viewUid An UID string that allows DOM logical connection between the
- * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#labelView labeled view's label} and the textarea.
- * @param statusUid An UID string that allows DOM logical connection between the
- * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#statusView labeled view's status} and the textarea.
- * @returns The textarea view instance.
- */
-const createLabeledTextarea: LabeledFieldViewCreator<TextareaView> = ( labeledFieldView, viewUid, statusUid ) => {
-	const textareaView = new TextareaView( labeledFieldView.locale );
-
-	textareaView.set( {
-		id: viewUid,
-		ariaDescribedById: statusUid
-	} );
-
-	textareaView.bind( 'isReadOnly' ).to( labeledFieldView, 'isEnabled', value => !value );
-	textareaView.bind( 'hasError' ).to( labeledFieldView, 'errorText', value => !!value );
-
-	textareaView.on<InputViewInputEvent>( 'input', () => {
-		// UX: Make the error text disappear and disable the error indicator as the user
-		// starts fixing the errors.
-		labeledFieldView.errorText = null;
-	} );
-
-	labeledFieldView.bind( 'isEmpty', 'isFocused', 'placeholder' ).to( textareaView );
-
-	return textareaView;
-};
+}
 
 /**
  * A helper for creating labeled dropdowns.
@@ -177,19 +131,21 @@ const createLabeledTextarea: LabeledFieldViewCreator<TextareaView> = ( labeledFi
  *
  * Usage:
  *
- * ```ts
- * const labeledInputView = new LabeledFieldView( locale, createLabeledDropdown );
- * console.log( labeledInputView.fieldView ); // A dropdown instance.
- * ```
+ *		const labeledInputView = new LabeledFieldView( locale, createLabeledDropdown );
+ *		console.log( labeledInputView.fieldView ); // A dropdown instance.
  *
- * @param labeledFieldView The instance of the labeled field view.
- * @param viewUid An UID string that allows DOM logical connection between the
+ * @param {module:ui/labeledfield/labeledfieldview~LabeledFieldView} labeledFieldView The instance of the labeled field view.
+ * @param {String} viewUid An UID string that allows DOM logical connection between the
  * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#labelView labeled view label} and the dropdown.
- * @param statusUid An UID string that allows DOM logical connection between the
+ * @param {String} statusUid An UID string that allows DOM logical connection between the
  * {@link module:ui/labeledfield/labeledfieldview~LabeledFieldView#statusView labeled view status} and the dropdown.
- * @returns The dropdown view instance.
+ * @returns {module:ui/dropdown/dropdownview~DropdownView} The dropdown view instance.
  */
-const createLabeledDropdown: LabeledFieldViewCreator<DropdownView> = ( labeledFieldView, viewUid, statusUid ) => {
+export function createLabeledDropdown(
+	labeledFieldView: LabeledFieldView,
+	viewUid: string,
+	statusUid: string
+): DropdownView {
 	const dropdownView = createDropdown( labeledFieldView.locale );
 
 	dropdownView.set( {
@@ -200,11 +156,4 @@ const createLabeledDropdown: LabeledFieldViewCreator<DropdownView> = ( labeledFi
 	dropdownView.bind( 'isEnabled' ).to( labeledFieldView );
 
 	return dropdownView;
-};
-
-export {
-	createLabeledInputNumber,
-	createLabeledInputText,
-	createLabeledTextarea,
-	createLabeledDropdown
-};
+}

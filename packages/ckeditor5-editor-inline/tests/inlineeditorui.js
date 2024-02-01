@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -8,7 +8,7 @@
 import View from '@ckeditor/ckeditor5-ui/src/view';
 
 import InlineEditorUI from '../src/inlineeditorui';
-import EditorUI from '@ckeditor/ckeditor5-ui/src/editorui/editorui';
+import EditorUI from '@ckeditor/ckeditor5-core/src/editor/editorui';
 import InlineEditorUIView from '../src/inlineeditoruiview';
 import InlineEditor from '../src/inlineeditor';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
@@ -178,7 +178,7 @@ describe( 'InlineEditorUI', () => {
 		} );
 
 		describe( 'placeholder', () => {
-			it( 'sets placeholder from editor.config.placeholder - string', () => {
+			it( 'sets placeholder from editor.config.placeholder', () => {
 				return VirtualInlineTestEditor
 					.create( 'foo', {
 						extraPlugins: [ Paragraph ],
@@ -193,11 +193,14 @@ describe( 'InlineEditorUI', () => {
 					} );
 			} );
 
-			it( 'sets placeholder from editor.config.placeholder - object', () => {
+			it( 'sets placeholder from the "placeholder" attribute of a passed <textarea>', () => {
+				const element = document.createElement( 'textarea' );
+
+				element.setAttribute( 'placeholder', 'placeholder-text' );
+
 				return VirtualInlineTestEditor
-					.create( 'foo', {
-						extraPlugins: [ Paragraph ],
-						placeholder: { main: 'placeholder-text' }
+					.create( element, {
+						extraPlugins: [ Paragraph ]
 					} )
 					.then( newEditor => {
 						const firstChild = newEditor.editing.view.document.getRoot().getChild( 0 );
@@ -208,16 +211,20 @@ describe( 'InlineEditorUI', () => {
 					} );
 			} );
 
-			it( 'sets placeholder from editor.config.placeholder - object (invalid root name)', () => {
+			it( 'uses editor.config.placeholder rather than the "placeholder" attribute of a passed <textarea>', () => {
+				const element = document.createElement( 'textarea' );
+
+				element.setAttribute( 'placeholder', 'placeholder-text' );
+
 				return VirtualInlineTestEditor
-					.create( 'foo', {
-						extraPlugins: [ Paragraph ],
-						placeholder: { 'root-name-that-not-exists': 'placeholder-text' }
+					.create( element, {
+						placeholder: 'config takes precedence',
+						extraPlugins: [ Paragraph ]
 					} )
 					.then( newEditor => {
 						const firstChild = newEditor.editing.view.document.getRoot().getChild( 0 );
 
-						expect( firstChild.hasAttribute( 'data-placeholder' ) ).to.equal( false );
+						expect( firstChild.getAttribute( 'data-placeholder' ) ).to.equal( 'config takes precedence' );
 
 						return newEditor.destroy();
 					} );
