@@ -4,18 +4,12 @@
  */
 
 // The editor creator to use.
-/**
- * @license Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
- * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
- */
-
-// The editor creator to use.
 import { ClassicEditor as ClassicEditorBase } from '@ckeditor/ckeditor5-editor-classic';
 import { InlineEditor as InlineEditorBase } from '@ckeditor/ckeditor5-editor-inline';
 
 import { CKFinderUploadAdapter } from '@ckeditor/ckeditor5-adapter-ckfinder';
 import { Autoformat } from '@ckeditor/ckeditor5-autoformat';
-import { Bold, Italic, Subscript, Superscript, Underline } from '@ckeditor/ckeditor5-basic-styles';
+import { Bold, Italic, Subscript, Superscript, Underline, Strikethrough } from '@ckeditor/ckeditor5-basic-styles';
 import { BlockQuote } from '@ckeditor/ckeditor5-block-quote';
 import { CKFinder } from '@ckeditor/ckeditor5-ckfinder';
 import { CloudServices } from '@ckeditor/ckeditor5-cloud-services';
@@ -29,13 +23,16 @@ import { Link } from '@ckeditor/ckeditor5-link';
 import { List } from '@ckeditor/ckeditor5-list';
 import { MediaEmbed } from '@ckeditor/ckeditor5-media-embed';
 import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
-import { SpecialCharacters } from '@ckeditor/ckeditor5-special-characters';
+import { SpecialCharacters, SpecialCharactersEssentials } from '@ckeditor/ckeditor5-special-characters';
 import { Style } from '@ckeditor/ckeditor5-style';
 import { Table, TableToolbar } from '@ckeditor/ckeditor5-table';
 import { TextTransformation } from '@ckeditor/ckeditor5-typing';
+import { FontFamily, FontBackgroundColor, FontSize, FontColor } from '@ckeditor/ckeditor5-font';
+import { Alignment } from '@ckeditor/ckeditor5-alignment';
+import { RemoveFormat } from '@ckeditor/ckeditor5-remove-format';
 
-class ClassicEditor extends ClassicEditorBase {}
-class InlineEditor extends InlineEditorBase {}
+class ClassicEditor extends ClassicEditorBase { }
+class InlineEditor extends InlineEditorBase { }
 
 // Plugins to include in the build.
 const plugins = [
@@ -62,12 +59,20 @@ const plugins = [
 	MediaEmbed,
 	Paragraph,
 	SpecialCharacters,
+	SpecialCharactersEssentials,
 	Style,
 	Subscript,
 	Superscript,
 	Table,
 	TableToolbar,
-	TextTransformation
+	TextTransformation,
+	Strikethrough,
+	FontFamily,
+	FontBackgroundColor,
+	FontSize,
+	FontColor,
+	Alignment,
+	RemoveFormat
 ];
 
 ClassicEditor.builtinPlugins = plugins;
