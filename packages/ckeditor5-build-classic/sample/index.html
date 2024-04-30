@@ -41,7 +41,10 @@
 <script src="../build/ckeditor.js"></script>
 <script>
 	CKEDITOR.ClassicEditor.create( document.querySelector( '#editor' ), {
-		toolbar: ['heading', '|', 'bold', 'italic', 'link', 'underline', 'bulletedList', 'numberedList', 'blockQuote'],
+		toolbar: ['RemoveFormat', 'FontFamily', 'FontSize', 'FontColor', 'FontBackgroundColor', 'Underline', 'StrikeThrough',
+		'|', 'heading', 'Alignment',
+		'|', 'bold', 'italic', 'link', 'Strikethrough', 'underline', 'bulletedList', 'numberedList', 'blockQuote',
+		'|', 'SpecialCharacters'],
 	})
 		.then( editor => {
 			window.editor = editor;
