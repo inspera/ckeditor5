@@ -11,7 +11,6 @@ import type { Editor, UiConfig } from '@ckeditor/ckeditor5-core';
 import {
 	DomEmitterMixin,
 	Rect,
-	verifyLicense,
 	type PositionOptions,
 	type Locale
 } from '@ckeditor/ckeditor5-utils';
@@ -101,9 +100,8 @@ export default class PoweredBy extends DomEmitterMixin() {
 	private _handleEditorReady(): void {
 		const editor = this.editor;
 		const forceVisible = !!editor.config.get( 'ui.poweredBy.forceVisible' );
-
 		/* istanbul ignore next -- @preserve */
-		if ( !forceVisible && verifyLicense( editor.config.get( 'licenseKey' ) ) === 'VALID' ) {
+		if ( !forceVisible ) {
 			return;
 		}
 
