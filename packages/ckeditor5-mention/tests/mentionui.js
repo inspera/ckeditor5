@@ -1,26 +1,26 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global window, document, setTimeout, Event, console */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata';
-import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo';
-import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
-import env from '@ckeditor/ckeditor5-utils/src/env';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata.js';
+import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo.js';
+import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon.js';
+import env from '@ckeditor/ckeditor5-utils/src/env.js';
 
-import MentionUI, { createRegExp } from '../src/mentionui';
-import MentionEditing from '../src/mentionediting';
-import MentionsView from '../src/ui/mentionsview';
-import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import MentionUI, { createRegExp } from '../src/mentionui.js';
+import MentionEditing from '../src/mentionediting.js';
+import MentionsView from '../src/ui/mentionsview.js';
+import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 describe( 'MentionUI', () => {
 	let editor, model, doc, editingView, mentionUI, editorElement, mentionsView, panelView, clock;
@@ -298,6 +298,71 @@ describe( 'MentionUI', () => {
 					// Should not break;
 					expect( limiter() ).to.be.null;
 				} );
+		} );
+
+		describe( 'relation with the UI language direction of the editor', () => {
+			describe( 'for RTL languages', () => {
+				let contextualBaloonSpy;
+
+				beforeEach( async () => {
+					await editor.destroy();
+
+					return createClassicTestEditor( { ...staticConfig } )
+						.then( () => {
+							const contextualBalloon = editor.plugins.get( ContextualBalloon );
+							setData( model, '<paragraph>foo []</paragraph>' );
+							editor.locale.uiLanguageDirection = 'rtl';
+							contextualBaloonSpy = sinon.spy( contextualBalloon, 'add' );
+
+							model.change( writer => {
+								writer.insertText( '@', doc.selection.getFirstPosition() );
+							} );
+						} )
+						.then( waitForDebounce );
+				} );
+
+				it( 'should prefer the west position first (to the left of the caret)', () => {
+					const positionNames = contextualBaloonSpy.firstCall.firstArg.position.positions.map( ( { name } ) => name );
+
+					expect( positionNames ).to.have.ordered.members( [
+						'caret_sw',
+						'caret_se',
+						'caret_nw',
+						'caret_ne'
+					] );
+				} );
+			} );
+
+			describe( 'for ltr languages', () => {
+				let contextualBaloonSpy;
+
+				beforeEach( async () => {
+					await editor.destroy();
+
+					return createClassicTestEditor( { ...staticConfig } )
+						.then( () => {
+							const contextualBalloon = editor.plugins.get( ContextualBalloon );
+							setData( model, '<paragraph>foo []</paragraph>' );
+							contextualBaloonSpy = sinon.spy( contextualBalloon, 'add' );
+
+							model.change( writer => {
+								writer.insertText( '@', doc.selection.getFirstPosition() );
+							} );
+						} )
+						.then( waitForDebounce );
+				} );
+
+				it( 'should prefer the east position first (to the right of the caret)', () => {
+					const positionNames = contextualBaloonSpy.firstCall.firstArg.position.positions.map( ( { name } ) => name );
+
+					expect( positionNames ).to.have.ordered.members( [
+						'caret_se',
+						'caret_sw',
+						'caret_ne',
+						'caret_nw'
+					] );
+				} );
+			} );
 		} );
 	} );
 
@@ -2326,6 +2391,12 @@ describe( 'MentionUI', () => {
 				feed: longFeed
 			};
 
+			const limitedArrayFeed = {
+				marker: '@',
+				feed: longFeed,
+				dropdownLimit: 5
+			};
+
 			const customFunctionFeed = {
 				marker: '@',
 				feed: () => {
@@ -2386,6 +2457,24 @@ describe( 'MentionUI', () => {
 					.then( () => {
 						expect( panelView.isVisible ).to.be.true;
 						expect( mentionsView.items ).to.have.length( simpleArrayFeed.feed.length );
+					} );
+			} );
+
+			it( 'dropdown list length should be equal to the feeds dropdownLimit value', () => {
+				return createClassicTestEditor( {
+					dropdownLimit: 25,
+					feeds: [ limitedArrayFeed ] } )
+					.then( () => {
+						setData( model, '<paragraph>foo []</paragraph>' );
+
+						model.change( writer => {
+							writer.insertText( '@', doc.selection.getFirstPosition() );
+						} );
+					} )
+					.then( waitForDebounce )
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 5 );
 					} );
 			} );
 		} );

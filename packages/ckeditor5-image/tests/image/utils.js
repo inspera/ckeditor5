@@ -1,34 +1,34 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import ViewDowncastWriter from '@ckeditor/ckeditor5-engine/src/view/downcastwriter';
-import UpcastWriter from '@ckeditor/ckeditor5-engine/src/view/upcastwriter';
-import ViewDocument from '@ckeditor/ckeditor5-engine/src/view/document';
-import { StylesProcessor } from '@ckeditor/ckeditor5-engine/src/view/stylesmap';
-import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { parse as parseView, stringify as stringifyView } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import ViewDowncastWriter from '@ckeditor/ckeditor5-engine/src/view/downcastwriter.js';
+import UpcastWriter from '@ckeditor/ckeditor5-engine/src/view/upcastwriter.js';
+import ViewDocument from '@ckeditor/ckeditor5-engine/src/view/document.js';
+import { StylesProcessor } from '@ckeditor/ckeditor5-engine/src/view/stylesmap.js';
+import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { parse as parseView, stringify as stringifyView } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
 
-import Table from '@ckeditor/ckeditor5-table/src/table';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import Table from '@ckeditor/ckeditor5-table/src/table.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
-import Image from '../../src/image';
-import ImageEditing from '../../src/image/imageediting';
-import ImageBlockEditing from '../../src/image/imageblockediting';
-import ImageInlineEditing from '../../src/image/imageinlineediting';
-import ImageUtils from '../../src/imageutils';
+import Image from '../../src/image.js';
+import ImageEditing from '../../src/image/imageediting.js';
+import ImageBlockEditing from '../../src/image/imageblockediting.js';
+import ImageInlineEditing from '../../src/image/imageinlineediting.js';
+import ImageUtils from '../../src/imageutils.js';
 
 import {
 	getImgViewElementMatcher,
 	createBlockImageViewElement,
 	createInlineImageViewElement,
 	determineImageTypeForInsertionAtSelection
-} from '../../src/image/utils';
+} from '../../src/image/utils.js';
 
 describe( 'image utils', () => {
 	let editor, imageUtils, element, image, writer, viewDocument;
@@ -257,6 +257,15 @@ describe( 'image utils', () => {
 					it( 'should return a matcherPattern object if the element is an "image"', () => {
 						element = writer.createElement( 'img', { src: 'sample.jpg' } );
 						writer.appendChild( element, writer.createElement( 'figure', { class: 'image' } ) );
+
+						expect( matcherPattern( element ) ).to.deep.equal( {
+							name: true,
+							attributes: [ 'src' ]
+						} );
+					} );
+
+					it( 'should return a matcherPattern object if the element has `display:block` style', () => {
+						element = writer.createElement( 'img', { src: 'sample.jpg', style: 'display:block' } );
 
 						expect( matcherPattern( element ) ).to.deep.equal( {
 							name: true,

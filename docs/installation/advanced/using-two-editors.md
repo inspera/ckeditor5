@@ -1,118 +1,116 @@
 ---
 category: advanced
+meta-title: Using two different editors | CKEditor 5 documentation
 order: 10
 ---
 # Using two different editors
 
 The ability to use two or more types of rich text editors on one page is a common requirement. For instance, you may want to use the {@link installation/getting-started/predefined-builds#classic-editor classic editor} next to a couple of {@link installation/getting-started/predefined-builds#inline-editor inline editors}.
 
-**Do not load two builds on one page.** This is a mistake which leads to:
+**Do not load two builds on one page.** This is a mistake that leads to:
 
 * Code duplication. Both builds share up to 99% of the code, including CSS and SVGs. By loading them twice you make your page unnecessarily heavy.
-* Duplicated CSS may lead to conflicts and, thus, broken UI of the editors.
-* Translation repository gets duplicated entries which may cause loading incorrect strings with translations.
+* Duplicated CSS may lead to conflicts and, thus, a broken UI of the editors.
+* The translation repository gets duplicated entries which may cause the loading of incorrect strings with translations.
 
 ## Solutions
 
 If you want to load two different editors on one page you need to make sure that they are built together (once). This can be achieved in at least two ways:
 
-* {@link installation/advanced/integrating-from-source Integrating CKEditor 5 from source} directly into your application. Since you build you application once, the editors that you use will be built together, too.
-* [Creating a "super build" of CKEditor 5](#creating-super-builds). Instead of creating a build which exports just one editor, you can create a build which exports two or more at the same time.
+* {@link installation/advanced/integrating-from-source-webpack Integrating CKEditor&nbsp;5 from source} directly into your application. Since you build you application once, the editors that you use will be built together, too.
+* [Creating a "super build" of CKEditor&nbsp;5](#creating-super-builds). Instead of creating a build that exports just one editor, you can create a build that exports two or more at the same time.
 
 ## Creating "super builds"
 
-There is no limit for how many editor classes a single build can export. By default, the official builds export a single editor class only. However, they can easily import more.
+There is no limit to how many editor classes a single build can export. By default, the official builds export a single editor class only. However, they can easily import more.
 
-You can start from forking (or copying) an existing build like in the {@link installation/getting-started/quick-start-other#building-the-editor-from-source "Creating custom builds"} guide. Let's say you forked and cloned the [`ckeditor5`](http://github.com/ckeditor/ckeditor5) repository and want to add {@link module:editor-inline/inlineeditor~InlineEditor} to the classic build:
+You can start by forking (or copying) an existing build like in the {@link installation/getting-started/quick-start-other#building-the-editor-from-source "Creating custom builds"} guide. Let's say you forked and cloned the [`ckeditor5`](http://github.com/ckeditor/ckeditor5) repository and want to add {@link module:editor-inline/inlineeditor~InlineEditor} to the classic build:
 
 ```bash
 git clone -b stable git@github.com:<your-username>/ckeditor5.git
 cd ckeditor5/packages/ckeditor5-build-classic
-npm install
+yarn install
 ```
 
 Now it is time to add the missing editor package and install it:
 
-```
-npm install --save-dev @ckeditor/ckeditor5-editor-inline
+```bash
+yarn add -D @ckeditor/ckeditor5-editor-inline
 ```
 
-Once all the dependencies are installed, modify the webpack's entry point which is the `src/ckeditor.js` file. For now it was exporting just a single class:
+Once all the dependencies are installed, you will need to modify the `src/ckeditor.ts` file, which currently only exports a single class. The first step is to move all plugins and configuration to variables so they can be reused by both editors:
 
 ```js
-// The editor creator to use.
-import ClassicEditorBase from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
+import { ClassicEditor as ClassicEditorBase } from '@ckeditor/ckeditor5-editor-classic';
 
-// ...
+// Other imports
 
-export default class ClassicEditor extends ClassicEditorBase {}
+class ClassicEditor extends ClassicEditorBase {}
 
-// Plugins to include in the build.
-ClassicEditor.builtinPlugins = [
-	// ...
-];
+const plugins = [
+  // ...
+]
 
-// Editor configuration.
-ClassicEditor.defaultConfig = {
-	// ...
+const config = {
+  // ...
+}
+
+ClassicEditor.builtinPlugins = plugins;
+ClassicEditor.defaultConfig = config;
+
+export {
+  ClassicEditor
 };
 ```
 
-Let's make it export an object with two classes: `ClassicEditor` and `InlineEditor`. To make both constructors work in the same way (load the same plugins and default configuration) you also need to assign `builtinPlugins` and `defaultConfig` static properties to both of them:
+Now you can add the `InlineEditor` class to the file, add the same plugins and configuration to it and export it:
 
-```js
-// The editor creators to use.
-import ClassicEditorBase from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import InlineEditorBase from '@ckeditor/ckeditor5-editor-inline/src/inlineeditor';
+```diff
+import { ClassicEditor as ClassicEditorBase } from '@ckeditor/ckeditor5-editor-classic';
++ import { InlineEditor as InlineEditorBase } from '@ckeditor/ckeditor5-editor-inline';
 
-// ...
+// Other imports
 
 class ClassicEditor extends ClassicEditorBase {}
-class InlineEditor extends InlineEditorBase {}
++ class InlineEditor extends InlineEditorBase {}
 
-// Plugins to include in the build.
 const plugins = [
-	// ...
+  // ...
 ];
-
-ClassicEditor.builtinPlugins = plugins;
-InlineEditor.builtinPlugins = plugins;
 
 // Editor configuration.
 const config = {
-	// ...
+  // ...
 };
 
+ClassicEditor.builtinPlugins = plugins;
 ClassicEditor.defaultConfig = config;
-InlineEditor.defaultConfig = config;
+
++ InlineEditor.builtinPlugins = plugins;
++ InlineEditor.defaultConfig = config;
 
 export default {
-	ClassicEditor, InlineEditor
+  ClassicEditor,
++  InlineEditor
 };
 ```
 
-Since you now export an object with two properties (`ClassicEditor` and `InlineEditor`), it is also reasonable to rename the global variable to which webpack will assign this object. So far it was called `ClassicEditor`. A more adequate name now would be for example `CKEDITOR`. This variable is defined in `webpack.config.js` in the `output.library` setting:
+Since you now export an object with two editor types (`ClassicEditor` and `InlineEditor`), it is also reasonable to rename the global variable `ClassicEditor`. An appropriate name now might be `CKEDITOR`. This variable is defined in `webpack.config.js` in the `output.library` setting:
 
 ```diff
-diff --git a/webpack.config.js b/webpack.config.js
-index c57e371..04fc9fe 100644
---- a/webpack.config.js
-+++ b/webpack.config.js
-@@ -21,7 +21,7 @@ module.exports = {
+// webpack.config.js
 
-     output: {
-         // The name under which the editor will be exported.
--        library: 'ClassicEditor',
-+        library: 'CKEDITOR',
-
-         path: path.resolve( __dirname, 'build' ),
-         filename: 'ckeditor.js',
+module.exports = {
+  output: {
+-    library: 'ClassicEditor',
++    library: 'CKEDITOR',
+		// ...
 ```
 
-Once you changed the `src/ckeditor.js` and `webpack.config.js` files it is time to rebuild the build:
+Once you changed the `src/ckeditor.ts` and `webpack.config.js` files, it is time to rebuild the build:
 
 ```bash
-npm run build
+yarn build
 ```
 
 Finally, when webpack finishes compiling your super build, you can change the `samples/index.html` file to test both editors:
@@ -132,7 +130,7 @@ Finally, when webpack finishes compiling your super build, you can change the `s
 </head>
 <body>
 
-<h1>CKEditor 5 – super build</h1>
+<h1>CKEditor&nbsp;5 – super build</h1>
 
 <div id="classic-editor">
 	<h2>Sample</h2>

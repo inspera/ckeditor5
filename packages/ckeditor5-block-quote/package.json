@@ -1,6 +1,6 @@
 {
   "name": "@ckeditor/ckeditor5-block-quote",
-  "version": "35.3.0",
+  "version": "41.3.1",
   "description": "Block quote feature for CKEditor 5.",
   "keywords": [
     "ckeditor",
@@ -10,30 +10,28 @@
     "ckeditor5-plugin",
     "ckeditor5-dll"
   ],
-  "main": "src/index.js",
+  "type": "module",
+  "main": "src/index.ts",
   "dependencies": {
-    "ckeditor5": "^35.3.0"
+    "ckeditor5": "41.3.1"
   },
   "devDependencies": {
-    "@ckeditor/ckeditor5-basic-styles": "^35.3.0",
-    "@ckeditor/ckeditor5-core": "^35.3.0",
-    "@ckeditor/ckeditor5-dev-utils": "^31.0.0",
-    "@ckeditor/ckeditor5-editor-classic": "^35.3.0",
-    "@ckeditor/ckeditor5-engine": "^35.3.0",
-    "@ckeditor/ckeditor5-enter": "^35.3.0",
-    "@ckeditor/ckeditor5-heading": "^35.3.0",
-    "@ckeditor/ckeditor5-image": "^35.3.0",
-    "@ckeditor/ckeditor5-list": "^35.3.0",
-    "@ckeditor/ckeditor5-paragraph": "^35.3.0",
-    "@ckeditor/ckeditor5-table": "^35.3.0",
-    "@ckeditor/ckeditor5-theme-lark": "^35.3.0",
-    "@ckeditor/ckeditor5-typing": "^35.3.0",
+    "@ckeditor/ckeditor5-basic-styles": "41.3.1",
+    "@ckeditor/ckeditor5-core": "41.3.1",
+    "@ckeditor/ckeditor5-dev-utils": "^39.7.0",
+    "@ckeditor/ckeditor5-editor-classic": "41.3.1",
+    "@ckeditor/ckeditor5-engine": "41.3.1",
+    "@ckeditor/ckeditor5-enter": "41.3.1",
+    "@ckeditor/ckeditor5-heading": "41.3.1",
+    "@ckeditor/ckeditor5-image": "41.3.1",
+    "@ckeditor/ckeditor5-list": "41.3.1",
+    "@ckeditor/ckeditor5-paragraph": "41.3.1",
+    "@ckeditor/ckeditor5-table": "41.3.1",
+    "@ckeditor/ckeditor5-theme-lark": "41.3.1",
+    "@ckeditor/ckeditor5-typing": "41.3.1",
+    "typescript": "5.0.4",
     "webpack": "^5.58.1",
     "webpack-cli": "^4.9.0"
-  },
-  "engines": {
-    "node": ">=14.0.0",
-    "npm": ">=5.7.1"
   },
   "author": "CKSource (http://cksource.com/)",
   "license": "GPL-2.0-or-later",
@@ -45,14 +43,18 @@
     "directory": "packages/ckeditor5-block-quote"
   },
   "files": [
+    "dist",
     "lang",
-    "src",
+    "src/**/*.js",
+    "src/**/*.d.ts",
     "theme",
     "build",
     "ckeditor5-metadata.json",
     "CHANGELOG.md"
   ],
   "scripts": {
-    "dll:build": "webpack"
+    "dll:build": "webpack",
+    "build": "tsc -p ./tsconfig.json",
+    "build:dist": "node ../../scripts/build-package.mjs"
   }
 }

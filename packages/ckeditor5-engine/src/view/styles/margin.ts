@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,26 +7,28 @@
  * @module engine/view/styles/margin
  */
 
-import type { StylesProcessor } from '../stylesmap';
-import { getPositionShorthandNormalizer, getBoxSidesValueReducer } from './utils';
+import type { StylesProcessor } from '../stylesmap.js';
+import { getPositionShorthandNormalizer, getBoxSidesValueReducer } from './utils.js';
 
 /**
  * Adds a margin CSS styles processing rules.
  *
- *		editor.data.addStyleProcessorRules( addMarginRules );
+ * ```ts
+ * editor.data.addStyleProcessorRules( addMarginRules );
+ * ```
  *
  * The normalized value is stored as:
  *
- *		const styles = {
- *			margin: {
- *				top,
- *				right,
- *				bottom,
- *				left
- *			}
- *		};
- *
- * @param {module:engine/view/stylesmap~StylesProcessor} stylesProcessor
+ * ```ts
+ * const styles = {
+ * 	margin: {
+ * 		top,
+ * 		right,
+ * 		bottom,
+ * 		left
+ * 	}
+ * };
+ * ```
  */
 export function addMarginRules( stylesProcessor: StylesProcessor ): void {
 	stylesProcessor.setNormalizer( 'margin', getPositionShorthandNormalizer( 'margin' ) );

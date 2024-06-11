@@ -1,24 +1,24 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
-import TableEditing from '../../src/tableediting';
-import TablePropertiesEditing from '../../src/tableproperties/tablepropertiesediting';
+import TableEditing from '../../src/tableediting.js';
+import TablePropertiesEditing from '../../src/tableproperties/tablepropertiesediting.js';
 
-import TableBorderColorCommand from '../../src/tableproperties/commands/tablebordercolorcommand';
-import TableBorderStyleCommand from '../../src/tableproperties/commands/tableborderstylecommand';
-import TableBorderWidthCommand from '../../src/tableproperties/commands/tableborderwidthcommand';
-import TableAlignmentCommand from '../../src/tableproperties/commands/tablealignmentcommand';
-import TableWidthCommand from '../../src/tableproperties/commands/tablewidthcommand';
-import TableHeightCommand from '../../src/tableproperties/commands/tableheightcommand';
-import TableBackgroundColorCommand from '../../src/tableproperties/commands/tablebackgroundcolorcommand';
+import TableBorderColorCommand from '../../src/tableproperties/commands/tablebordercolorcommand.js';
+import TableBorderStyleCommand from '../../src/tableproperties/commands/tableborderstylecommand.js';
+import TableBorderWidthCommand from '../../src/tableproperties/commands/tableborderwidthcommand.js';
+import TableAlignmentCommand from '../../src/tableproperties/commands/tablealignmentcommand.js';
+import TableWidthCommand from '../../src/tableproperties/commands/tablewidthcommand.js';
+import TableHeightCommand from '../../src/tableproperties/commands/tableheightcommand.js';
+import TableBackgroundColorCommand from '../../src/tableproperties/commands/tablebackgroundcolorcommand.js';
 
-import { setData as setModelData, getData as getModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { assertTableStyle, assertTRBLAttribute } from '../_utils/utils';
+import { setData as setModelData, getData as getModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { assertTableStyle, assertTRBLAttribute } from '../_utils/utils.js';
 
 describe( 'table properties', () => {
 	describe( 'TablePropertiesEditing', () => {
@@ -957,6 +957,30 @@ describe( 'table properties', () => {
 
 					expect( table.getAttribute( 'tableWidth' ) ).to.equal( '1337px' );
 				} );
+
+				it( 'should upcast width from <figure> if both <figure> and <table> has width style set', () => {
+					editor.setData(
+						'<figure class="table" style="width:75%">' +
+							'<table style="width:95%"><tbody><tr><td>foo</td></tr></tbody></table>' +
+						'</figure>'
+					);
+
+					const table = model.document.getRoot().getNodeByPath( [ 0 ] );
+
+					expect( table.getAttribute( 'tableWidth' ) ).to.equal( '75%' );
+				} );
+
+				it( 'should not upcast width if <table> inside <figure> has width style set', () => {
+					editor.setData(
+						'<figure class="table">' +
+							'<table style="width:95%"><tbody><tr><td>1</td></tr></tbody></table>' +
+						'</figure>'
+					);
+
+					const table = model.document.getRoot().getNodeByPath( [ 0 ] );
+
+					expect( table.getAttribute( 'tableWidth' ) ).to.be.undefined;
+				} );
 			} );
 
 			describe( 'downcast conversion', () => {
@@ -1030,6 +1054,30 @@ describe( 'table properties', () => {
 					const table = model.document.getRoot().getNodeByPath( [ 0 ] );
 
 					expect( table.getAttribute( 'tableHeight' ) ).to.equal( '1337px' );
+				} );
+
+				it( 'should upcast height from <figure> if both <figure> and <table> has height style set', () => {
+					editor.setData(
+						'<figure class="table" style="height:75%">' +
+							'<table style="height:95%"><tbody><tr><td>foo</td></tr></tbody></table>' +
+						'</figure>'
+					);
+
+					const table = model.document.getRoot().getNodeByPath( [ 0 ] );
+
+					expect( table.getAttribute( 'tableHeight' ) ).to.equal( '75%' );
+				} );
+
+				it( 'should not upcast height if <table> inside <figure> has height style set', () => {
+					editor.setData(
+						'<figure class="table">' +
+							'<table style="height:95%"><tbody><tr><td>1</td></tr></tbody></table>' +
+						'</figure>'
+					);
+
+					const table = model.document.getRoot().getNodeByPath( [ 0 ] );
+
+					expect( table.getAttribute( 'tableHeight' ) ).to.be.undefined;
 				} );
 			} );
 

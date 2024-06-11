@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,21 +7,24 @@
  * @module engine/model/differ
  */
 
-import Position from './position';
-import Range from './range';
+import Position from './position.js';
+import Range from './range.js';
 
-import type { default as MarkerCollection, MarkerData } from './markercollection';
-import type AttributeOperation from './operation/attributeoperation';
-import type DocumentFragment from './documentfragment';
-import type Element from './element';
-import type InsertOperation from './operation/insertoperation';
-import type Item from './item';
-import type MergeOperation from './operation/mergeoperation';
-import type MoveOperation from './operation/moveoperation';
-import type Node from './node';
-import type Operation from './operation/operation';
-import type RenameOperation from './operation/renameoperation';
-import type SplitOperation from './operation/splitoperation';
+import type { default as MarkerCollection, MarkerData } from './markercollection.js';
+import type AttributeOperation from './operation/attributeoperation.js';
+import type DocumentFragment from './documentfragment.js';
+import type Element from './element.js';
+import type InsertOperation from './operation/insertoperation.js';
+import type Item from './item.js';
+import type MergeOperation from './operation/mergeoperation.js';
+import type MoveOperation from './operation/moveoperation.js';
+import type Node from './node.js';
+import type RootElement from './rootelement.js';
+import type Operation from './operation/operation.js';
+import type RenameOperation from './operation/renameoperation.js';
+import type SplitOperation from './operation/splitoperation.js';
+import type RootOperation from './operation/rootoperation.js';
+import type RootAttributeOperation from './operation/rootattributeoperation.js';
 
 /**
  * Calculates the difference between two model states.
@@ -32,122 +35,92 @@ import type SplitOperation from './operation/splitoperation';
  * elements and new ones and returns a change set.
  */
 export default class Differ {
+	/**
+	 * Reference to the model's marker collection.
+	 */
 	private readonly _markerCollection: MarkerCollection;
-	private readonly _changesInElement: Map<Element | DocumentFragment, Array<ChangeItem>>;
-	private readonly _elementSnapshots: Map<Element | DocumentFragment, Array<{ name: string; attributes: Map<string, unknown> }>>;
-	private readonly _changedMarkers: Map<string, { newMarkerData: MarkerData; oldMarkerData: MarkerData }>;
-	private _changeCount: number;
-	private _cachedChanges: Array<DiffItem> | null;
-	private _cachedChangesWithGraveyard: Array<DiffItem> | null;
-	private _refreshedItems: Set<Item>;
+
+	/**
+	 * A map that stores changes that happened in a given element.
+	 *
+	 * The keys of the map are references to the model elements.
+	 * The values of the map are arrays with changes that were done on this element.
+	 */
+	private readonly _changesInElement: Map<Element | DocumentFragment, Array<ChangeItem>> = new Map();
+
+	/**
+	 * A map that stores "element's children snapshots". A snapshot is representing children of a given element before
+	 * the first change was applied on that element. Snapshot items are objects with two properties: `name`,
+	 * containing the element name (or `'$text'` for a text node) and `attributes` which is a map of the node's attributes.
+	 */
+	private readonly _elementSnapshots: Map<Element | DocumentFragment, Array<DifferSnapshot>> = new Map();
+
+	/**
+	 * A map that stores all changed markers.
+	 *
+	 * The keys of the map are marker names.
+	 * The values of the map are objects with the following properties:
+	 * - `oldMarkerData`,
+	 * - `newMarkerData`.
+	 */
+	private readonly _changedMarkers: Map<string, { newMarkerData: MarkerData; oldMarkerData: MarkerData }> = new Map();
+
+	/**
+	 * A map that stores all roots that have been changed.
+	 *
+	 * The keys are the names of the roots while value represents the changes.
+	 */
+	private readonly _changedRoots: Map<string, DiffItemRoot> = new Map();
+
+	/**
+	 * Stores the number of changes that were processed. Used to order the changes chronologically. It is important
+	 * when changes are sorted.
+	 */
+	private _changeCount: number = 0;
+
+	/**
+	 * For efficiency purposes, `Differ` stores the change set returned by the differ after {@link #getChanges} call.
+	 * Cache is reset each time a new operation is buffered. If the cache has not been reset, {@link #getChanges} will
+	 * return the cached value instead of calculating it again.
+	 *
+	 * This property stores those changes that did not take place in graveyard root.
+	 */
+	private _cachedChanges: Array<DiffItem> | null = null;
+
+	/**
+	 * For efficiency purposes, `Differ` stores the change set returned by the differ after the {@link #getChanges} call.
+	 * The cache is reset each time a new operation is buffered. If the cache has not been reset, {@link #getChanges} will
+	 * return the cached value instead of calculating it again.
+	 *
+	 * This property stores all changes evaluated by `Differ`, including those that took place in the graveyard.
+	 */
+	private _cachedChangesWithGraveyard: Array<DiffItem> | null = null;
+
+	/**
+	 * Set of model items that were marked to get refreshed in {@link #_refreshItem}.
+	 */
+	private _refreshedItems: Set<Item> = new Set();
 
 	/**
 	 * Creates a `Differ` instance.
 	 *
-	 * @param {module:engine/model/markercollection~MarkerCollection} markerCollection Model's marker collection.
+	 * @param markerCollection Model's marker collection.
 	 */
 	constructor( markerCollection: MarkerCollection ) {
-		/**
-		 * Reference to the model's marker collection.
-		 *
-		 * @private
-		 * @type {module:engine/model/markercollection~MarkerCollection}
-		 */
 		this._markerCollection = markerCollection;
-
-		/**
-		 * A map that stores changes that happened in a given element.
-		 *
-		 * The keys of the map are references to the model elements.
-		 * The values of the map are arrays with changes that were done on this element.
-		 *
-		 * @private
-		 * @type {Map}
-		 */
-		this._changesInElement = new Map();
-
-		/**
-		 * A map that stores "element's children snapshots". A snapshot is representing children of a given element before
-		 * the first change was applied on that element. Snapshot items are objects with two properties: `name`,
-		 * containing the element name (or `'$text'` for a text node) and `attributes` which is a map of the node's attributes.
-		 *
-		 * @private
-		 * @type {Map}
-		 */
-		this._elementSnapshots = new Map();
-
-		/**
-		 * A map that stores all changed markers.
-		 *
-		 * The keys of the map are marker names.
-		 * The values of the map are objects with the following properties:
-		 * - `oldMarkerData`,
-		 * - `newMarkerData`.
-		 *
-		 * @private
-		 * @type {Map.<String, Object>}
-		 */
-		this._changedMarkers = new Map();
-
-		/**
-		 * Stores the number of changes that were processed. Used to order the changes chronologically. It is important
-		 * when changes are sorted.
-		 *
-		 * @private
-		 * @type {Number}
-		 */
-		this._changeCount = 0;
-
-		/**
-		 * For efficiency purposes, `Differ` stores the change set returned by the differ after {@link #getChanges} call.
-		 * Cache is reset each time a new operation is buffered. If the cache has not been reset, {@link #getChanges} will
-		 * return the cached value instead of calculating it again.
-		 *
-		 * This property stores those changes that did not take place in graveyard root.
-		 *
-		 * @private
-		 * @type {Array.<Object>|null}
-		 */
-		this._cachedChanges = null;
-
-		/**
-		 * For efficiency purposes, `Differ` stores the change set returned by the differ after the {@link #getChanges} call.
-		 * The cache is reset each time a new operation is buffered. If the cache has not been reset, {@link #getChanges} will
-		 * return the cached value instead of calculating it again.
-		 *
-		 * This property stores all changes evaluated by `Differ`, including those that took place in the graveyard.
-		 *
-		 * @private
-		 * @type {Array.<Object>|null}
-		 */
-		this._cachedChangesWithGraveyard = null;
-
-		/**
-		 * Set of model items that were marked to get refreshed in {@link #_refreshItem}.
-		 *
-		 * @private
-		 * @type {Set.<module:engine/model/item~Item>}
-		 */
-		this._refreshedItems = new Set();
 	}
 
 	/**
 	 * Informs whether there are any changes buffered in `Differ`.
-	 *
-	 * @readonly
-	 * @type {Boolean}
 	 */
 	public get isEmpty(): boolean {
-		return this._changesInElement.size == 0 && this._changedMarkers.size == 0;
+		return this._changesInElement.size == 0 && this._changedMarkers.size == 0 && this._changedRoots.size == 0;
 	}
 
 	/**
 	 * Buffers the given operation. An operation has to be buffered before it is executed.
 	 *
-	 * Operation type is checked and it is checked which nodes it will affect. These nodes are then stored in `Differ`
-	 * in the state before the operation is executed.
-	 *
-	 * @param {module:engine/model/operation/operation~Operation} operationToBuffer An operation to buffer.
+	 * @param operationToBuffer An operation to buffer.
 	 */
 	public bufferOperation( operationToBuffer: Operation ): void {
 		// Below we take an operation, check its type, then use its parameters in marking (private) methods.
@@ -160,9 +133,14 @@ export default class Differ {
 			MoveOperation |
 			RenameOperation |
 			SplitOperation |
-			MergeOperation
+			MergeOperation |
+			RootOperation |
+			RootAttributeOperation
 		);
 
+		// Note: an operation that happens inside a non-loaded root will be ignored. If the operation happens partially inside
+		// a non-loaded root, that part will be ignored (this may happen for move or marker operations).
+		//
 		switch ( operation.type ) {
 			case 'insert': {
 				if ( this._isInInsertedElement( operation.position.parent ) ) {
@@ -271,6 +249,36 @@ export default class Differ {
 
 				break;
 			}
+			case 'detachRoot':
+			case 'addRoot': {
+				const root = operation.affectedSelectable as RootElement;
+
+				if ( !root._isLoaded ) {
+					return;
+				}
+
+				// Don't buffer if the root state does not change.
+				if ( root.isAttached() == operation.isAdd ) {
+					return;
+				}
+
+				this._bufferRootStateChange( operation.rootName, operation.isAdd );
+
+				break;
+			}
+			case 'addRootAttribute':
+			case 'removeRootAttribute':
+			case 'changeRootAttribute': {
+				if ( !operation.root._isLoaded ) {
+					return;
+				}
+
+				const rootName = operation.root.rootName;
+
+				this._bufferRootAttributeChange( rootName, operation.key, operation.oldValue, operation.newValue );
+
+				break;
+			}
 		}
 
 		// Clear cache after each buffered operation as it is no longer valid.
@@ -280,33 +288,40 @@ export default class Differ {
 	/**
 	 * Buffers a marker change.
 	 *
-	 * @param {String} markerName The name of the marker that changed.
-	 * @param {module:engine/model/markercollection~MarkerData} oldMarkerData Marker data before the change.
-	 * @param {module:engine/model/markercollection~MarkerData} newMarkerData Marker data after the change.
+	 * @param markerName The name of the marker that changed.
+	 * @param oldMarkerData Marker data before the change.
+	 * @param newMarkerData Marker data after the change.
 	 */
 	public bufferMarkerChange( markerName: string, oldMarkerData: MarkerData, newMarkerData: MarkerData ): void {
-		const buffered = this._changedMarkers.get( markerName );
+		if ( oldMarkerData.range && oldMarkerData.range.root.is( 'rootElement' ) && !oldMarkerData.range.root._isLoaded ) {
+			oldMarkerData.range = null;
+		}
+
+		if ( newMarkerData.range && newMarkerData.range.root.is( 'rootElement' ) && !newMarkerData.range.root._isLoaded ) {
+			newMarkerData.range = null;
+		}
+
+		let buffered = this._changedMarkers.get( markerName );
 
 		if ( !buffered ) {
-			this._changedMarkers.set( markerName, {
-				newMarkerData,
-				oldMarkerData
-			} );
+			buffered = { newMarkerData, oldMarkerData };
+
+			this._changedMarkers.set( markerName, buffered );
 		} else {
 			buffered.newMarkerData = newMarkerData;
+		}
 
-			if ( buffered.oldMarkerData.range == null && newMarkerData.range == null ) {
-				// The marker is going to be removed (`newMarkerData.range == null`) but it did not exist before the first buffered change
-				// (`buffered.oldMarkerData.range == null`). In this case, do not keep the marker in buffer at all.
-				this._changedMarkers.delete( markerName );
-			}
+		if ( buffered.oldMarkerData.range == null && newMarkerData.range == null ) {
+			// The marker is going to be removed (`newMarkerData.range == null`) but it did not exist before the first buffered change
+			// (`buffered.oldMarkerData.range == null`). In this case, do not keep the marker in buffer at all.
+			this._changedMarkers.delete( markerName );
 		}
 	}
 
 	/**
 	 * Returns all markers that should be removed as a result of buffered changes.
 	 *
-	 * @returns {Array.<Object>} Markers to remove. Each array item is an object containing the `name` and `range` properties.
+	 * @returns Markers to remove. Each array item is an object containing the `name` and `range` properties.
 	 */
 	public getMarkersToRemove(): Array<{ name: string; range: Range }> {
 		const result = [];
@@ -323,7 +338,7 @@ export default class Differ {
 	/**
 	 * Returns all markers which should be added as a result of buffered changes.
 	 *
-	 * @returns {Array.<Object>} Markers to add. Each array item is an object containing the `name` and `range` properties.
+	 * @returns Markers to add. Each array item is an object containing the `name` and `range` properties.
 	 */
 	public getMarkersToAdd(): Array<{ name: string; range: Range }> {
 		const result = [];
@@ -339,8 +354,6 @@ export default class Differ {
 
 	/**
 	 * Returns all markers which changed.
-	 *
-	 * @returns {Array.<Object>}
 	 */
 	public getChangedMarkers(): Array<{
 		name: string;
@@ -367,13 +380,16 @@ export default class Differ {
 	 *
 	 * * model structure changes,
 	 * * attribute changes,
+	 * * a root is added or detached,
 	 * * changes of markers which were defined as `affectsData`,
 	 * * changes of markers' `affectsData` property.
-	 *
-	 * @returns {Boolean}
 	 */
 	public hasDataChanges(): boolean {
-		if ( this._changesInElement.size > 0 ) {
+		if ( this.getChanges().length ) {
+			return true;
+		}
+
+		if ( this._changedRoots.size > 0 ) {
 			return true;
 		}
 
@@ -409,10 +425,10 @@ export default class Differ {
 	 * Because calculating the diff is a costly operation, the result is cached. If no new operation was buffered since the
 	 * previous {@link #getChanges} call, the next call will return the cached value.
 	 *
-	 * @param {Object} options Additional options.
-	 * @param {Boolean} [options.includeChangesInGraveyard=false] If set to `true`, also changes that happened
+	 * @param options Additional options.
+	 * @param options.includeChangesInGraveyard If set to `true`, also changes that happened
 	 * in the graveyard root will be returned. By default, changes in the graveyard root are not returned.
-	 * @returns {Array.<module:engine/model/differ~DiffItem>} Diff between the old and the new model tree state.
+	 * @returns Diff between the old and the new model tree state.
 	 */
 	public getChanges( options: { includeChangesInGraveyard?: boolean } = {} ): Array<DiffItem> {
 		// If there are cached changes, just return them instead of calculating changes again.
@@ -581,9 +597,31 @@ export default class Differ {
 	}
 
 	/**
-	 * Returns a set of model items that were marked to get refreshed.
+	 * Returns all roots that have changed (either were attached, or detached, or their attributes changed).
 	 *
-	 * @return {Set.<module:engine/model/item~Item>}
+	 * @returns Diff between the old and the new roots state.
+	 */
+	public getChangedRoots(): Array<DiffItemRoot> {
+		return Array.from( this._changedRoots.values() ).map( diffItem => {
+			const entry = { ...diffItem };
+
+			if ( entry.state !== undefined ) {
+				// The root was attached or detached -- do not return its attributes changes.
+				// If the root was attached, it should be handled as a whole, together with its attributes, the same way as model nodes.
+				// If the root was detached, its attributes should be discarded anyway.
+				//
+				// Keep in mind that filtering must happen on this stage (when retrieving changes). If filtering happens on-the-fly as
+				// the attributes change, it may lead to incorrect situation, e.g.: detach root, change attribute, re-attach root.
+				// In this case, attribute change cannot be filtered. After the root is re-attached, the attribute change must be kept.
+				delete entry.attributes;
+			}
+
+			return entry;
+		} );
+	}
+
+	/**
+	 * Returns a set of model items that were marked to get refreshed.
 	 */
 	public getRefreshedItems(): Set<Item> {
 		return new Set( this._refreshedItems );
@@ -596,17 +634,83 @@ export default class Differ {
 		this._changesInElement.clear();
 		this._elementSnapshots.clear();
 		this._changedMarkers.clear();
+		this._changedRoots.clear();
 		this._refreshedItems = new Set();
 		this._cachedChanges = null;
+	}
+
+	/**
+	 * Buffers the root state change after the root was attached or detached
+	 */
+	private _bufferRootStateChange( rootName: string, isAttached: boolean ): void {
+		if ( !this._changedRoots.has( rootName ) ) {
+			this._changedRoots.set( rootName, { name: rootName, state: isAttached ? 'attached' : 'detached' } );
+
+			return;
+		}
+
+		const diffItem = this._changedRoots.get( rootName )!;
+
+		if ( diffItem.state !== undefined ) {
+			// Root `state` can only toggle between one of the values and no value. It cannot be any other way,
+			// because if the root was originally attached it can only become detached. Then, if it is re-attached in the same batch of
+			// changes, it gets back to "no change" (which means no value). Same if the root was originally detached.
+			delete diffItem.state;
+
+			if ( diffItem.attributes === undefined ) {
+				// If there is no `state` change and no `attributes` change, remove the entry.
+				this._changedRoots.delete( rootName );
+			}
+		} else {
+			diffItem.state = isAttached ? 'attached' : 'detached';
+		}
+	}
+
+	/**
+	 * Buffers a root attribute change.
+	 */
+	private _bufferRootAttributeChange( rootName: string, key: string, oldValue: unknown, newValue: unknown ): void {
+		const diffItem: DiffItemRoot = this._changedRoots.get( rootName ) || { name: rootName };
+		const attrs: Record<string, { oldValue: unknown; newValue: unknown }> = diffItem.attributes || {};
+
+		if ( attrs[ key ] ) {
+			// If this attribute or metadata was already changed earlier and is changed again, check to what value it is changed.
+			const attrEntry = attrs[ key ];
+
+			if ( newValue === attrEntry.oldValue ) {
+				// If it was changed back to the old value, remove the entry.
+				delete attrs[ key ];
+			} else {
+				// If it was changed to a different value, update the entry.
+				attrEntry.newValue = newValue;
+			}
+		} else {
+			// If this attribute or metadata was not set earlier, add an entry.
+			attrs[ key ] = { oldValue, newValue };
+		}
+
+		if ( Object.entries( attrs ).length === 0 ) {
+			// If attributes or metadata changes set became empty, remove it from the diff item.
+			delete diffItem.attributes;
+
+			if ( diffItem.state === undefined ) {
+				// If there is no `state` change and no `attributes` change, remove the entry.
+				this._changedRoots.delete( rootName );
+			}
+		} else {
+			// Make sure that, if a new object in the structure was created, it gets set.
+			diffItem.attributes = attrs;
+
+			this._changedRoots.set( rootName, diffItem );
+		}
 	}
 
 	/**
 	 * Marks the given `item` in differ to be "refreshed". It means that the item will be marked as removed and inserted
 	 * in the differ changes set, so it will be effectively re-converted when the differ changes are handled by a dispatcher.
 	 *
-	 * @protected
 	 * @internal
-	 * @param {module:engine/model/item~Item} item Item to refresh.
+	 * @param item Item to refresh.
 	 */
 	public _refreshItem( item: Item ): void {
 		if ( this._isInInsertedElement( item.parent! ) ) {
@@ -631,14 +735,50 @@ export default class Differ {
 	}
 
 	/**
-	 * Saves and handles an insert change.
+	 * Buffers all the data related to given root like it was all just added to the editor.
 	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} parent
-	 * @param {Number} offset
-	 * @param {Number} howMany
+	 * Following changes are buffered:
+	 *
+	 * * root is attached,
+	 * * all root content is inserted,
+	 * * all root attributes are added,
+	 * * all markers inside the root are added.
+	 *
+	 * @internal
+	 */
+	public _bufferRootLoad( root: RootElement ): void {
+		if ( !root.isAttached() ) {
+			return;
+		}
+
+		this._bufferRootStateChange( root.rootName, true );
+		this._markInsert( root, 0, root.maxOffset );
+
+		// Buffering root attribute changes makes sense and is actually needed, even though we buffer root state change above.
+		// Because the root state change is buffered, the root attributes changes are not returned by the differ.
+		// But, if the root attribute is removed in the same change block, or the root is detached, then the differ results would be wrong.
+		//
+		for ( const key of root.getAttributeKeys() ) {
+			this._bufferRootAttributeChange( root.rootName, key, null, root.getAttribute( key ) );
+		}
+
+		for ( const marker of this._markerCollection ) {
+			if ( marker.getRange().root == root ) {
+				const markerData = marker.getData();
+
+				this.bufferMarkerChange( marker.name, { ...markerData, range: null }, markerData );
+			}
+		}
+	}
+
+	/**
+	 * Saves and handles an insert change.
 	 */
 	private _markInsert( parent: Element | DocumentFragment, offset: number, howMany: number ) {
+		if ( parent.root.is( 'rootElement' ) && !parent.root._isLoaded ) {
+			return;
+		}
+
 		const changeItem = { type: 'insert', offset, howMany, count: this._changeCount++ } as const;
 
 		this._markChange( parent, changeItem );
@@ -646,13 +786,12 @@ export default class Differ {
 
 	/**
 	 * Saves and handles a remove change.
-	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} parent
-	 * @param {Number} offset
-	 * @param {Number} howMany
 	 */
 	private _markRemove( parent: Element | DocumentFragment, offset: number, howMany: number ) {
+		if ( parent.root.is( 'rootElement' ) && !parent.root._isLoaded ) {
+			return;
+		}
+
 		const changeItem = { type: 'remove', offset, howMany, count: this._changeCount++ } as const;
 
 		this._markChange( parent, changeItem );
@@ -662,11 +801,12 @@ export default class Differ {
 
 	/**
 	 * Saves and handles an attribute change.
-	 *
-	 * @private
-	 * @param {module:engine/model/item~Item} item
 	 */
 	private _markAttribute( item: Item ): void {
+		if ( item.root.is( 'rootElement' ) && !item.root._isLoaded ) {
+			return;
+		}
+
 		const changeItem = { type: 'attribute', offset: item.startOffset!, howMany: item.offsetSize, count: this._changeCount++ } as const;
 
 		this._markChange( item.parent as Element, changeItem );
@@ -674,10 +814,6 @@ export default class Differ {
 
 	/**
 	 * Saves and handles a model change.
-	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} parent
-	 * @param {Object} changeItem
 	 */
 	private _markChange( parent: Element | DocumentFragment, changeItem: ChangeItem ): void {
 		// First, make a snapshot of this parent's children (it will be made only if it was not made before).
@@ -705,10 +841,6 @@ export default class Differ {
 
 	/**
 	 * Gets an array of changes that have already been saved for a given element.
-	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} element
-	 * @returns {Array.<Object>}
 	 */
 	private _getChangesForElement( element: Element | DocumentFragment ): Array<ChangeItem> {
 		let changes: Array<ChangeItem>;
@@ -726,9 +858,6 @@ export default class Differ {
 
 	/**
 	 * Saves a children snapshot for a given element.
-	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} element
 	 */
 	private _makeSnapshot( element: Element | DocumentFragment ): void {
 		if ( !this._elementSnapshots.has( element ) ) {
@@ -740,9 +869,8 @@ export default class Differ {
 	 * For a given newly saved change, compares it with a change already done on the element and modifies the incoming
 	 * change and/or the old change.
 	 *
-	 * @private
-	 * @param {Object} inc Incoming (new) change.
-	 * @param {Array.<Object>} changes An array containing all the changes done on that element.
+	 * @param inc Incoming (new) change.
+	 * @param changes An array containing all the changes done on that element.
 	 */
 	private _handleChange( inc: ChangeItem, changes: Array<ChangeItem> ): void {
 		// We need a helper variable that will store how many nodes are to be still handled for this change item.
@@ -964,16 +1092,15 @@ export default class Differ {
 	/**
 	 * Returns an object with a single insert change description.
 	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} parent The element in which the change happened.
-	 * @param {Number} offset The offset at which change happened.
-	 * @param {Object} elementSnapshot The snapshot of the removed element a character.
-	 * @returns {Object} The diff item.
+	 * @param parent The element in which the change happened.
+	 * @param offset The offset at which change happened.
+	 * @param elementSnapshot The snapshot of the removed element a character.
+	 * @returns The diff item.
 	 */
 	private _getInsertDiff(
 		parent: Element | DocumentFragment,
 		offset: number,
-		elementSnapshot: { name: string; attributes: Map<string, unknown> }
+		elementSnapshot: DifferSnapshot
 	): DiffItemInsert & DiffItemInternal {
 		return {
 			type: 'insert',
@@ -981,23 +1108,23 @@ export default class Differ {
 			name: elementSnapshot.name,
 			attributes: new Map( elementSnapshot.attributes ),
 			length: 1,
-			changeCount: this._changeCount++
+			changeCount: this._changeCount++,
+			_element: elementSnapshot.element
 		};
 	}
 
 	/**
 	 * Returns an object with a single remove change description.
 	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} parent The element in which change happened.
-	 * @param {Number} offset The offset at which change happened.
-	 * @param {Object} elementSnapshot The snapshot of the removed element a character.
-	 * @returns {Object} The diff item.
+	 * @param parent The element in which change happened.
+	 * @param offset The offset at which change happened.
+	 * @param elementSnapshot The snapshot of the removed element a character.
+	 * @returns The diff item.
 	 */
 	private _getRemoveDiff(
 		parent: Element | DocumentFragment,
 		offset: number,
-		elementSnapshot: { name: string; attributes: Map<string, unknown> }
+		elementSnapshot: DifferSnapshot
 	): DiffItemRemove & DiffItemInternal {
 		return {
 			type: 'remove',
@@ -1005,18 +1132,18 @@ export default class Differ {
 			name: elementSnapshot.name,
 			attributes: new Map( elementSnapshot.attributes ),
 			length: 1,
-			changeCount: this._changeCount++
+			changeCount: this._changeCount++,
+			_element: elementSnapshot.element
 		};
 	}
 
 	/**
 	 * Returns an array of objects where each one is a single attribute change description.
 	 *
-	 * @private
-	 * @param {module:engine/model/range~Range} range The range where the change happened.
-	 * @param {Map} oldAttributes A map, map iterator or compatible object that contains attributes before the change.
-	 * @param {Map} newAttributes A map, map iterator or compatible object that contains attributes after the change.
-	 * @returns {Array.<Object>} An array containing one or more diff items.
+	 * @param range The range where the change happened.
+	 * @param oldAttributes A map, map iterator or compatible object that contains attributes before the change.
+	 * @param newAttributes A map, map iterator or compatible object that contains attributes after the change.
+	 * @returns An array containing one or more diff items.
 	 */
 	private _getAttributesDiff(
 		range: Range,
@@ -1073,10 +1200,6 @@ export default class Differ {
 
 	/**
 	 * Checks whether given element or any of its parents is an element that is buffered as an inserted element.
-	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} element Element to check.
-	 * @returns {Boolean}
 	 */
 	private _isInInsertedElement( element: Element | DocumentFragment ): boolean {
 		const parent = element.parent;
@@ -1102,11 +1225,6 @@ export default class Differ {
 	/**
 	 * Removes deeply all buffered changes that are registered in elements from range specified by `parent`, `offset`
 	 * and `howMany`.
-	 *
-	 * @private
-	 * @param {module:engine/model/element~Element} parent
-	 * @param {Number} offset
-	 * @param {Number} howMany
 	 */
 	private _removeAllNestedChanges( parent: Element | DocumentFragment, offset: number, howMany: number ) {
 		const range = new Range( Position._createAt( parent, offset ), Position._createAt( parent, offset + howMany ) );
@@ -1130,10 +1248,12 @@ interface ChangeItem {
 	nodesToHandle?: number;
 }
 
-// Returns an array that is a copy of passed child list with the exception that text nodes are split to one or more
-// objects, each representing one character and attributes set on that character.
-function _getChildrenSnapshot( children: Iterable<Node> ) {
-	const snapshot = [];
+/**
+ * Returns an array that is a copy of passed child list with the exception that text nodes are split to one or more
+ * objects, each representing one character and attributes set on that character.
+ */
+function _getChildrenSnapshot( children: Iterable<Node> ): Array<DifferSnapshot> {
+	const snapshot: Array<DifferSnapshot> = [];
 
 	for ( const child of children ) {
 		if ( child.is( '$text' ) ) {
@@ -1146,7 +1266,8 @@ function _getChildrenSnapshot( children: Iterable<Node> ) {
 		} else {
 			snapshot.push( {
 				name: ( child as Element ).name,
-				attributes: new Map( child.getAttributes() )
+				attributes: new Map( child.getAttributes() ),
+				element: child as Element
 			} );
 		}
 	}
@@ -1154,51 +1275,53 @@ function _getChildrenSnapshot( children: Iterable<Node> ) {
 	return snapshot;
 }
 
-// Generates array of actions for given changes set.
-// It simulates what `diff` function does.
-// Generated actions are:
-// - 'e' for 'equal' - when item at that position did not change,
-// - 'i' for 'insert' - when item at that position was inserted,
-// - 'r' for 'remove' - when item at that position was removed,
-// - 'a' for 'attribute' - when item at that position has it attributes changed.
-//
-// Example (assume that uppercase letters have bold attribute, compare with function code):
-//
-// children before:	fooBAR
-// children after:	foxybAR
-//
-// changes: type: remove, offset: 1, howMany: 1
-//			type: insert, offset: 2, howMany: 2
-//			type: attribute, offset: 4, howMany: 1
-//
-// expected actions: equal (f), remove (o), equal (o), insert (x), insert (y), attribute (b), equal (A), equal (R)
-//
-// steps taken by th script:
-//
-// 1. change = "type: remove, offset: 1, howMany: 1"; offset = 0; oldChildrenHandled = 0
-//    1.1 between this change and the beginning is one not-changed node, fill with one equal action, one old child has been handled
-//    1.2 this change removes one node, add one remove action
-//    1.3 change last visited `offset` to 1
-//    1.4 since an old child has been removed, one more old child has been handled
-//    1.5 actions at this point are: equal, remove
-//
-// 2. change = "type: insert, offset: 2, howMany: 2"; offset = 1; oldChildrenHandled = 2
-//    2.1 between this change and previous change is one not-changed node, add equal action, another one old children has been handled
-//    2.2 this change inserts two nodes, add two insert actions
-//    2.3 change last visited offset to the end of the inserted range, that is 4
-//    2.4 actions at this point are: equal, remove, equal, insert, insert
-//
-// 3. change = "type: attribute, offset: 4, howMany: 1"; offset = 4, oldChildrenHandled = 3
-//    3.1 between this change and previous change are no not-changed nodes
-//    3.2 this change changes one node, add one attribute action
-//    3.3 change last visited `offset` to the end of change range, that is 5
-//    3.4 since an old child has been changed, one more old child has been handled
-//    3.5 actions at this point are: equal, remove, equal, insert, insert, attribute
-//
-// 4. after loop oldChildrenHandled = 4, oldChildrenLength = 6 (fooBAR is 6 characters)
-//    4.1 fill up with two equal actions
-//
-// The result actions are: equal, remove, equal, insert, insert, attribute, equal, equal.
+/**
+ * Generates array of actions for given changes set.
+ * It simulates what `diff` function does.
+ * Generated actions are:
+ * - 'e' for 'equal' - when item at that position did not change,
+ * - 'i' for 'insert' - when item at that position was inserted,
+ * - 'r' for 'remove' - when item at that position was removed,
+ * - 'a' for 'attribute' - when item at that position has it attributes changed.
+ *
+ * Example (assume that uppercase letters have bold attribute, compare with function code):
+ *
+ * children before:	fooBAR
+ * children after:	foxybAR
+ *
+ * changes: type: remove, offset: 1, howMany: 1
+ *			type: insert, offset: 2, howMany: 2
+ *			type: attribute, offset: 4, howMany: 1
+ *
+ * expected actions: equal (f), remove (o), equal (o), insert (x), insert (y), attribute (b), equal (A), equal (R)
+ *
+ * steps taken by th script:
+ *
+ * 1. change = "type: remove, offset: 1, howMany: 1"; offset = 0; oldChildrenHandled = 0
+ *    1.1 between this change and the beginning is one not-changed node, fill with one equal action, one old child has been handled
+ *    1.2 this change removes one node, add one remove action
+ *    1.3 change last visited `offset` to 1
+ *    1.4 since an old child has been removed, one more old child has been handled
+ *    1.5 actions at this point are: equal, remove
+ *
+ * 2. change = "type: insert, offset: 2, howMany: 2"; offset = 1; oldChildrenHandled = 2
+ *    2.1 between this change and previous change is one not-changed node, add equal action, another one old children has been handled
+ *    2.2 this change inserts two nodes, add two insert actions
+ *    2.3 change last visited offset to the end of the inserted range, that is 4
+ *    2.4 actions at this point are: equal, remove, equal, insert, insert
+ *
+ * 3. change = "type: attribute, offset: 4, howMany: 1"; offset = 4, oldChildrenHandled = 3
+ *    3.1 between this change and previous change are no not-changed nodes
+ *    3.2 this change changes one node, add one attribute action
+ *    3.3 change last visited `offset` to the end of change range, that is 5
+ *    3.4 since an old child has been changed, one more old child has been handled
+ *    3.5 actions at this point are: equal, remove, equal, insert, insert, attribute
+ *
+ * 4. after loop oldChildrenHandled = 4, oldChildrenLength = 6 (fooBAR is 6 characters)
+ *    4.1 fill up with two equal actions
+ *
+ * The result actions are: equal, remove, equal, insert, insert, attribute, equal, equal.
+ */
 function _generateActionsFromChanges( oldChildrenLength: number, changes: Array<ChangeItem> ) {
 	const actions: Array<string> = [];
 
@@ -1254,12 +1377,20 @@ function _generateActionsFromChanges( oldChildrenLength: number, changes: Array<
 	return actions;
 }
 
-// Filter callback for Array.filter that filters out change entries that are in graveyard.
+/**
+ * Filter callback for Array.filter that filters out change entries that are in graveyard.
+ */
 function _changesInGraveyardFilter( entry: DiffItem ) {
 	const posInGy = 'position' in entry && entry.position!.root.rootName == '$graveyard';
 	const rangeInGy = 'range' in entry && entry.range.root.rootName == '$graveyard';
 
 	return !posInGy && !rangeInGy;
+}
+
+interface DifferSnapshot {
+	element?: Element;
+	name: string;
+	attributes: Map<string, unknown>;
 }
 
 /**
@@ -1270,115 +1401,156 @@ function _changesInGraveyardFilter( entry: DiffItem ) {
  * * {@link module:engine/model/differ~DiffItemInsert `DiffItemInsert`},
  * * {@link module:engine/model/differ~DiffItemRemove `DiffItemRemove`},
  * * {@link module:engine/model/differ~DiffItemAttribute `DiffItemAttribute`}.
- *
- * @interface DiffItem
  */
-
 export type DiffItem = DiffItemInsert | DiffItemRemove | DiffItemAttribute;
 
 /**
- * The single diff item for inserted nodes.
- *
- * @class DiffItemInsert
- * @implements module:engine/model/differ~DiffItem
+ * A single diff item for inserted nodes.
  */
-
 export interface DiffItemInsert {
+
+	/**
+	 * The type of diff item.
+	 */
 	type: 'insert';
+
+	/**
+	 * Reference to the model element that was inserted.
+	 *
+	 * Undefined if the diff item is related to text node insertion.
+	 *
+	 * @internal
+	 */
+	_element?: Element;
+
+	/**
+	 * The name of the inserted elements or `'$text'` for a text node.
+	 */
 	name: string;
+
+	/**
+	 * Map of attributes that were set on the item while it was inserted.
+	 */
 	attributes: Map<string, unknown>;
+
+	/**
+	 * The position where the node was inserted.
+	 */
 	position: Position;
+
+	/**
+	 * The length of an inserted text node. For elements, it is always 1 as each inserted element is counted as a one.
+	 */
 	length: number;
 }
 
 /**
- * The type of diff item.
- *
- * @member {'insert'} module:engine/model/differ~DiffItemInsert#type
+ * A single diff item for removed nodes.
  */
-
-/**
- * The name of the inserted elements or `'$text'` for a text node.
- *
- * @member {String} module:engine/model/differ~DiffItemInsert#name
- */
-
-/**
- * Map of attributes that were set on the item while it was inserted.
- *
- * @member {Map.<String,*>} module:engine/model/differ~DiffItemInsert#attributes
- */
-
-/**
- * The position where the node was inserted.
- *
- * @member {module:engine/model/position~Position} module:engine/model/differ~DiffItemInsert#position
- */
-
-/**
- * The length of an inserted text node. For elements it is always 1 as each inserted element is counted as a one.
- *
- * @member {Number} module:engine/model/differ~DiffItemInsert#length
- */
-
-/**
- * The single diff item for removed nodes.
- *
- * @class DiffItemRemove
- * @implements module:engine/model/differ~DiffItem
- */
-
 export interface DiffItemRemove {
+
+	/**
+	 * The type of diff item.
+	 */
 	type: 'remove';
+
+	/**
+	 * Reference to the model element that was removed.
+	 *
+	 * Undefined if the diff item is related to text node deletion.
+	 *
+	 * Note that this element will have the state after all changes has been performed on the model, not before. For example, if a paragraph
+	 * was first renamed to `heading1`, and then removed, `element.name` will be `heading1`. Similarly, with attributes. Also, you should
+	 * not read the element's position, as it will no longer point to the original element position.
+	 *
+	 * Instead, you should use {@link ~DiffItemRemove#name `DiffItemRemove#name`},
+	 * {@link ~DiffItemRemove#attributes `DiffItemRemove#attributes`}, and {@link ~DiffItemRemove#position `DiffItemRemove#position`}.
+	 *
+	 * This property should be only used to check instance reference equality. For example, if you want to detect that some particular
+	 * element was removed, you can check `_element` property. You can use it together with {@link ~DiffItemInsert#_element `#_element`} on
+	 * insert diff items to detect move, refresh, or rename changes.
+	 *
+	 * @internal
+	 */
+	_element?: Element;
+
+	/**
+	 * The name of the removed element or `'$text'` for a text node.
+	 */
 	name: string;
+
+	/**
+	 * Map of attributes that were set on the item while it was removed.
+	 */
 	attributes: Map<string, unknown>;
+
+	/**
+	 * The position where the node was removed.
+	 */
 	position: Position;
+
+	/**
+	 * The length of a removed text node. For elements, it is always 1, as each removed element is counted as a one.
+	 */
 	length: number;
 }
 
 /**
- * The type of diff item.
- *
- * @member {'remove'} module:engine/model/differ~DiffItemRemove#type
+ * A single diff item for attribute change.
  */
-
-/**
- * The name of the removed element or `'$text'` for a text node.
- *
- * @member {String} module:engine/model/differ~DiffItemRemove#name
- */
-
-/**
- * Map of attributes that were set on the item while it was removed.
- *
- * @member {Map.<String,*>} module:engine/model/differ~DiffItemRemove#attributes
- */
-
-/**
- * The position where the node was removed.
- *
- * @member {module:engine/model/position~Position} module:engine/model/differ~DiffItemRemove#position
- */
-
-/**
- * The length of a removed text node. For elements it is always 1 as each removed element is counted as a one.
- *
- * @member {Number} module:engine/model/differ~DiffItemRemove#length
- */
-
-/**
- * The single diff item for attribute change.
- *
- * @class DiffItemAttribute
- * @implements module:engine/model/differ~DiffItem
- */
-
 export interface DiffItemAttribute {
+
+	/**
+	 * The type of diff item.
+	 */
 	type: 'attribute';
+
+	/**
+	 * The name of the changed attribute.
+	 */
 	attributeKey: string;
+
+	/**
+	 * An attribute previous value (before change).
+	 */
 	attributeOldValue: unknown;
+
+	/**
+	 * An attribute new value (after change).
+	 */
 	attributeNewValue: unknown;
+
+	/**
+	 * The range where the change happened.
+	 */
 	range: Range;
+}
+
+/**
+ * A single diff item for a changed root.
+ */
+export interface DiffItemRoot {
+
+	/**
+	 * Name of the changed root.
+	 */
+	name: string;
+
+	/**
+	 * Set accordingly if the root got attached or detached. Otherwise, not set.
+	 */
+	state?: 'attached' | 'detached';
+
+	/**
+	 * Keeps all attribute changes that happened on the root.
+	 *
+	 * The keys are keys of the changed attributes. The values are objects containing the attribute value before the change
+	 * (`oldValue`) and after the change (`newValue`).
+	 *
+	 * Note, that if the root state changed (`state` is set), then `attributes` property will not be set. All attributes should be
+	 * handled together with the root being attached or detached.
+	 */
+	attributes?: Record<string, { oldValue: unknown; newValue: unknown }>;
 }
 
 interface DiffItemInternal {
@@ -1386,33 +1558,3 @@ interface DiffItemInternal {
 	position?: Position;
 	length?: number;
 }
-
-/**
- * The type of diff item.
- *
- * @member {'attribute'} module:engine/model/differ~DiffItemAttribute#type
- */
-
-/**
- * The name of the changed attribute.
- *
- * @member {String} module:engine/model/differ~DiffItemAttribute#attributeKey
- */
-
-/**
- * An attribute previous value (before change).
- *
- * @member {String} module:engine/model/differ~DiffItemAttribute#attributeOldValue
- */
-
-/**
- * An attribute new value (after change).
- *
- * @member {String} module:engine/model/differ~DiffItemAttribute#attributeNewValue
- */
-
-/**
- * The range where the change happened.
- *
- * @member {module:engine/model/range~Range} module:engine/model/differ~DiffItemAttribute#range
- */

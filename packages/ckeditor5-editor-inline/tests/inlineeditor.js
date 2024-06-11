@@ -1,29 +1,30 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document, console */
 
-import InlineEditorUI from '../src/inlineeditorui';
-import InlineEditorUIView from '../src/inlineeditoruiview';
+import InlineEditor from '../src/inlineeditor.js';
+import InlineEditorUI from '../src/inlineeditorui.js';
+import InlineEditorUIView from '../src/inlineeditoruiview.js';
 
-import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor';
+import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor.js';
 
-import InlineEditor from '../src/inlineeditor';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
-import DataApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/dataapimixin';
-import ElementApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/elementapimixin';
-import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement';
+import Context from '@ckeditor/ckeditor5-core/src/context.js';
+import EditorWatchdog from '@ckeditor/ckeditor5-watchdog/src/editorwatchdog.js';
+import ContextWatchdog from '@ckeditor/ckeditor5-watchdog/src/contextwatchdog.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold.js';
+import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement.js';
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
-import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
-import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory';
-import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
+import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset.js';
+import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory.js';
+import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror.js';
 
 describe( 'InlineEditor', () => {
 	let editor, editorElement;
@@ -57,12 +58,8 @@ describe( 'InlineEditor', () => {
 			expect( editor.data.processor ).to.be.instanceof( HtmlDataProcessor );
 		} );
 
-		it( 'has a Data Interface', () => {
-			expect( testUtils.isMixed( InlineEditor, DataApiMixin ) ).to.be.true;
-		} );
-
-		it( 'has a Element Interface', () => {
-			expect( testUtils.isMixed( InlineEditor, ElementApiMixin ) ).to.be.true;
+		it( 'mixes ElementApiMixin', () => {
+			expect( InlineEditor.prototype ).have.property( 'updateSourceElement' ).to.be.a( 'function' );
 		} );
 
 		it( 'creates main root element', () => {
@@ -402,6 +399,20 @@ describe( 'InlineEditor', () => {
 		} );
 	} );
 
+	describe( 'static fields', () => {
+		it( 'InlineEditor.Context', () => {
+			expect( InlineEditor.Context ).to.equal( Context );
+		} );
+
+		it( 'InlineEditor.EditorWatchdog', () => {
+			expect( InlineEditor.EditorWatchdog ).to.equal( EditorWatchdog );
+		} );
+
+		it( 'InlineEditor.ContextWatchdog', () => {
+			expect( InlineEditor.ContextWatchdog ).to.equal( ContextWatchdog );
+		} );
+	} );
+
 	describeMemoryUsage( () => {
 		testMemoryUsage(
 			'should not grow on multiple create/destroy',
@@ -410,7 +421,7 @@ describe( 'InlineEditor', () => {
 					plugins: [ ArticlePluginSet ],
 					toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote' ],
 					image: {
-						toolbar: [ 'imageStyle:block', 'imageStyle:side', '|', 'imageTextAlternative' ]
+						toolbar: [ 'imageStyle:block', 'imageStyle:wrapText', '|', 'imageTextAlternative' ]
 					}
 				} ) );
 	} );

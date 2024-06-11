@@ -1,27 +1,27 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document, Event, console */
 
-import ToolbarView from '../../src/toolbar/toolbarview';
-import ToolbarSeparatorView from '../../src/toolbar/toolbarseparatorview';
-import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
-import ComponentFactory from '../../src/componentfactory';
-import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
-import FocusCycler from '../../src/focuscycler';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import ViewCollection from '../../src/viewcollection';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import View from '../../src/view';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import { add as addTranslations, _clear as clearTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service';
-import Rect from '@ckeditor/ckeditor5-utils/src/dom/rect';
-import Locale from '@ckeditor/ckeditor5-utils/src/locale';
-import ResizeObserver from '@ckeditor/ckeditor5-utils/src/dom/resizeobserver';
-import ToolbarLineBreakView from '../../src/toolbar/toolbarlinebreakview';
-import DropdownView from '../../src/dropdown/dropdownview';
+import ToolbarView from '../../src/toolbar/toolbarview.js';
+import ToolbarSeparatorView from '../../src/toolbar/toolbarseparatorview.js';
+import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler.js';
+import ComponentFactory from '../../src/componentfactory.js';
+import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker.js';
+import FocusCycler from '../../src/focuscycler.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import ViewCollection from '../../src/viewcollection.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import View from '../../src/view.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import { add as addTranslations, _clear as clearTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service.js';
+import Rect from '@ckeditor/ckeditor5-utils/src/dom/rect.js';
+import Locale from '@ckeditor/ckeditor5-utils/src/locale.js';
+import ResizeObserver from '@ckeditor/ckeditor5-utils/src/dom/resizeobserver.js';
+import ToolbarLineBreakView from '../../src/toolbar/toolbarlinebreakview.js';
+import DropdownView from '../../src/dropdown/dropdownview.js';
 
 import { icons } from '@ckeditor/ckeditor5-core';
 
@@ -169,6 +169,7 @@ describe( 'ToolbarView', () => {
 			it( 'should be defined', () => {
 				expect( view.element.getAttribute( 'role' ) ).to.equal( 'toolbar' );
 				expect( view.element.getAttribute( 'aria-label' ) ).to.equal( 'Editor toolbar' );
+				expect( view.element.getAttribute( 'tabindex' ) ).to.equal( '-1' );
 			} );
 
 			it( 'should allow a custom aria-label', () => {
@@ -246,6 +247,21 @@ describe( 'ToolbarView', () => {
 	} );
 
 	describe( 'render()', () => {
+		it( 'registers itself in #focusTracker', () => {
+			const view = new ToolbarView( locale );
+			const spyAdd = sinon.spy( view.focusTracker, 'add' );
+			const spyRemove = sinon.spy( view.focusTracker, 'remove' );
+
+			sinon.assert.notCalled( spyAdd );
+
+			view.render();
+
+			sinon.assert.calledOnce( spyAdd );
+			sinon.assert.notCalled( spyRemove );
+
+			view.destroy();
+		} );
+
 		it( 'registers #items in #focusTracker', () => {
 			const view = new ToolbarView( locale );
 			const spyAdd = sinon.spy( view.focusTracker, 'add' );
@@ -257,7 +273,8 @@ describe( 'ToolbarView', () => {
 
 			view.render();
 
-			sinon.assert.calledTwice( spyAdd );
+			// 2 for items and 1 for toolbar itself.
+			sinon.assert.calledThrice( spyAdd );
 
 			view.items.remove( 1 );
 			sinon.assert.calledOnce( spyRemove );
@@ -672,6 +689,13 @@ describe( 'ToolbarView', () => {
 				], factory );
 
 				dropdownView = view.items.get( 1 );
+
+				// Make sure that toolbar view is not created before first dropdown open.
+				expect( dropdownView.toolbarView ).to.be.undefined;
+
+				// Trigger toolbar view creation (lazy init).
+				dropdownView.isOpen = true;
+
 				toolbarView = dropdownView.toolbarView;
 
 				const items = view.items;
@@ -848,7 +872,20 @@ describe( 'ToolbarView', () => {
 				], factory );
 
 				const level0DropdownView = view.items.get( 1 );
+
+				// Make sure that toolbar view is not created before first dropdown open.
+				expect( level0DropdownView.toolbarView ).to.be.undefined;
+
+				// Trigger toolbar view creation (lazy init).
+				level0DropdownView.isOpen = true;
+
 				const level1DropdownView = level0DropdownView.toolbarView.items.get( 2 );
+
+				// Make sure that toolbar view is not created before first dropdown open.
+				expect( level1DropdownView.toolbarView ).to.be.undefined;
+
+				// Trigger toolbar view creation (lazy init).
+				level1DropdownView.isOpen = true;
 
 				expect( level1DropdownView.toolbarView.items.length ).to.equal( 1 );
 				expect( level1DropdownView.toolbarView.items.get( 0 ).name ).to.equal( 'bar' );
@@ -886,6 +923,12 @@ describe( 'ToolbarView', () => {
 					}, factory );
 
 					dropdownView = view.items.get( 1 );
+
+					// Make sure that toolbar view is not created before first dropdown open.
+					expect( dropdownView.toolbarView ).to.be.undefined;
+
+					// Trigger toolbar view creation (lazy init).
+					dropdownView.isOpen = true;
 					toolbarView = dropdownView.toolbarView;
 
 					const nestedToolbarItems = toolbarView.items;
@@ -915,7 +958,20 @@ describe( 'ToolbarView', () => {
 					}, factory );
 
 					const level0DropdownView = view.items.get( 1 );
+
+					// Make sure that toolbar view is not created before first dropdown open.
+					expect( level0DropdownView.toolbarView ).to.be.undefined;
+
+					// Trigger toolbar view creation (lazy init).
+					level0DropdownView.isOpen = true;
+
 					const level1DropdownView = level0DropdownView.toolbarView.items.get( 0 );
+
+					// Make sure that toolbar view is not created before first dropdown open.
+					expect( level1DropdownView.toolbarView ).to.be.undefined;
+
+					// Trigger toolbar view creation (lazy init).
+					level1DropdownView.isOpen = true;
 
 					const level0NestedToolbarItems = level0DropdownView.toolbarView.items;
 					const level1NestedToolbarItems = level1DropdownView.toolbarView.items;
@@ -1491,6 +1547,8 @@ describe( 'ToolbarView', () => {
 			} );
 
 			it( 'shares its toolbarView#items with grouped items', () => {
+				groupedItemsDropdown.isOpen = true;
+
 				view.items.add( focusable() );
 				view.items.add( focusable() );
 				view.items.add( focusable() );

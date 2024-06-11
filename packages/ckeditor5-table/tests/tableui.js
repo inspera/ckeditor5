@@ -1,21 +1,22 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import { _clear as clearTranslations, add as addTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import { _clear as clearTranslations, add as addTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
-import TableEditing from '../src/tableediting';
-import TableUI from '../src/tableui';
-import InsertTableView from '../src/ui/inserttableview';
-import SwitchButtonView from '@ckeditor/ckeditor5-ui/src/button/switchbuttonview';
-import DropdownView from '@ckeditor/ckeditor5-ui/src/dropdown/dropdownview';
-import ListSeparatorView from '@ckeditor/ckeditor5-ui/src/list/listseparatorview';
-import SplitButtonView from '@ckeditor/ckeditor5-ui/src/dropdown/button/splitbuttonview';
+import TableEditing from '../src/tableediting.js';
+import TableUI from '../src/tableui.js';
+import InsertTableView from '../src/ui/inserttableview.js';
+import SwitchButtonView from '@ckeditor/ckeditor5-ui/src/button/switchbuttonview.js';
+import DropdownView from '@ckeditor/ckeditor5-ui/src/dropdown/dropdownview.js';
+import ListSeparatorView from '@ckeditor/ckeditor5-ui/src/list/listseparatorview.js';
+import SplitButtonView from '@ckeditor/ckeditor5-ui/src/dropdown/button/splitbuttonview.js';
+import { icons } from '@ckeditor/ckeditor5-core';
 
 describe( 'TableUI', () => {
 	let editor, element;
@@ -69,7 +70,7 @@ describe( 'TableUI', () => {
 		it( 'should register insertTable button', () => {
 			expect( insertTable ).to.be.instanceOf( DropdownView );
 			expect( insertTable.buttonView.label ).to.equal( 'Insert table' );
-			expect( insertTable.buttonView.icon ).to.match( /<svg / );
+			expect( insertTable.buttonView.icon ).to.equal( icons.table );
 		} );
 
 		it( 'should bind to insertTable command', () => {
@@ -133,11 +134,98 @@ describe( 'TableUI', () => {
 		} );
 	} );
 
+	describe( 'menuBar:insertTable menu bar menu', () => {
+		let menuView;
+
+		beforeEach( () => {
+			menuView = editor.ui.componentFactory.create( 'menuBar:insertTable' );
+			menuView.render();
+
+			document.body.appendChild( menuView.element );
+
+			menuView.isOpen = true;
+		} );
+
+		afterEach( () => {
+			menuView.element.remove();
+		} );
+
+		it( 'should set properties on a button', () => {
+			expect( menuView.buttonView.label ).to.equal( 'Table' );
+			expect( menuView.buttonView.icon ).to.equal( icons.table );
+		} );
+
+		it( 'should bind #isEnabled to the InsertTableCommand', () => {
+			const command = editor.commands.get( 'insertTable' );
+
+			expect( menuView.isEnabled ).to.be.true;
+
+			command.forceDisabled( 'foo' );
+			expect( menuView.isEnabled ).to.be.false;
+
+			command.clearForceDisabled( 'foo' );
+			expect( menuView.isEnabled ).to.be.true;
+		} );
+
+		it( 'should render InsertTableView', () => {
+			expect( menuView.panelView.children.first ).to.be.instanceOf( InsertTableView );
+		} );
+
+		it( 'should delegate #execute from InsertTableView to the MenuBarMenuView', () => {
+			const spy = sinon.spy();
+
+			menuView.on( 'execute', spy );
+
+			menuView.panelView.children.first.fire( 'execute' );
+
+			sinon.assert.calledOnce( spy );
+		} );
+
+		it( 'should execute the insertTable command upon the #execute event and focus editing', () => {
+			const command = editor.commands.get( 'insertTable' );
+			const commandSpy = sinon.spy( command, 'execute' );
+			const focusSpy = sinon.spy( editor.editing.view, 'focus' );
+			const insertView = menuView.panelView.children.first;
+
+			insertView.rows = 3;
+			insertView.columns = 5;
+
+			insertView.fire( 'execute' );
+
+			sinon.assert.calledOnceWithExactly( commandSpy, { rows: 3, columns: 5 } );
+			sinon.assert.calledOnce( focusSpy );
+			sinon.assert.callOrder( commandSpy, focusSpy );
+		} );
+
+		it( 'should reset column and rows selection on reopen', () => {
+			const insertView = menuView.panelView.children.first;
+
+			insertView.rows = 3;
+			insertView.columns = 5;
+
+			menuView.isOpen = false;
+
+			expect( insertView.rows ).to.equal( 1 );
+			expect( insertView.columns ).to.equal( 1 );
+
+			menuView.isOpen = true;
+
+			expect( insertView.rows ).to.equal( 1 );
+			expect( insertView.columns ).to.equal( 1 );
+		} );
+	} );
+
 	describe( 'tableRow dropdown', () => {
 		let dropdown;
 
 		beforeEach( () => {
 			dropdown = editor.ui.componentFactory.create( 'tableRow' );
+			dropdown.render();
+			document.body.appendChild( dropdown.element );
+		} );
+
+		afterEach( () => {
+			dropdown.element.remove();
 		} );
 
 		it( 'have button with proper properties set', () => {
@@ -152,6 +240,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should have proper items in panel', () => {
+			dropdown.isOpen = true;
+
 			const listView = dropdown.listView;
 
 			const labels = listView.items.map( item => item instanceof ListSeparatorView ? '|' : item.children.first.label );
@@ -162,6 +252,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should bind items in panel to proper commands', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			const setRowHeaderCommand = editor.commands.get( 'setTableRowHeader' );
@@ -209,6 +301,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should focus view after command execution', () => {
+			dropdown.isOpen = true;
+
 			const focusSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 
 			dropdown.listView.items.get( 2 ).children.last.fire( 'execute' );
@@ -217,6 +311,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should not focus view after using a switchbutton', () => {
+			dropdown.isOpen = true;
+
 			const focusSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 
 			dropdown.listView.items.first.children.last.fire( 'execute' );
@@ -225,6 +321,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'executes command when it\'s executed', () => {
+			dropdown.isOpen = true;
+
 			const spy = sinon.stub( editor, 'execute' );
 
 			dropdown.listView.items.first.children.first.fire( 'execute' );
@@ -234,12 +332,16 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should use a toggle switch for the setTableRowHeader item', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			expect( items.first.children.first ).to.be.instanceOf( SwitchButtonView );
 		} );
 
 		it( 'should bind set header row command value to dropdown item', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			const setRowHeaderCommand = editor.commands.get( 'setTableRowHeader' );
@@ -257,6 +359,12 @@ describe( 'TableUI', () => {
 
 		beforeEach( () => {
 			dropdown = editor.ui.componentFactory.create( 'tableColumn' );
+			dropdown.render();
+			document.body.appendChild( dropdown.element );
+		} );
+
+		afterEach( () => {
+			dropdown.element.remove();
 		} );
 
 		it( 'have button with proper properties set', () => {
@@ -271,6 +379,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should have proper items in panel', () => {
+			dropdown.isOpen = true;
+
 			const listView = dropdown.listView;
 
 			const labels = listView.items.map( item => item instanceof ListSeparatorView ? '|' : item.children.first.label );
@@ -281,6 +391,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should bind items in panel to proper commands (LTR content)', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			const setColumnHeaderCommand = editor.commands.get( 'setTableColumnHeader' );
@@ -339,6 +451,9 @@ describe( 'TableUI', () => {
 				} )
 				.then( editor => {
 					const dropdown = editor.ui.componentFactory.create( 'tableColumn' );
+
+					dropdown.isOpen = true;
+
 					const items = dropdown.listView.items;
 
 					expect( items.get( 2 ).children.first.label ).to.equal( 'Insert column left' );
@@ -354,6 +469,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should focus view after command execution', () => {
+			dropdown.isOpen = true;
+
 			const focusSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 
 			dropdown.listView.items.get( 2 ).children.first.fire( 'execute' );
@@ -362,6 +479,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should not focus view after using a switchbutton', () => {
+			dropdown.isOpen = true;
+
 			const focusSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 
 			dropdown.listView.items.first.children.last.fire( 'execute' );
@@ -370,6 +489,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'executes command when it\'s executed', () => {
+			dropdown.isOpen = true;
+
 			const spy = sinon.stub( editor, 'execute' );
 
 			dropdown.listView.items.first.children.first.fire( 'execute' );
@@ -379,12 +500,16 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should use a toggle switch for the setTableColumnHeader item', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			expect( items.first.children.first ).to.be.instanceOf( SwitchButtonView );
 		} );
 
 		it( 'should bind set header column command value to dropdown item', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			const setColumnHeaderCommand = editor.commands.get( 'setTableColumnHeader' );
@@ -403,6 +528,13 @@ describe( 'TableUI', () => {
 		beforeEach( () => {
 			dropdown = editor.ui.componentFactory.create( 'mergeTableCells' );
 			command = editor.commands.get( 'mergeTableCells' );
+
+			dropdown.render();
+			document.body.appendChild( dropdown.element );
+		} );
+
+		afterEach( () => {
+			dropdown.element.remove();
 		} );
 
 		it( 'have button with proper properties set', () => {
@@ -455,6 +587,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should have proper items in panel', () => {
+			dropdown.isOpen = true;
+
 			const listView = dropdown.listView;
 
 			const labels = listView.items.map( item => item instanceof ListSeparatorView ? '|' : item.children.first.label );
@@ -471,6 +605,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should bind items in panel to proper commands (LTR content)', () => {
+			dropdown.isOpen = true;
+
 			const items = dropdown.listView.items;
 
 			const mergeCellUpCommand = editor.commands.get( 'mergeTableCellUp' );
@@ -536,6 +672,9 @@ describe( 'TableUI', () => {
 				} )
 				.then( editor => {
 					const dropdown = editor.ui.componentFactory.create( 'mergeTableCells' );
+
+					dropdown.isOpen = true;
+
 					const items = dropdown.listView.items;
 
 					expect( items.get( 1 ).children.first.label ).to.equal( 'Merge cell right' );
@@ -551,6 +690,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'should focus view after command execution', () => {
+			dropdown.isOpen = true;
+
 			const focusSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 
 			dropdown.listView.items.first.children.first.fire( 'execute' );
@@ -559,6 +700,8 @@ describe( 'TableUI', () => {
 		} );
 
 		it( 'executes command when it\'s executed', () => {
+			dropdown.isOpen = true;
+
 			const spy = sinon.stub( editor, 'execute' );
 
 			dropdown.listView.items.first.children.first.fire( 'execute' );

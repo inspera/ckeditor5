@@ -1,22 +1,22 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import DowncastWriter from '../../../src/view/downcastwriter';
-import Document from '../../../src/view/document';
-import EditableElement from '../../../src/view/editableelement';
-import ViewPosition from '../../../src/view/position';
-import ViewRange from '../../../src/view/range';
-import createViewRoot from '../_utils/createroot';
-import ViewElement from '../../../src/view/element';
-import ViewSelection from '../../../src/view/selection';
-import { StylesProcessor } from '../../../src/view/stylesmap';
-import DocumentFragment from '../../../src/view/documentfragment';
-import HtmlDataProcessor from '../../../src/dataprocessor/htmldataprocessor';
+import DowncastWriter from '../../../src/view/downcastwriter.js';
+import Document from '../../../src/view/document.js';
+import EditableElement from '../../../src/view/editableelement.js';
+import ViewPosition from '../../../src/view/position.js';
+import ViewRange from '../../../src/view/range.js';
+import createViewRoot from '../_utils/createroot.js';
+import ViewElement from '../../../src/view/element.js';
+import ViewSelection from '../../../src/view/selection.js';
+import { StylesProcessor } from '../../../src/view/stylesmap.js';
+import DocumentFragment from '../../../src/view/documentfragment.js';
+import HtmlDataProcessor from '../../../src/dataprocessor/htmldataprocessor.js';
 
-import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'DowncastWriter', () => {
 	let writer, attributes, root, doc;
@@ -426,6 +426,14 @@ describe( 'DowncastWriter', () => {
 
 			expect( element.getCustomProperty( 'foo' ) ).to.equal( 'bar' );
 		} );
+
+		it( 'should set custom property to given document fragment', () => {
+			const fragment = writer.createDocumentFragment();
+
+			writer.setCustomProperty( 'foo', 'bar', fragment );
+
+			expect( fragment.getCustomProperty( 'foo' ) ).to.equal( 'bar' );
+		} );
 	} );
 
 	describe( 'removeCustomProperty()', () => {
@@ -437,6 +445,16 @@ describe( 'DowncastWriter', () => {
 
 			writer.removeCustomProperty( 'foo', element );
 			expect( element.getCustomProperty( 'foo' ) ).to.be.undefined;
+		} );
+
+		it( 'should remove custom property from given document fragment', () => {
+			const fragment = writer.createDocumentFragment();
+
+			writer.setCustomProperty( 'foo', 'bar', fragment );
+			expect( fragment.getCustomProperty( 'foo' ) ).to.equal( 'bar' );
+
+			writer.removeCustomProperty( 'foo', fragment );
+			expect( fragment.getCustomProperty( 'foo' ) ).to.be.undefined;
 		} );
 	} );
 

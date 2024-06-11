@@ -1,18 +1,18 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import View from '../../../src/view/view';
-import MutationObserver from '../../../src/view/observer/mutationobserver';
-import UIElement from '../../../src/view/uielement';
-import RawElement from '../../../src/view/rawelement';
-import createViewRoot from '../_utils/createroot';
-import { parse } from '../../../src/dev-utils/view';
-import { StylesProcessor } from '../../../src/view/stylesmap';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import View from '../../../src/view/view.js';
+import MutationObserver from '../../../src/view/observer/mutationobserver.js';
+import UIElement from '../../../src/view/uielement.js';
+import RawElement from '../../../src/view/rawelement.js';
+import createViewRoot from '../_utils/createroot.js';
+import { parse } from '../../../src/dev-utils/view.js';
+import { StylesProcessor } from '../../../src/view/stylesmap.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'MutationObserver', () => {
 	let view, domRoot, viewDocument, viewRoot, mutationObserver, domWrapper, spyRenderedMarkToSync;
@@ -64,6 +64,38 @@ describe( 'MutationObserver', () => {
 
 		expect( domAdditionalRoot.childNodes.length ).to.equal( 1 );
 		expect( domAdditionalRoot.childNodes[ 0 ].data ).to.equal( 'foobar' );
+	} );
+
+	it( 'should allow to stop observing a DOM element', () => {
+		const { domRoot: domAdditionalRoot } = setupRoot( 'additional' );
+
+		mutationObserver.stopObserving( domRoot );
+
+		domAdditionalRoot.innerHTML = 'foobar';
+		domRoot.innerHTML = 'abcabc';
+
+		mutationObserver.flush();
+
+		// Explanation:
+		// Mutation observer is listening on `domAdditionalRoot`. Because of that, the changes done to it are reverted.
+		// Mutation observer was disabled for `domRoot`. Because of that, changes done to it are kept.
+		expect( domAdditionalRoot.innerHTML ).to.equal( '<br data-cke-filler="true">' );
+		expect( domRoot.innerHTML ).to.equal( 'abcabc' );
+	} );
+
+	it( 'should not stop observing a DOM element when observer is disabled', () => {
+		const { domRoot: domAdditionalRoot } = setupRoot( 'additional' );
+
+		mutationObserver.disable();
+		mutationObserver.stopObserving( domRoot );
+
+		domAdditionalRoot.innerHTML = 'foobar';
+		domRoot.innerHTML = 'abcabc';
+
+		mutationObserver.flush();
+
+		expect( domAdditionalRoot.innerHTML ).to.equal( 'foobar' );
+		expect( domRoot.innerHTML ).to.equal( 'abcabc' );
 	} );
 
 	it( 'should handle bold', () => {

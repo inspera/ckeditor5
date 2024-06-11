@@ -1,11 +1,11 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import addKeyboardHandlingForGrid from '../../src/bindings/addkeyboardhandlingforgrid';
-import View from '../../src/view';
-import ButtonView from '../../src/button/buttonview';
+import addKeyboardHandlingForGrid from '../../src/bindings/addkeyboardhandlingforgrid.js';
+import View from '../../src/view.js';
+import ButtonView from '../../src/button/buttonview.js';
 import { KeystrokeHandler, FocusTracker, Locale, keyCodes } from '@ckeditor/ckeditor5-utils';
 
 describe( 'addKeyboardHandlingForGrid()', () => {
@@ -272,6 +272,67 @@ describe( 'addKeyboardHandlingForGrid()', () => {
 			pressUpArrow( keystrokes );
 			sinon.assert.calledOnce( spy0 );
 			focusTracker.focusedElement = gridElementsCollection.get( 0 ).element;
+		} );
+	} );
+
+	describe( 'arrows moves in rtl', () => {
+		beforeEach( () => {
+			view = new TestView( );
+			keystrokes = new KeystrokeHandler();
+			focusTracker = new FocusTracker();
+
+			view.render();
+
+			gridElementsCollection = view.createCollection();
+
+			for ( let i = 0; i < 7; i++ ) {
+				const button = new ButtonView( new Locale() );
+
+				button.render();
+				gridElementsCollection.add( button );
+				focusTracker.add( button.element );
+			}
+
+			addKeyboardHandlingForGrid( {
+				keystrokeHandler: keystrokes,
+				focusTracker,
+				gridItems: gridElementsCollection,
+				numberOfColumns: 3,
+				uiLanguageDirection: 'rtl'
+			} );
+
+			keystrokes.listenTo( view.element );
+		} );
+
+		afterEach( () => {
+			view.element.remove();
+			view.destroy();
+			keystrokes.destroy();
+			focusTracker.destroy();
+		} );
+
+		it( 'swap arrowleft with arrowright', () => {
+			// before: [ ][x][ ]	after: [ ][ ][x]	key: ←
+			//         [ ][ ][ ]	       [ ][ ][ ]
+			//         [ ]      	       [ ]
+			focusTracker.focusedElement = gridElementsCollection.get( 1 ).element;
+
+			const spy = sinon.spy( gridElementsCollection.get( 2 ), 'focus' );
+
+			pressLeftArrow( keystrokes );
+			sinon.assert.calledOnce( spy );
+		} );
+
+		it( 'swap arrowright with arrowleft', () => {
+			// before: [ ][x][ ]	after: [x][ ][ ]	key: ←
+			//         [ ][ ][ ]	       [ ][ ][ ]
+			//         [ ]      	       [ ]
+			focusTracker.focusedElement = gridElementsCollection.get( 1 ).element;
+
+			const spy = sinon.spy( gridElementsCollection.get( 0 ), 'focus' );
+
+			pressRightArrow( keystrokes );
+			sinon.assert.calledOnce( spy );
 		} );
 	} );
 

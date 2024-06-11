@@ -1,28 +1,29 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document, Event, console */
 
-import ClassicEditorUI from '../src/classiceditorui';
-import ClassicEditorUIView from '../src/classiceditoruiview';
+import ClassicEditor from '../src/classiceditor.js';
+import ClassicEditorUI from '../src/classiceditorui.js';
+import ClassicEditorUIView from '../src/classiceditoruiview.js';
 
-import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor';
+import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor.js';
 
-import ClassicEditor from '../src/classiceditor';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
-import DataApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/dataapimixin';
-import ElementApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/elementapimixin';
-import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement';
-import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
+import Context from '@ckeditor/ckeditor5-core/src/context.js';
+import EditorWatchdog from '@ckeditor/ckeditor5-watchdog/src/editorwatchdog.js';
+import ContextWatchdog from '@ckeditor/ckeditor5-watchdog/src/contextwatchdog.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold.js';
+import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement.js';
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror.js';
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
-import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
-import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory';
+import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset.js';
+import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory.js';
 
 describe( 'ClassicEditor', () => {
 	let editor, editorElement;
@@ -51,12 +52,8 @@ describe( 'ClassicEditor', () => {
 			expect( editor.data.processor ).to.be.instanceof( HtmlDataProcessor );
 		} );
 
-		it( 'has a Data Interface', () => {
-			expect( testUtils.isMixed( ClassicEditor, DataApiMixin ) ).to.true;
-		} );
-
-		it( 'has a Element Interface', () => {
-			expect( testUtils.isMixed( ClassicEditor, ElementApiMixin ) ).to.true;
+		it( 'mixes ElementApiMixin', () => {
+			expect( ClassicEditor.prototype ).have.property( 'updateSourceElement' ).to.be.a( 'function' );
 		} );
 
 		it( 'creates main root element', () => {
@@ -387,6 +384,20 @@ describe( 'ClassicEditor', () => {
 		} );
 	} );
 
+	describe( 'static fields', () => {
+		it( 'ClassicEditor.Context', () => {
+			expect( ClassicEditor.Context ).to.equal( Context );
+		} );
+
+		it( 'ClassicEditor.EditorWatchdog', () => {
+			expect( ClassicEditor.EditorWatchdog ).to.equal( EditorWatchdog );
+		} );
+
+		it( 'ClassicEditor.ContextWatchdog', () => {
+			expect( ClassicEditor.ContextWatchdog ).to.equal( ContextWatchdog );
+		} );
+	} );
+
 	describeMemoryUsage( () => {
 		testMemoryUsage(
 			'should not grow on multiple create/destroy',
@@ -395,7 +406,7 @@ describe( 'ClassicEditor', () => {
 					plugins: [ ArticlePluginSet ],
 					toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote' ],
 					image: {
-						toolbar: [ 'imageStyle:block', 'imageStyle:side', '|', 'imageTextAlternative' ]
+						toolbar: [ 'imageStyle:block', 'imageStyle:wrapText', '|', 'imageTextAlternative' ]
 					}
 				} ) );
 	} );

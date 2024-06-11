@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,11 +7,14 @@
 
 /* globals document, window, Event, MouseEvent */
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import DomEmitterMixin, { Emitter as DomEmitter } from '../../src/dom/emittermixin';
-import EmitterMixin, { Emitter } from '../../src/emittermixin';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import DomEmitterMixin from '../../src/dom/emittermixin.js';
+import EmitterMixin from '../../src/emittermixin.js';
 
 describe( 'DomEmitterMixin', () => {
+	const Emitter = EmitterMixin();
+	const DomEmitter = DomEmitterMixin();
+
 	let emitter, domEmitter, node;
 
 	testUtils.createSinonSandbox();

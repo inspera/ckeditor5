@@ -1,16 +1,16 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global Event */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import MediaEmbed from '../src/mediaembed';
-import MediaEmbedUI from '../src/mediaembedui';
-import MediaFormView from '../src/ui/mediaformview';
-import DropdownView from '@ckeditor/ckeditor5-ui/src/dropdown/dropdownview';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import MediaEmbed from '../src/mediaembed.js';
+import MediaEmbedUI from '../src/mediaembedui.js';
+import MediaFormView from '../src/ui/mediaformview.js';
+import DropdownView from '@ckeditor/ckeditor5-ui/src/dropdown/dropdownview.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
 import mediaIcon from '../theme/icons/media.svg';
 
 describe( 'MediaEmbedUI', () => {
@@ -37,11 +37,14 @@ describe( 'MediaEmbedUI', () => {
 				editor = newEditor;
 				dropdown = editor.ui.componentFactory.create( 'mediaEmbed' );
 				button = dropdown.buttonView;
-				form = dropdown.panelView.children.get( 0 );
 
 				dropdown.render();
-
 				global.document.body.appendChild( dropdown.element );
+
+				dropdown.isOpen = true;
+				dropdown.isOpen = false;
+
+				form = dropdown.panelView.children.get( 0 );
 			} );
 	} );
 
@@ -152,6 +155,7 @@ describe( 'MediaEmbedUI', () => {
 			it( 'executes the command and closes the UI (if the form is valid)', async () => {
 				const viewFocusSpy = sinon.spy( editor.editing.view, 'focus' );
 				const commandSpy = sinon.spy( editor.commands.get( 'mediaEmbed' ), 'execute' );
+				const updateSpy = sinon.spy( editor.ui, 'update' );
 
 				// The form is invalid.
 				form.url = 'https://invalid/url';
@@ -162,7 +166,9 @@ describe( 'MediaEmbedUI', () => {
 
 				sinon.assert.notCalled( commandSpy );
 				sinon.assert.notCalled( viewFocusSpy );
+
 				expect( dropdown.isOpen ).to.be.true;
+				expect( updateSpy ).to.be.calledOnce;
 
 				// The form is valid.
 				form.url = 'https://valid/url';
@@ -176,6 +182,7 @@ describe( 'MediaEmbedUI', () => {
 				await wait( 10 );
 
 				expect( dropdown.isOpen ).to.be.false;
+				expect( updateSpy ).to.be.calledTwice;
 			} );
 		} );
 
@@ -221,13 +228,13 @@ describe( 'MediaEmbedUI', () => {
 			form.fire( 'submit' );
 		} );
 
-		it( 'binds urlInputView#isReadOnly to command#isEnabled', () => {
+		it( 'binds urlInputView#isEnabled to command#isEnabled', () => {
 			const command = editor.commands.get( 'mediaEmbed' );
 
-			expect( form.urlInputView.isReadOnly ).to.be.false;
+			expect( form.urlInputView.isEnabled ).to.be.true;
 
 			command.isEnabled = false;
-			expect( form.urlInputView.isReadOnly ).to.be.true;
+			expect( form.urlInputView.isEnabled ).to.be.false;
 		} );
 
 		it( 'should trim URL input value', () => {
@@ -242,15 +249,8 @@ describe( 'MediaEmbedUI', () => {
 			expect( form.mediaURLInputValue ).to.equal( 'test' );
 		} );
 
-		it( 'binds saveButtonView#isEnabled to trimmed URL input value', () => {
-			form.urlInputView.fieldView.fire( 'input' );
-
-			expect( form.saveButtonView.isEnabled ).to.be.false;
-
-			form.urlInputView.fieldView.element.value = 'test';
-			form.urlInputView.fieldView.fire( 'input' );
-
-			expect( form.saveButtonView.isEnabled ).to.be.true;
+		it( 'should implement the CSS transition disabling feature', () => {
+			expect( form.disableCssTransitions ).to.be.a( 'function' );
 		} );
 
 		describe( 'validators', () => {

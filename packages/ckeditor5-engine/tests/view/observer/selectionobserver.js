@@ -1,23 +1,23 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals setTimeout, document, console, Event */
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
-import ViewRange from '../../../src/view/range';
-import DocumentSelection from '../../../src/view/documentselection';
-import ViewSelection from '../../../src/view/selection';
-import View from '../../../src/view/view';
-import SelectionObserver from '../../../src/view/observer/selectionobserver';
-import FocusObserver from '../../../src/view/observer/focusobserver';
-import MutationObserver from '../../../src/view/observer/mutationobserver';
-import createViewRoot from '../_utils/createroot';
-import { parse } from '../../../src/dev-utils/view';
-import { StylesProcessor } from '../../../src/view/stylesmap';
-import env from '@ckeditor/ckeditor5-utils/src/env';
+import ViewRange from '../../../src/view/range.js';
+import DocumentSelection from '../../../src/view/documentselection.js';
+import ViewSelection from '../../../src/view/selection.js';
+import View from '../../../src/view/view.js';
+import SelectionObserver from '../../../src/view/observer/selectionobserver.js';
+import FocusObserver from '../../../src/view/observer/focusobserver.js';
+import MutationObserver from '../../../src/view/observer/mutationobserver.js';
+import createViewRoot from '../_utils/createroot.js';
+import { parse } from '../../../src/dev-utils/view.js';
+import { StylesProcessor } from '../../../src/view/stylesmap.js';
+import env from '@ckeditor/ckeditor5-utils/src/env.js';
 
 describe( 'SelectionObserver', () => {
 	let view, viewDocument, viewRoot, selectionObserver, domRoot, domMain, domDocument;
@@ -30,7 +30,6 @@ describe( 'SelectionObserver', () => {
 		domRoot.innerHTML = '<div contenteditable="true"></div><div contenteditable="true" id="additional"></div>';
 		domMain = domRoot.childNodes[ 0 ];
 		domDocument.body.appendChild( domRoot );
-
 		view = new View( new StylesProcessor() );
 		viewDocument = view.document;
 		createViewRoot( viewDocument );
@@ -49,7 +48,10 @@ describe( 'SelectionObserver', () => {
 			domDocument.getSelection().removeAllRanges();
 
 			viewDocument.isFocused = true;
+
 			domMain.focus();
+
+			viewDocument._isFocusChanging = false;
 		} );
 
 		selectionObserver.enable();
@@ -89,6 +91,37 @@ describe( 'SelectionObserver', () => {
 		changeDomSelection();
 	} );
 
+	it( 'should call focusObserver#flush when selection is changed', done => {
+		const flushSpy = testUtils.sinon.spy( selectionObserver.focusObserver, 'flush' );
+
+		viewDocument.on( 'selectionChange', () => {
+			sinon.assert.calledOnce( flushSpy );
+
+			done();
+		} );
+
+		changeDomSelection();
+	} );
+
+	// See https://github.com/ckeditor/ckeditor5/issues/14569.
+	it( 'should call focusObserver#flush when selection is in the editable but not changed', () => {
+		// Set DOM selection.
+		changeDomSelection();
+
+		// Update view selection to match DOM selection.
+		const domSelection = domDocument.getSelection();
+		const viewPosition = view.domConverter.domPositionToView( domSelection.focusNode, domSelection.focusOffset );
+
+		view.change( writer => writer.setSelection( viewPosition ) );
+
+		const flushSpy = testUtils.sinon.spy( selectionObserver.focusObserver, 'flush' );
+
+		// Fire selection change without actually moving selection.
+		domDocument.dispatchEvent( new Event( 'selectionchange' ) );
+
+		sinon.assert.calledOnce( flushSpy );
+	} );
+
 	it( 'should not fire selectionChange while user is composing', done => {
 		viewDocument.on( 'selectionChange', () => {
 			throw 'selectionChange fired while composing';
@@ -126,6 +159,25 @@ describe( 'SelectionObserver', () => {
 		} );
 
 		changeDomSelection();
+	} );
+
+	it( 'should detect "restricted objects" in Firefox DOM ranges and prevent an error being thrown', () => {
+		testUtils.sinon.stub( env, 'isGecko' ).value( true );
+
+		changeDomSelection();
+		domDocument.dispatchEvent( new Event( 'selectionchange' ) );
+
+		expect( view.hasDomSelection ).to.be.true;
+
+		const domFoo = domDocument.getSelection().anchorNode;
+
+		sinon.stub( domFoo, Symbol.toStringTag ).get( () => {
+			throw new Error( 'Permission denied to access property Symbol.toStringTag' );
+		} );
+
+		domDocument.dispatchEvent( new Event( 'selectionchange' ) );
+
+		expect( view.hasDomSelection ).to.be.false;
 	} );
 
 	it( 'should add only one #selectionChange listener to one document', done => {
@@ -211,15 +263,18 @@ describe( 'SelectionObserver', () => {
 			writer.setSelection( viewFoo, 0 );
 		} );
 
+		let wasInfiniteLoopDetected = false;
+		sinon.stub( selectionObserver, '_reportInfiniteLoop' ).callsFake( () => {
+			wasInfiniteLoopDetected = true;
+		} );
 		const selectionChangeSpy = sinon.spy();
 
-		// Catches the "Selection change observer detected an infinite rendering loop." warning in the CK_DEBUG mode.
-		sinon.stub( console, 'warn' );
-
+		selectionObserver._clearInfiniteLoop();
 		viewDocument.on( 'selectionChange', selectionChangeSpy );
 
 		return new Promise( resolve => {
 			viewDocument.on( 'selectionChangeDone', () => {
+				expect( wasInfiniteLoopDetected ).to.be.true;
 				expect( selectionChangeSpy.callCount ).to.equal( 60 );
 
 				resolve();
@@ -230,6 +285,15 @@ describe( 'SelectionObserver', () => {
 				counter--;
 			}
 		} );
+	} );
+
+	it.skip( 'SelectionObserver#_reportInfiniteLoop() should throw an error', () => {
+		expect( () => {
+			selectionObserver._reportInfiniteLoop();
+		} ).to.throw( Error,
+			'Selection change observer detected an infinite rendering loop.\n\n' +
+			'⚠️⚠️ Report this error on https://github.com/ckeditor/ckeditor5/issues/11658.'
+		);
 	} );
 
 	it( 'should not be treated as an infinite loop if selection is changed only few times', done => {
@@ -397,6 +461,20 @@ describe( 'SelectionObserver', () => {
 
 		// 1. Collapse in a text node, before ui element, and wait for async selectionchange to fire selection change handling.
 		sel.collapse( domText, 3 );
+	} );
+
+	describe( 'stopListening()', () => {
+		it( 'should not fire selectionChange after stopped observing a DOM element', () => {
+			const spy = sinon.spy();
+
+			viewDocument.on( 'selectionChange', spy );
+
+			selectionObserver.stopListening( domMain );
+
+			changeDomSelection();
+
+			expect( spy.called ).to.be.false;
+		} );
 	} );
 
 	describe( 'Management of view Document#isSelecting', () => {

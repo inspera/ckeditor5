@@ -1,17 +1,17 @@
 /**
- * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
-import Input from '../src/input';
-import InsertTextCommand from '../src/inserttextcommand';
-import env from '@ckeditor/ckeditor5-utils/src/env';
+import Input from '../src/input.js';
+import InsertTextCommand from '../src/inserttextcommand.js';
+import env from '@ckeditor/ckeditor5-utils/src/env.js';
 
 describe( 'Input', () => {
 	testUtils.createSinonSandbox();
@@ -44,22 +44,24 @@ describe( 'Input', () => {
 		} );
 
 		describe( 'init()', () => {
-			it( 'should register the input command (deprecated)', async () => {
-				const editor = await ClassicTestEditor.create( domElement, {
-					plugins: [ Input ]
-				} );
-
-				expect( editor.commands.get( 'input' ) ).to.be.instanceOf( InsertTextCommand );
-
-				await editor.destroy();
-			} );
-
 			it( 'should register the insert text command', async () => {
 				const editor = await ClassicTestEditor.create( domElement, {
 					plugins: [ Input ]
 				} );
 
 				expect( editor.commands.get( 'insertText' ) ).to.be.instanceOf( InsertTextCommand );
+
+				await editor.destroy();
+			} );
+
+			it( 'should register the input command (deprecated) with the same command instance', async () => {
+				const editor = await ClassicTestEditor.create( domElement, {
+					plugins: [ Input ]
+				} );
+
+				const insertTextCommand = editor.commands.get( 'insertText' );
+
+				expect( editor.commands.get( 'input' ) ).to.equal( insertTextCommand );
 
 				await editor.destroy();
 			} );
@@ -189,6 +191,19 @@ describe( 'Input', () => {
 				viewDocument.fire( 'compositionstart' );
 
 				sinon.assert.notCalled( spy );
+			} );
+
+			it( 'should scroll to the selection after inserting text', async () => {
+				const scrollToSelectionSpy = sinon.spy( editor.editing.view, 'scrollToTheSelection' );
+
+				viewDocument.fire( 'insertText', {
+					text: 'bar',
+					selection: viewDocument.selection,
+					preventDefault: () => {}
+				} );
+
+				sinon.assert.calledOnce( insertTextCommandSpy );
+				sinon.assert.calledOnce( scrollToSelectionSpy );
 			} );
 		} );
 	} );
