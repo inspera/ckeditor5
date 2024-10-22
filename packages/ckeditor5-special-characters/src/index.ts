@@ -14,6 +14,7 @@ export { default as SpecialCharactersMathematical } from './specialcharactersmat
 export { default as SpecialCharactersLatin } from './specialcharacterslatin.js';
 export { default as SpecialCharactersEssentials } from './specialcharactersessentials.js';
 export { default as SpecialCharactersCurrency } from './specialcharacterscurrency.js';
+export { default as SpecialCharactersIELTS } from './specialcharactersIELTS.js';
 
 export type { SpecialCharactersConfig } from './specialcharactersconfig.js';
 
