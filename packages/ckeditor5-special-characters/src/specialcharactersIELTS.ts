@@ -4,7 +4,7 @@
  */
 
 /**
- * @module special-characters/specialcharacterslatin
+ * @module special-characters/specialcharactersIELTS
  */
 
 import { Plugin } from 'ckeditor5/src/core.js';

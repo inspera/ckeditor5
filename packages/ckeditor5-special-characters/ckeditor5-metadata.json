@@ -73,6 +73,16 @@
 			"requires": [
 				"SpecialCharacters"
 			]
+		},
+		{
+			"name": "Special characters IELTS",
+			"className": "SpecialCharactersIELTS",
+			"description": "Adds special characters as per what IELTS requires.",
+			"docs": "features/special-characters.html",
+			"path": "src/specialcharactersIELTS.js",
+			"requires": [
+				"SpecialCharacters"
+			]
 		}
 	]
 }
