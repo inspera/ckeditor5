@@ -27,7 +27,7 @@ export default class SpecialCharactersIELTS extends Plugin {
 	 * @inheritDoc
 	 */
 	public static get pluginName() {
-		return 'SpecialCharactersILETS' as const;
+		return 'SpecialCharactersIELTS' as const;
 	}
 
 	/**
