@@ -4,30 +4,30 @@
  */
 
 /**
- * @module special-characters/specialcharactersIELTS
+ * @module special-characters/specialcharactersCustom
  */
 
 import { Plugin } from 'ckeditor5/src/core.js';
 import type SpecialCharacters from './specialcharacters.js';
 
 /**
- * A plugin that provides special characters for the "IELTS" category.
+ * A plugin that provides special characters for the "Basic" category.
  *
  * ```ts
  * ClassicEditor
  *   .create( {
- *     plugins: [ ..., SpecialCharacters, SpecialCharactersIELTS ],
+ *     plugins: [ ..., SpecialCharacters, specialcharactersCustom ],
  *   } )
  *   .then( ... )
  *   .catch( ... );
  * ```
  */
-export default class SpecialCharactersIELTS extends Plugin {
+export default class SpecialCharactersCustom extends Plugin {
 	/**
 	 * @inheritDoc
 	 */
 	public static get pluginName() {
-		return 'SpecialCharactersIELTS' as const;
+		return 'SpecialCharactersCustom' as const;
 	}
 
 	/**
@@ -143,13 +143,13 @@ export default class SpecialCharactersIELTS extends Plugin {
 			character: symbol, title: t(symbol), 
 		}));
 
-		plugin.addItems( 'IELTS', [
+		plugin.addItems( 'Custom', [
 			...numbers,
 			...textSymbols,
 			...currencySymbols,
 			...mathSymbols,
 			...alphabets,
 			...LatinSymbols,
-		], { label: t( 'IELTS' ) } );
+		], { label: t( 'Custom' ) } );
 	}
 }
