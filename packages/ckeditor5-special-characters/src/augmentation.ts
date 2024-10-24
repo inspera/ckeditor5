@@ -11,8 +11,8 @@ import type {
 	SpecialCharactersLatin,
 	SpecialCharactersMathematical,
 	SpecialCharactersText,
-
-	SpecialCharactersConfig
+	SpecialCharactersConfig,
+	SpecialCharactersCustom
 } from './index.js';
 
 declare module '@ckeditor/ckeditor5-core' {
@@ -24,6 +24,7 @@ declare module '@ckeditor/ckeditor5-core' {
 		[SpecialCharactersLatin.pluginName]: SpecialCharactersLatin;
 		[SpecialCharactersCurrency.pluginName]: SpecialCharactersCurrency;
 		[SpecialCharactersMathematical.pluginName]: SpecialCharactersMathematical;
+		[SpecialCharactersCustom.pluginName]: SpecialCharactersCustom;
 	}
 
 	interface EditorConfig {

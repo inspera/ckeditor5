@@ -73,6 +73,16 @@
 			"requires": [
 				"SpecialCharacters"
 			]
+		},
+		{
+			"name": "Special characters Custom",
+			"className": "SpecialCharactersCustom",
+			"description": "Adds special characters as per the special characters supported in CKEditor v4.",
+			"docs": "features/special-characters.html",
+			"path": "src/specialcharactersCustom.js",
+			"requires": [
+				"SpecialCharacters"
+			]
 		}
 	]
 }

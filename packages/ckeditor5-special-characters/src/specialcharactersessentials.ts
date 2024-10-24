@@ -14,6 +14,7 @@ import SpecialCharactersMathematical from './specialcharactersmathematical.js';
 import SpecialCharactersArrows from './specialcharactersarrows.js';
 import SpecialCharactersLatin from './specialcharacterslatin.js';
 import SpecialCharactersText from './specialcharacterstext.js';
+import SpecialCharactersCustom from './specialcharactersCustom.js';
 
 /**
  * A plugin combining a basic set of characters for the special characters plugin.
@@ -44,7 +45,8 @@ export default class SpecialCharactersEssentials extends Plugin {
 			SpecialCharactersText,
 			SpecialCharactersMathematical,
 			SpecialCharactersArrows,
-			SpecialCharactersLatin
+			SpecialCharactersLatin,
+			SpecialCharactersCustom,
 		] as const;
 	}
 }
