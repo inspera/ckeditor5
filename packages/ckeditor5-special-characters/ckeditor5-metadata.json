@@ -73,6 +73,16 @@
 			"requires": [
 				"SpecialCharacters"
 			]
+		},
+		{
+			"name": "Special characters custom",
+			"className": "SpecialCharactersCustom",
+			"description": "Adds the custom category and characters to the special characters feature.",
+			"docs": "features/special-characters.html",
+			"path": "src/specialcharacterscustom.js",
+			"requires": [
+				"SpecialCharacters"
+			]
 		}
 	]
 }
