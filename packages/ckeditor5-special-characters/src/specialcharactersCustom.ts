@@ -9,6 +9,7 @@
 
 import { Plugin } from 'ckeditor5/src/core.js';
 import type SpecialCharacters from './specialcharacters.js';
+import { SpecialCharacterDefinition } from './specialcharacters.js';
 
 /**
  * A plugin that provides special characters for the "Basic" category.
@@ -38,7 +39,7 @@ export default class SpecialCharactersCustom extends Plugin {
 		const t = editor.t;
 		const plugin: SpecialCharacters = editor.plugins.get( 'SpecialCharacters' );
 
-		const numbers = [
+		const numbers: SpecialCharacterDefinition[] = [
 			{ character: '0', title: t('0') },
 			{ character: '1', title: t('1') },
 			{ character: '2', title: t('2') },
@@ -51,7 +52,7 @@ export default class SpecialCharactersCustom extends Plugin {
 			{ character: '9', title: t('9') },
 		];
 		
-		const textSymbols = [
+		const textSymbols: SpecialCharacterDefinition[] = [
 			{ character: '!', title: t('!') },
 			{ character: '&quot;', title: t('"') },
 			{ character: '#', title: t('#') },
@@ -102,7 +103,7 @@ export default class SpecialCharactersCustom extends Plugin {
 			{ character: '≈', title: t('Almost equal to') },
 		];
 		
-		const currencySymbols = [
+		const currencySymbols: SpecialCharacterDefinition[] = [
 			{ character: '€', title: t('Euro sign') },
 			{ character: '£', title: t('Pound sign') },
 			{ character: '¢', title: t('Cent sign') },
@@ -110,7 +111,7 @@ export default class SpecialCharactersCustom extends Plugin {
 			{ character: '¥', title: t('Yen sign') },
 		];
 		
-		const mathSymbols = [
+		const mathSymbols: SpecialCharacterDefinition[] = [
 			{ character: '(', title: t('(') },
 			{ character: ')', title: t(')') },
 			{ character: '*', title: t('*') },
@@ -131,25 +132,27 @@ export default class SpecialCharactersCustom extends Plugin {
 			{ character: '¼', title: t('Vulgar fraction one quater') },
 			{ character: '½', title: t('Vulgar fraction one half') },
 			{ character: '¾', title: t('Vulgar fraction three quater') },
-			{ character: '¿', title: t('Inverted question mark') },
+			{ character: '¿', title: t( 'Inverted question mark' ) },
 		];
 		
-		const alphabets = new Array(52).map((_e, i) => {
+		const alphabets: SpecialCharacterDefinition[] = new Array(52).map((_e, i) => {
 			if (i <= 25) return { character: String.fromCharCode(i + 65), title: t(String.fromCharCode(i + 65)) };
 			return { character: String.fromCharCode(i + 71), title: t(String.fromCharCode(i + 71)),  };
 		});
 		
-		const LatinSymbols = 'ÀÁÂÃÄÅÆÇÈÉÊËËÌÍÎÏÐÑÒÓÔÖÕØÙÚÛÛÜÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŴŶŵŷ'.split('').map((symbol) => ({
+		const LatinSymbols: SpecialCharacterDefinition[] = 'ÀÁÂÃÄÅÆÇÈÉÊËËÌÍÎÏÐÑÒÓÔÖÕØÙÚÛÛÜÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŴŶŵŷ'.split('').map((symbol) => ({
 			character: symbol, title: t(symbol), 
 		}));
 
-		plugin.addItems( 'Custom', [
+		const customSymbols = [
 			...numbers,
 			...textSymbols,
 			...currencySymbols,
 			...mathSymbols,
 			...alphabets,
 			...LatinSymbols,
-		], { label: t( 'Custom' ) } );
+		]
+
+		plugin.addItems( 'Custom', customSymbols , { label: t( 'Custom' ) } );
 	}
 }
