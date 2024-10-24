@@ -175,7 +175,7 @@
   "packages/ckeditor5-special-characters/src/specialcharacterslatin.js": "Specialcharacterslatin",
   "packages/ckeditor5-special-characters/src/specialcharactersmathematical.js": "Specialcharactersmathematical",
   "packages/ckeditor5-special-characters/src/specialcharacterstext.js": "Specialcharacterstext",
-  "packages/ckeditor5-special-characters/src/specialcharacterscustom.js": "SpecialCharacterscustom",
+  "packages/ckeditor5-special-characters/src/specialcharacterscustom.js": "Specialcharacterscustom",
   "packages/ckeditor5-style/src/style.js": "Style",
   "packages/ckeditor5-style/src/styleediting.js": "Styleediting",
   "packages/ckeditor5-style/src/styleui.js": "Styleui",

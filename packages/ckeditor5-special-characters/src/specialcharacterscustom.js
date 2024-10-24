@@ -35,8 +35,6 @@ export default class SpecialCharactersCustom extends Plugin {
 	init() {
 		const editor = this.editor;
 		const t = editor.t;
-		const plugin = editor.plugins.get( 'SpecialCharacters' );
-		console.log('editor custom characters');
 		const numbers = [
 			{ character: '0', title: t('0') },
 			{ character: '1', title: t('1') },
@@ -151,6 +149,6 @@ export default class SpecialCharactersCustom extends Plugin {
 			...LatinSymbols,
 		]
 
-		plugin.addItems( 'Custom', customSymbols , { label: t( 'Custom' ) } );
+		editor.plugins.get( 'SpecialCharacters' ).addItems( 'Custom', customSymbols );
 	}
 }
